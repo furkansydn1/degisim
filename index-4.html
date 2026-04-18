@@ -1,0 +1,2163 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a1b2e">
+<title>Zinciri Kırma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+/* === RESET & TEMEL === */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #1a1b2e;
+  --bg-2: #22243b;
+  --bg-3: #2a2d47;
+  --paper: #f4e8d0;
+  --paper-dim: rgba(244, 232, 208, 0.7);
+  --paper-ghost: rgba(244, 232, 208, 0.4);
+  --paper-line: rgba(244, 232, 208, 0.12);
+  --gold: #d4a574;
+  --gold-dim: rgba(212, 165, 116, 0.15);
+  --sage: #7a9b76;
+  --sage-dim: rgba(122, 155, 118, 0.15);
+  --crimson: #a85454;
+  --crimson-dim: rgba(168, 84, 84, 0.12);
+  --violet: #8a8db3;
+  --fs-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --fs-serif: 'Crimson Pro', Georgia, serif;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--paper);
+  font-family: var(--fs-sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  padding-bottom: 80px;
+  background-image: radial-gradient(circle at 20% 10%, rgba(212, 165, 116, 0.05), transparent 40%),
+                    radial-gradient(circle at 80% 90%, rgba(122, 155, 118, 0.04), transparent 40%);
+  background-attachment: fixed;
+}
+
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, textarea, select { font-family: inherit; color: inherit; }
+
+/* === LOGIN EKRANI === */
+.login-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+.login-screen .brand {
+  font-family: var(--fs-serif);
+  font-size: 42px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+.login-screen .tagline {
+  font-family: var(--fs-serif);
+  font-style: italic;
+  color: var(--paper-dim);
+  font-size: 18px;
+  margin-bottom: 48px;
+  max-width: 440px;
+  line-height: 1.5;
+}
+.login-screen .quote {
+  max-width: 480px;
+  color: var(--paper-ghost);
+  font-size: 14px;
+  line-height: 1.7;
+  margin-bottom: 40px;
+  font-family: var(--fs-serif);
+  font-style: italic;
+}
+.google-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--paper);
+  color: var(--bg);
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 15px;
+  transition: transform 0.15s, box-shadow 0.2s;
+}
+.google-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(212, 165, 116, 0.15); }
+.google-btn:active { transform: translateY(0); }
+.login-footer { margin-top: 32px; font-size: 12px; color: var(--paper-ghost); }
+
+/* === UYGULAMA KABUĞU === */
+.app { max-width: 720px; margin: 0 auto; padding: 20px 16px 0; display: none; }
+.app.active { display: block; }
+
+/* === ÜST BAŞLIK === */
+.top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 0 4px;
+}
+.top-header .logo {
+  font-family: var(--fs-serif);
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.3px;
+}
+.top-header .logo span { color: var(--gold); }
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-2);
+  padding: 4px 10px 4px 4px;
+  border-radius: 20px;
+  font-size: 12px;
+  color: var(--paper-dim);
+}
+.user-chip img { width: 24px; height: 24px; border-radius: 50%; }
+
+/* === EKRANLAR === */
+.screen { display: none; animation: fadeIn 0.3s ease; }
+.screen.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* === KARAKTER (ANA) KARTI === */
+.hero-card {
+  background: var(--bg-2);
+  border: 0.5px solid var(--paper-line);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 14px;
+}
+.hero-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 0.5px solid var(--paper-line);
+}
+.hero-title-block .label {
+  font-size: 10px;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--violet);
+  margin-bottom: 4px;
+}
+.hero-title-block .name {
+  font-family: var(--fs-serif);
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+.hero-stats {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--gold-dim);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  color: var(--gold);
+  font-weight: 500;
+}
+.stat-pill.xp { background: rgba(138, 141, 179, 0.12); color: var(--violet); }
+.stat-pill svg { width: 13px; height: 13px; }
+
+/* === GÖREV KARTLARI === */
+.quest-main {
+  background: linear-gradient(135deg, rgba(212, 165, 116, 0.08), rgba(212, 165, 116, 0.03));
+  border: 0.5px solid rgba(212, 165, 116, 0.3);
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.quest-main:hover { border-color: rgba(212, 165, 116, 0.5); }
+.quest-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12px;
+}
+.quest-head .lbl {
+  font-size: 10px;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+.quest-head .ttl {
+  font-family: var(--fs-serif);
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+.quest-head .pct {
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+.progress-track {
+  background: rgba(244, 232, 208, 0.08);
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.progress-fill { height: 100%; border-radius: 4px; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+.progress-fill.gold { background: var(--gold); }
+.progress-fill.sage { background: var(--sage); }
+.progress-meta { font-size: 11px; color: var(--violet); }
+
+.dual-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.boss-card {
+  background: var(--sage-dim);
+  border: 0.5px solid rgba(122, 155, 118, 0.3);
+  border-radius: 12px;
+  padding: 14px;
+  cursor: pointer;
+}
+.boss-card .lbl {
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: #9cb59a;
+  margin-bottom: 6px;
+}
+.boss-card .ttl {
+  font-family: var(--fs-serif);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.3;
+  margin-bottom: 10px;
+  min-height: 2.6em;
+}
+.anti-card {
+  background: var(--crimson-dim);
+  border: 0.5px solid rgba(168, 84, 84, 0.35);
+  border-radius: 12px;
+  padding: 14px;
+  cursor: pointer;
+}
+.anti-card .lbl {
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: #c47878;
+  margin-bottom: 6px;
+}
+.anti-card .txt {
+  font-family: var(--fs-serif);
+  font-size: 13px;
+  font-style: italic;
+  color: #e8c4c4;
+  line-height: 1.5;
+}
+
+/* === QUEST LİSTESİ === */
+.section-label {
+  font-size: 10px;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--violet);
+  margin: 20px 0 12px 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.quest-row {
+  background: var(--bg-2);
+  border: 0.5px solid var(--paper-line);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.quest-row:hover { border-color: rgba(244, 232, 208, 0.25); background: var(--bg-3); }
+.quest-row.done { opacity: 0.6; }
+.quest-row.done .q-title { text-decoration: line-through; }
+.quest-row.active { border-color: rgba(212, 165, 116, 0.5); }
+.quest-row.locked { opacity: 0.5; cursor: not-allowed; }
+.quest-row .q-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+.quest-dot {
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.quest-dot.pending { border: 1.5px solid rgba(244, 232, 208, 0.25); }
+.quest-dot.active { border: 1.5px solid var(--gold); }
+.quest-dot.done { background: var(--sage); }
+.quest-dot.done svg { width: 12px; height: 12px; }
+.q-info { min-width: 0; flex: 1; }
+.q-title { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+.q-sub { font-size: 11px; color: var(--violet); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.q-xp { font-size: 11px; color: var(--gold); font-weight: 500; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+
+/* === PATTERN / UYARI KARTLARI === */
+.insight-card {
+  background: rgba(138, 141, 179, 0.08);
+  border-left: 3px solid var(--violet);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 10px;
+}
+.insight-card.warn {
+  background: rgba(168, 84, 84, 0.08);
+  border-left-color: var(--crimson);
+}
+.insight-card.celebrate {
+  background: rgba(212, 165, 116, 0.08);
+  border-left-color: var(--gold);
+}
+.insight-card .lbl {
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--violet);
+  margin-bottom: 6px;
+}
+.insight-card.warn .lbl { color: #c47878; }
+.insight-card.celebrate .lbl { color: var(--gold); }
+.insight-card .msg {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--paper);
+}
+.insight-card .msg em {
+  font-family: var(--fs-serif);
+  color: var(--gold);
+  font-style: italic;
+}
+
+/* === QUEST / SORU EKRANI === */
+.quest-screen {
+  background: var(--bg-2);
+  border-radius: 16px;
+  padding: 24px;
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
+}
+.quest-head-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.quest-head-bar .lbl {
+  font-size: 10px;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.quest-head-bar .count {
+  font-size: 12px;
+  color: var(--violet);
+  font-variant-numeric: tabular-nums;
+}
+.quest-progress {
+  background: rgba(244, 232, 208, 0.08);
+  height: 3px;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+.quest-progress div {
+  background: var(--gold);
+  height: 100%;
+  transition: width 0.4s ease;
+}
+.question-block { flex: 1; }
+.q-mini-label {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--violet);
+  margin-bottom: 14px;
+}
+.q-text {
+  font-family: var(--fs-serif);
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--paper);
+  margin-bottom: 8px;
+}
+.q-hint {
+  font-family: var(--fs-serif);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--paper-ghost);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+.q-answer {
+  width: 100%;
+  min-height: 160px;
+  background: rgba(244, 232, 208, 0.04);
+  border: 0.5px solid var(--paper-line);
+  border-radius: 10px;
+  padding: 14px;
+  color: var(--paper);
+  font-size: 15px;
+  font-family: var(--fs-serif);
+  line-height: 1.6;
+  resize: vertical;
+  transition: border 0.2s;
+}
+.q-answer:focus { outline: none; border-color: rgba(212, 165, 116, 0.5); }
+.q-answer::placeholder { color: rgba(244, 232, 208, 0.3); font-style: italic; }
+
+.quest-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  margin-top: 16px;
+  border-top: 0.5px solid var(--paper-line);
+}
+.quest-footer .note { font-size: 11px; color: var(--violet); }
+.btn-group { display: flex; gap: 8px; }
+
+.btn {
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+.btn-primary { background: var(--gold); color: var(--bg); }
+.btn-primary:hover { background: #e0b685; }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-ghost {
+  background: transparent;
+  color: var(--paper-dim);
+  border: 0.5px solid var(--paper-line);
+}
+.btn-ghost:hover { color: var(--paper); border-color: rgba(244, 232, 208, 0.3); }
+
+/* === FORM ALANLARI === */
+.form-block {
+  background: var(--bg-2);
+  border: 0.5px solid var(--paper-line);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 14px;
+}
+.form-block h3 {
+  font-family: var(--fs-serif);
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.form-block .sub {
+  font-family: var(--fs-serif);
+  font-style: italic;
+  color: var(--paper-dim);
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+.form-block label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--violet);
+  margin-bottom: 8px;
+  margin-top: 14px;
+}
+.form-block label:first-of-type { margin-top: 0; }
+.form-input, .form-textarea {
+  width: 100%;
+  background: rgba(244, 232, 208, 0.04);
+  border: 0.5px solid var(--paper-line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--paper);
+  font-size: 14px;
+  font-family: var(--fs-serif);
+  transition: border 0.2s;
+}
+.form-textarea { min-height: 90px; line-height: 1.6; resize: vertical; }
+.form-input:focus, .form-textarea:focus { outline: none; border-color: rgba(212, 165, 116, 0.5); }
+.form-input::placeholder, .form-textarea::placeholder {
+  color: rgba(244, 232, 208, 0.3);
+  font-style: italic;
+}
+
+.form-block.anti {
+  background: linear-gradient(135deg, rgba(168, 84, 84, 0.08), var(--bg-2));
+  border-color: rgba(168, 84, 84, 0.25);
+}
+.form-block.vision {
+  background: linear-gradient(135deg, rgba(212, 165, 116, 0.06), var(--bg-2));
+  border-color: rgba(212, 165, 116, 0.25);
+}
+
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* === HEDEF KARTLARI === */
+.goal-row {
+  background: rgba(244, 232, 208, 0.04);
+  border: 0.5px solid var(--paper-line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.goal-row input {
+  background: transparent;
+  border: none;
+  flex: 1;
+  font-size: 14px;
+  font-family: var(--fs-serif);
+}
+.goal-row input:focus { outline: none; }
+.del-btn {
+  color: var(--paper-ghost);
+  font-size: 18px;
+  padding: 4px 8px;
+  line-height: 1;
+}
+.del-btn:hover { color: var(--crimson); }
+.add-btn {
+  width: 100%;
+  background: transparent;
+  border: 0.5px dashed var(--paper-line);
+  color: var(--paper-dim);
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  margin-top: 8px;
+}
+.add-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+/* === GEÇMİŞ EKRANI === */
+.history-search {
+  width: 100%;
+  background: var(--bg-2);
+  border: 0.5px solid var(--paper-line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--paper);
+  font-size: 14px;
+  margin-bottom: 14px;
+}
+.history-search:focus { outline: none; border-color: rgba(212, 165, 116, 0.4); }
+
+.history-entry {
+  background: var(--bg-2);
+  border: 0.5px solid var(--paper-line);
+  border-left: 2px solid var(--gold);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 10px;
+}
+.history-entry.sabah { border-left-color: var(--gold); }
+.history-entry.gunici { border-left-color: var(--violet); }
+.history-entry.aksam { border-left-color: var(--sage); }
+.history-entry .meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--violet);
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+.history-entry .q {
+  font-family: var(--fs-serif);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--paper);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+.history-entry .a {
+  font-family: var(--fs-serif);
+  font-size: 14px;
+  color: var(--paper-dim);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* === RİTÜEL EKRANLARI === */
+.ritual-screen {
+  background: linear-gradient(160deg, var(--bg-2), var(--bg));
+  border: 0.5px solid rgba(212, 165, 116, 0.2);
+  border-radius: 16px;
+  padding: 28px;
+}
+.ritual-screen .badge {
+  display: inline-block;
+  background: var(--gold-dim);
+  color: var(--gold);
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+.ritual-screen h2 {
+  font-family: var(--fs-serif);
+  font-size: 26px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+.ritual-screen .intro {
+  font-family: var(--fs-serif);
+  font-style: italic;
+  color: var(--paper-dim);
+  font-size: 15px;
+  line-height: 1.6;
+  margin-bottom: 22px;
+}
+
+/* === ZAMAN KAPSÜLÜ === */
+.capsule-card {
+  background: var(--bg-2);
+  border: 0.5px solid var(--paper-line);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 14px;
+  position: relative;
+  overflow: hidden;
+}
+.capsule-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.capsule-card .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 14px;
+}
+.capsule-card .header .title {
+  font-family: var(--fs-serif);
+  font-size: 16px;
+  color: var(--gold);
+}
+.capsule-card .header .date {
+  font-size: 11px;
+  color: var(--violet);
+}
+.capsule-card .old-q {
+  font-family: var(--fs-serif);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--paper-ghost);
+  margin-bottom: 6px;
+}
+.capsule-card .old-a {
+  font-family: var(--fs-serif);
+  font-size: 15px;
+  color: var(--paper);
+  line-height: 1.6;
+  padding: 12px;
+  background: rgba(244, 232, 208, 0.03);
+  border-radius: 8px;
+  margin-bottom: 14px;
+  white-space: pre-wrap;
+}
+.capsule-card .challenge {
+  font-family: var(--fs-serif);
+  font-size: 14px;
+  color: var(--gold);
+  font-style: italic;
+  padding-top: 12px;
+  border-top: 0.5px solid var(--paper-line);
+}
+
+/* === ALT NAV === */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(26, 27, 46, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 0.5px solid var(--paper-line);
+  display: none;
+  justify-content: space-around;
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+  z-index: 100;
+}
+.bottom-nav.show { display: flex; }
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 4px;
+  color: var(--paper-ghost);
+  font-size: 10px;
+  letter-spacing: 0.3px;
+  position: relative;
+  transition: color 0.15s;
+}
+.nav-item svg { width: 20px; height: 20px; }
+.nav-item.active { color: var(--gold); }
+.nav-item .badge {
+  position: absolute;
+  top: 4px;
+  right: calc(50% - 16px);
+  background: var(--crimson);
+  color: white;
+  font-size: 9px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 5px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+}
+
+/* === TOAST === */
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-120%);
+  background: var(--bg-3);
+  border: 0.5px solid var(--gold);
+  color: var(--paper);
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  z-index: 200;
+  transition: transform 0.3s ease;
+  max-width: 90vw;
+  text-align: center;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.xp { border-color: var(--gold); }
+.toast.xp::before {
+  content: '+ ';
+  color: var(--gold);
+  font-weight: 500;
+}
+
+/* === EMPTY STATE === */
+.empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--paper-ghost);
+}
+.empty h3 {
+  font-family: var(--fs-serif);
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: var(--paper-dim);
+}
+.empty p {
+  font-family: var(--fs-serif);
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+/* === KİMLİK ÇEMBERİ === */
+.identity-ring {
+  background: var(--bg-2);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 14px;
+  text-align: center;
+}
+.identity-ring .label {
+  font-size: 10px;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--violet);
+  margin-bottom: 10px;
+}
+.identity-ring .statement {
+  font-family: var(--fs-serif);
+  font-size: 18px;
+  font-style: italic;
+  color: var(--gold);
+  line-height: 1.5;
+  padding: 0 10px;
+}
+.identity-ring .edit {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--violet);
+  border-bottom: 0.5px dashed var(--violet);
+  padding-bottom: 2px;
+}
+
+/* === MOBILE === */
+@media (max-width: 600px) {
+  .app { padding: 16px 12px 0; }
+  .hero-card { padding: 18px; }
+  .hero-title-block .name { font-size: 20px; }
+  .dual-grid { grid-template-columns: 1fr; }
+  .q-text { font-size: 19px; }
+  .row-2 { grid-template-columns: 1fr; }
+  .quest-screen { padding: 20px; }
+  .ritual-screen { padding: 22px; }
+  .hero-stats { gap: 6px; }
+  .stat-pill { font-size: 11px; padding: 5px 10px; }
+}
+
+/* === LOADING === */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  flex-direction: column;
+  gap: 18px;
+}
+.loading-overlay .spinner {
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--paper-line);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+.loading-overlay .txt {
+  font-family: var(--fs-serif);
+  font-style: italic;
+  color: var(--paper-dim);
+  font-size: 14px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.hidden { display: none !important; }
+
+/* Seçici grubu */
+.seg-group {
+  display: flex;
+  background: var(--bg-2);
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 14px;
+  gap: 2px;
+}
+.seg-group button {
+  flex: 1;
+  padding: 8px;
+  font-size: 12px;
+  color: var(--paper-dim);
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+.seg-group button.active {
+  background: var(--bg-3);
+  color: var(--gold);
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="txt">Zincirler çözülüyor...</div>
+</div>
+
+<!-- LOGIN EKRANI -->
+<div class="login-screen hidden" id="login">
+  <div class="brand">Zinciri <span style="color: var(--gold);">Kırma</span></div>
+  <div class="tagline">Alışkanlıklarını değil, kim olduğunu değiştir.</div>
+  <div class="quote">
+    "Hareket dışında hiçbir şeye güvenme. Hayat olaylar düzeyinde olur, kelimeler değil."<br>
+    <span style="color: var(--paper-ghost); font-style: normal; font-size: 12px;">— Alfred Adler</span>
+  </div>
+  <button class="google-btn" id="loginBtn">
+    <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+    Google ile devam et
+  </button>
+  <div class="login-footer">Verilerin Google'ın güvenli sunucularında şifreli saklanır.</div>
+</div>
+
+<!-- UYGULAMA -->
+<div class="app" id="app">
+
+  <div class="top-header">
+    <div class="logo">Zinciri <span>Kırma</span></div>
+    <div class="user-chip" id="userChip">
+      <img id="userImg" src="" alt="">
+      <span id="userName">—</span>
+    </div>
+  </div>
+
+  <!-- === ANA SAYFA === -->
+  <div class="screen active" id="screen-home">
+    <div class="hero-card">
+      <div class="hero-top">
+        <div class="hero-title-block">
+          <div class="label" id="charLabel">karakter · seviye 1</div>
+          <div class="name" id="charName">Uyanan</div>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-pill">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 0.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67z"/></svg>
+            <span id="streakNum">0</span> gün
+          </div>
+          <div class="stat-pill xp"><span id="xpNum">0</span> XP</div>
+        </div>
+      </div>
+
+      <!-- Kimlik Çemberi mini -->
+      <div style="font-size: 11px; color: var(--violet); letter-spacing: 1.2px; margin-bottom: 8px;">KİMLİK İFADEM</div>
+      <div id="identityStmt" style="font-family: var(--fs-serif); font-style: italic; color: var(--gold); font-size: 15px; line-height: 1.5;">
+        Ben henüz kim olduğumu tanımlamadım.
+      </div>
+    </div>
+
+    <!-- Ana Quest -->
+    <div class="quest-main" onclick="showScreen('goals')">
+      <div class="quest-head">
+        <div>
+          <div class="lbl">Ana Görev · 1 yıl</div>
+          <div class="ttl" id="mainQuestTitle">1 yıllık hedefini belirle</div>
+        </div>
+        <div class="pct" id="mainQuestPct">0%</div>
+      </div>
+      <div class="progress-track"><div class="progress-fill gold" id="mainQuestBar" style="width: 0%"></div></div>
+      <div class="progress-meta" id="mainQuestMeta">Henüz yola çıkılmadı</div>
+    </div>
+
+    <div class="dual-grid">
+      <div class="boss-card" onclick="showScreen('goals')">
+        <div class="lbl">Boss · 1 ay</div>
+        <div class="ttl" id="bossTitle">Bu ayki proje?</div>
+        <div class="progress-track"><div class="progress-fill sage" id="bossBar" style="width: 0%"></div></div>
+        <div class="progress-meta" id="bossMeta">-</div>
+      </div>
+      <div class="anti-card" onclick="showScreen('vision')">
+        <div class="lbl">Anti-Vizyon · Tehlike</div>
+        <div class="txt" id="antiVisionShort">Kaçtığın hayatı tanımla.</div>
+      </div>
+    </div>
+
+    <!-- İçgörüler -->
+    <div id="insightBox"></div>
+
+    <!-- Bugünün Questleri -->
+    <div class="section-label">
+      <span>Bugünün Questleri</span>
+      <span id="todayDate" style="text-transform: none; letter-spacing: 0; color: var(--paper-ghost);"></span>
+    </div>
+    <div id="todayQuests"></div>
+  </div>
+
+  <!-- === QUEST (SORU) EKRANI === -->
+  <div class="screen" id="screen-quest">
+    <div class="quest-screen">
+      <div class="quest-head-bar">
+        <div class="lbl" id="questLabel">QUEST</div>
+        <div class="count" id="questCount">1 / 1</div>
+      </div>
+      <div class="quest-progress"><div id="questProgress" style="width: 0%"></div></div>
+
+      <div class="question-block">
+        <div class="q-mini-label" id="questMiniLabel">BUGÜNÜN SORUSU</div>
+        <div class="q-text" id="questText">Soru yükleniyor...</div>
+        <div class="q-hint" id="questHint"></div>
+        <textarea class="q-answer" id="questAnswer" placeholder="Düşün, acele etme. Kendi kelimelerin. Yapay zekâya sorma."></textarea>
+      </div>
+
+      <div class="quest-footer">
+        <div class="note">Otomatik kayıt · sadece sende kalır</div>
+        <div class="btn-group">
+          <button class="btn btn-ghost" id="questPrev">← Önceki</button>
+          <button class="btn btn-primary" id="questNext">Sonraki →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- === VİZYON & ANTİ-VİZYON === -->
+  <div class="screen" id="screen-vision">
+    <div style="margin-bottom: 16px;">
+      <div style="font-family: var(--fs-serif); font-size: 24px; font-weight: 500;">Vizyon & Anti-Vizyon</div>
+      <div style="font-family: var(--fs-serif); font-style: italic; color: var(--paper-dim); font-size: 14px; margin-top: 4px;">
+        Gideceğin yön ve kaçtığın karanlık. İkisi de zamanla evrilir.
+      </div>
+    </div>
+
+    <div class="form-block anti">
+      <h3>Anti-Vizyon</h3>
+      <p class="sub">Bir daha asla yaşamak istemediğin hayat. Tek cümle. Okuduğunda bir şey hissetmeli.</p>
+      <textarea class="form-textarea" id="antiVision" placeholder="'Hayatımın ...e dönüşmesine izin vermeyeceğim...'"></textarea>
+    </div>
+
+    <div class="form-block vision">
+      <h3>Vizyon MVP</h3>
+      <p class="sub">İnşa ettiğin şeyin tek cümle hali. Evrilir, sorun değil.</p>
+      <textarea class="form-textarea" id="vision" placeholder="'Ben ...yim ve ...yapıyorum...'"></textarea>
+    </div>
+
+    <div class="form-block">
+      <h3>Kimlik İfaden</h3>
+      <p class="sub">"Ben şöyle biriyim..." ile başla. Henüz tam o kişi olmasan bile.</p>
+      <input type="text" class="form-input" id="identityInput" placeholder="Ben ... türü biriyim">
+    </div>
+
+    <button class="btn btn-primary" style="width: 100%; padding: 14px;" onclick="saveVision()">Kaydet</button>
+  </div>
+
+  <!-- === HEDEFLER === -->
+  <div class="screen" id="screen-goals">
+    <div style="margin-bottom: 16px;">
+      <div style="font-family: var(--fs-serif); font-size: 24px; font-weight: 500;">Hedefler & Oyun Alanı</div>
+      <div style="font-family: var(--fs-serif); font-style: italic; color: var(--paper-dim); font-size: 14px; margin-top: 4px;">
+        Ana görev, boss savaşı, günlük quest'ler ve kuralların.
+      </div>
+    </div>
+
+    <div class="form-block">
+      <h3>Ana Görev · 1 Yıllık Hedef</h3>
+      <p class="sub">Eski kalıbı kırdığını bilmen için 1 yıl sonra ne doğru olmalı? Somut tek şey.</p>
+      <label>Başlık</label>
+      <input type="text" class="form-input" id="yearGoal" placeholder="Örn: Yazmayı alışkanlık haline getirdim">
+      <label>Hedef tarih</label>
+      <input type="date" class="form-input" id="yearDeadline">
+      <label>Şu anki ilerleme (%)</label>
+      <input type="number" min="0" max="100" class="form-input" id="yearProgress" placeholder="0">
+    </div>
+
+    <div class="form-block">
+      <h3>Boss · 1 Aylık Proje</h3>
+      <p class="sub">1 yıl hedefinin mümkün kalması için 1 ay sonra ne doğru olmalı?</p>
+      <label>Başlık</label>
+      <input type="text" class="form-input" id="monthGoal" placeholder="Örn: İlk 10 bin kelimeyi yazdım">
+      <label>Bitiş tarihi</label>
+      <input type="date" class="form-input" id="monthDeadline">
+      <label>İlerleme (%)</label>
+      <input type="number" min="0" max="100" class="form-input" id="monthProgress" placeholder="0">
+    </div>
+
+    <div class="form-block">
+      <h3>Günlük Kaldıraçlar</h3>
+      <p class="sub">Olmak istediğin kişinin öylesine yapacağı 2-3 eylem.</p>
+      <div id="daily-levers"></div>
+      <button class="add-btn" onclick="addGoal('daily-levers')">+ Kaldıraç ekle</button>
+    </div>
+
+    <div class="form-block">
+      <h3>Kısıtlamalar · Oyunun Kuralları</h3>
+      <p class="sub">Vizyonun için feda etmeyeceğin şeyler. (Aile, sağlık, değerler...)</p>
+      <div id="constraints"></div>
+      <button class="add-btn" onclick="addGoal('constraints')">+ Kural ekle</button>
+    </div>
+
+    <button class="btn btn-primary" style="width: 100%; padding: 14px;" onclick="saveGoals()">Kaydet</button>
+  </div>
+
+  <!-- === GEÇMİŞ === -->
+  <div class="screen" id="screen-history">
+    <div style="margin-bottom: 16px;">
+      <div style="font-family: var(--fs-serif); font-size: 24px; font-weight: 500;">Geçmişinle Yüzleş</div>
+      <div style="font-family: var(--fs-serif); font-style: italic; color: var(--paper-dim); font-size: 14px; margin-top: 4px;">
+        Kendi kelimelerinin tanığı ol.
+      </div>
+    </div>
+
+    <input type="text" class="history-search" id="historySearch" placeholder="🔍 Kelime ya da tema ara...">
+
+    <div class="seg-group">
+      <button class="active" data-filter="all">Tümü</button>
+      <button data-filter="sabah">Sabah</button>
+      <button data-filter="gunici">Gün içi</button>
+      <button data-filter="aksam">Akşam</button>
+    </div>
+
+    <div id="historyList"></div>
+  </div>
+
+  <!-- === ÖRÜNTÜLER === -->
+  <div class="screen" id="screen-patterns">
+    <div style="margin-bottom: 16px;">
+      <div style="font-family: var(--fs-serif); font-size: 24px; font-weight: 500;">Örüntülerin</div>
+      <div style="font-family: var(--fs-serif); font-style: italic; color: var(--paper-dim); font-size: 14px; margin-top: 4px;">
+        Cevaplarının sana söylediklerine bak.
+      </div>
+    </div>
+
+    <div id="patternsList"></div>
+  </div>
+
+  <!-- === ZAMAN KAPSÜLÜ === -->
+  <div class="screen" id="screen-capsule">
+    <div style="margin-bottom: 16px;">
+      <div style="font-family: var(--fs-serif); font-size: 24px; font-weight: 500;">Zaman Kapsülü</div>
+      <div style="font-family: var(--fs-serif); font-style: italic; color: var(--paper-dim); font-size: 14px; margin-top: 4px;">
+        Geçmişteki sen, şimdiki sana hesap soruyor.
+      </div>
+    </div>
+
+    <div id="capsuleList"></div>
+  </div>
+
+  <!-- === RİTÜEL (Haftalık/Aylık) === -->
+  <div class="screen" id="screen-ritual">
+    <div class="ritual-screen">
+      <span class="badge" id="ritualBadge">HAFTALIK RİTÜEL</span>
+      <h2 id="ritualTitle">Bu haftanın muhasebesi</h2>
+      <p class="intro" id="ritualIntro">Durul bir an. Geçen haftanın cevaplarına bak. Sözlerinle eylemlerin uyuştu mu?</p>
+      <div id="ritualContent"></div>
+    </div>
+  </div>
+
+  <!-- === AYARLAR === -->
+  <div class="screen" id="screen-settings">
+    <div style="margin-bottom: 16px;">
+      <div style="font-family: var(--fs-serif); font-size: 24px; font-weight: 500;">Ayarlar</div>
+    </div>
+
+    <div class="form-block">
+      <h3>Karakter Adın</h3>
+      <p class="sub">Oyunun kahramanının adı ne? (kendi adın ya da uydurduğun)</p>
+      <input type="text" class="form-input" id="charNameInput" placeholder="Örn: Uyanan, Savaşçı, vb.">
+    </div>
+
+    <div class="form-block">
+      <h3>Veri</h3>
+      <p class="sub">Cevaplarını JSON olarak indir ya da tamamen sil.</p>
+      <button class="btn btn-ghost" style="width: 100%; margin-bottom: 8px;" onclick="exportData()">📥 Verilerimi indir (JSON)</button>
+      <button class="btn btn-ghost" style="width: 100%; color: var(--crimson); border-color: rgba(168, 84, 84, 0.3);" onclick="resetData()">🗑 Tüm verilerimi sil</button>
+    </div>
+
+    <div class="form-block">
+      <h3>Çıkış</h3>
+      <p class="sub">Hesabından çıkış yap.</p>
+      <button class="btn btn-ghost" style="width: 100%;" onclick="doLogout()">Çıkış yap</button>
+    </div>
+
+    <div style="text-align: center; color: var(--paper-ghost); font-size: 11px; margin-top: 30px; font-family: var(--fs-serif); font-style: italic;">
+      "İnanılmaz uyarlanabilirsin. Eğer kendine yeterli bir sebep verirsen."
+    </div>
+  </div>
+
+</div>
+
+<!-- ALT NAVIGASYON -->
+<nav class="bottom-nav" id="bottomNav">
+  <a class="nav-item active" data-screen="home">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12l9-9 9 9M5 10v10h14V10"/></svg>
+    <span>Karakter</span>
+    <span class="badge hidden" id="homeBadge">1</span>
+  </a>
+  <a class="nav-item" data-screen="history">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+    <span>Geçmiş</span>
+  </a>
+  <a class="nav-item" data-screen="patterns">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>
+    <span>Örüntüler</span>
+    <span class="badge hidden" id="patternsBadge">1</span>
+  </a>
+  <a class="nav-item" data-screen="capsule">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 7h16v13H4zM8 7V4h8v3"/></svg>
+    <span>Kapsül</span>
+    <span class="badge hidden" id="capsuleBadge">1</span>
+  </a>
+  <a class="nav-item" data-screen="settings">
+    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    <span>Ayarlar</span>
+  </a>
+</nav>
+
+<!-- TOAST -->
+<div class="toast" id="toast">Mesaj</div>
+
+<!-- === FIREBASE & UYGULAMA MANTIK === -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, query, orderBy, where, Timestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBl4EyTFAPiKMgbgmRztm5MmToAdHKFTPQ",
+  authDomain: "zinciri-kirma-486a3.firebaseapp.com",
+  projectId: "zinciri-kirma-486a3",
+  storageBucket: "zinciri-kirma-486a3.firebasestorage.app",
+  messagingSenderId: "189866155572",
+  appId: "1:189866155572:web:31fdf2fc9b0e502c74f461",
+  measurementId: "G-880SWBJ3MC"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
+
+// === SORU BANKASI ===
+const QUESTIONS = {
+  // Tek seferlik - Sabah Psikolojik Kazı
+  kurulus: [
+    { id: 'k1', q: 'Yaşamayı öğrendiğin, sıradanlaşmış ama hâlâ içini kemiren memnuniyetsizlik ne?', hint: 'Derin acı değil, tolere etmeyi öğrendiğin şey.' },
+    { id: 'k2', q: 'Geçen yıl en çok tekrarladığın 3 şikayet neydi?', hint: 'Şikayet edip de hiç değiştirmediklerin.' },
+    { id: 'k3', q: 'Bu şikayetlere bakarak, davranışını izleyen biri gerçekten ne istediğini söylerdi?', hint: 'Sözlerin değil — hareketlerin ne diyor?' },
+    { id: 'k4', q: 'Saygı duyduğun birine itiraf etmen dayanılmaz olacak hayat gerçeğin ne?', hint: 'Rahatsız edici olan tam da cevap.' },
+    { id: 'k5', q: 'Hiçbir şey değişmezse 5 yıl sonra ortalama bir Salı günün nasıl geçer?', hint: 'Uyandığın yer, bedenin, ilk düşüncen, 22:00\'deki ruh halin — detay ver.' },
+    { id: 'k6', q: '10 yıl sonra neyi kaçırmış olurdun? Hangi fırsatlar kapanmış olur?', hint: 'Kimler senden umudu keserdi?' },
+    { id: 'k7', q: 'Hayatının sonundasın. Güvenli versiyonu yaşadın. Bedeli ne?', hint: 'Neyi hissetmene, denemene, olmana izin vermedin?' },
+    { id: 'k8', q: 'Hayatında zaten senin korktuğun geleceği yaşayan biri var mı?', hint: 'Ona dönüşme düşüncesi sende ne hissi yaratıyor?' },
+    { id: 'k9', q: 'Gerçekten değişmek için hangi kimliği bırakman gerek?', hint: '"Ben şöyle biriyim..." — sosyal bedeli ne olur?' },
+    { id: 'k10', q: 'Değişmemenin en utanç verici sebebi ne?', hint: 'Mantıklı değil — zayıf, korkak ya da tembel gösteren sebep.' },
+    { id: 'k11', q: 'Davranışın bir koruma biçimiyse, tam olarak neyi koruyorsun?', hint: 'Bu koruma sana ne kaybettiriyor?' },
+    { id: 'k12', q: 'Pratikliği unut: 3 yıl sonra yaşamak istediğin hayatta ortalama bir Salı nasıl geçer?', hint: 'Aynı detay seviyesinde anlat.' },
+    { id: 'k13', q: 'O hayatın zorlama değil doğal hissetmesi için kendin hakkında neye inanman gerek?', hint: '"Ben şöyle biriyim..."' },
+    { id: 'k14', q: 'Zaten o kişi olsan, bu hafta tek başına yapacağın şey ne?', hint: 'Küçük, somut bir eylem.' }
+  ],
+
+  // Her gün - Sabah (rotasyonlu)
+  sabah: [
+    { id: 's1', q: 'Bugün en çok neyle yüzleşmekten kaçıyorum?', hint: 'Dürüst ol — yargılamadan.' },
+    { id: 's2', q: 'Bugün, olmak istediğim kişinin en küçük versiyonu ne yapardı?', hint: 'Tek somut eylem.' },
+    { id: 's3', q: 'Şu an kendimi neyle meşgul edip asıl olanı ertelemeye çalışıyorum?', hint: 'Meşgul olmak ≠ önemli olmak.' },
+    { id: 's4', q: 'Bu hafta bana geri dönen bir duygu ya da düşünce var mı?', hint: 'Tekrarlayan şeyler, mesaj taşır.' },
+    { id: 's5', q: 'Bugün kiminle takılmam / ne okumam beni iyi yönde değiştirir?', hint: 'Girdi, çıktıya dönüşür.' },
+    { id: 's6', q: 'Son 24 saatte bir şeyden kurtulmuş gibi hissettiğim bir an oldu mu? Neden?', hint: 'Rahatlama, genelde bir kaçışa işaret eder.' },
+    { id: 's7', q: 'Bugün kendimden saklayabileceğim ama gerçek olan bir duygu ne?', hint: 'Söylemekten çekindiğin şey.' }
+  ],
+
+  // Her gün - Gün içi (kısa, rotasyonlu)
+  gunici: [
+    { id: 'g1', q: 'Şu an yaptığım şeyle neyi erteliyorum?', hint: '' },
+    { id: 'g2', q: 'Son 2 saatimi izleyen biri, ne istediğimi söylerdi?', hint: 'Sözlerin değil, hareketlerin.' },
+    { id: 'g3', q: 'Nefret ettiğim hayata mı, istediğim hayata mı doğru hareket ediyorum?', hint: 'Bu an hangisine oy veriyor?' },
+    { id: 'g4', q: 'Önemsiz numarası yaptığım en önemli şey ne?', hint: 'Bile bile görmezden geldiğin.' },
+    { id: 'g5', q: 'Şu an gerçek bir istekten mi, kimlik korumasından mı hareket ediyorum?', hint: 'Başkasına nasıl göründüğün mü belirliyor?' },
+    { id: 'g6', q: 'Şu an canlılık mı, güvenlik mi seçiyorum?', hint: '' }
+  ],
+
+  // Her gün - Akşam Sentezi
+  aksam: [
+    { id: 'a1', q: 'Bugün en canlı ne zaman hissettim? En ölü ne zaman?', hint: 'İkisini de yaz.' },
+    { id: 'a2', q: 'Bugün hangi eylemim, olmak istediğim kişinin eylemiydi?', hint: 'Küçük de olsa say.' },
+    { id: 'a3', q: 'Yarın sabah, bugünden farklı yapmak istediğim tek şey ne?', hint: 'Liste değil, tek şey.' }
+  ],
+
+  // Haftalık Ritüel (Pazar)
+  haftalik: [
+    { id: 'h1', q: 'Bu hafta kaç kez sözümle eylemim uyuştu? Kaç kez uyuşmadı?', hint: 'Dürüst say.' },
+    { id: 'h2', q: 'Geçen pazar ile bu pazar arasında ben olarak ne değişti?', hint: 'Hiçbir şey olmuyorsa bu da bir cevap.' },
+    { id: 'h3', q: 'Bu hafta en çok hangi duygudan kaçtım?', hint: 'Örüntüyü fark et.' }
+  ],
+
+  // Aylık Ritüel
+  aylik: [
+    { id: 'ay1', q: 'Bu ay anti-vizyonuma ne kadar yaklaştım?', hint: 'Dürüstçe — 1-10 arası.' },
+    { id: 'ay2', q: 'Bu ay kimlik ifademe en çok hangi eylem kanıt oldu?', hint: '' },
+    { id: 'ay3', q: 'Vizyonum evrilmeli mi? Öyleyse nasıl?', hint: 'MVP vizyon değişebilir — bu sağlıklıdır.' },
+    { id: 'ay4', q: 'Bu ay en büyük yalanımı kendime hangisi söyledi?', hint: 'Farkında olduğun ama görmezden geldiğin.' }
+  ]
+};
+
+// === GLOBAL STATE ===
+let currentUser = null;
+let userData = {
+  charName: 'Uyanan',
+  vision: '',
+  antiVision: '',
+  identity: '',
+  yearGoal: { title: '', deadline: '', progress: 0 },
+  monthGoal: { title: '', deadline: '', progress: 0 },
+  dailyLevers: [],
+  constraints: [],
+  xp: 0,
+  streak: 0,
+  lastActiveDate: null,
+  kurulusCompleted: false,
+  kurulusIndex: 0,
+  lastWeeklyRitual: null,
+  lastMonthlyRitual: null
+};
+let currentQuestType = null;
+let currentQuestIndex = 0;
+let currentQuestList = [];
+let currentAnswers = [];
+let historyCache = [];
+let historyFilter = 'all';
+
+// === AUTH ===
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  try {
+    // Mobilde popup bazen çalışmaz, try-catch ile redirect'e düşeriz
+    await signInWithPopup(auth, provider);
+  } catch (e) {
+    console.warn('Popup başarısız, redirect deneniyor', e);
+    try { await signInWithRedirect(auth, provider); }
+    catch(e2) { showToast('Giriş hatası: ' + e2.message); }
+  }
+});
+
+// Redirect sonrası
+getRedirectResult(auth).catch(e => console.warn(e));
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUser = user;
+    document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('login').classList.add('hidden');
+    await loadUserData();
+    initApp();
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('app').classList.add('active');
+    document.getElementById('bottomNav').classList.add('show');
+  } else {
+    currentUser = null;
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('login').classList.remove('hidden');
+    document.getElementById('app').classList.remove('active');
+    document.getElementById('bottomNav').classList.remove('show');
+  }
+});
+
+window.doLogout = async function() {
+  if (!confirm('Çıkış yapmak istediğine emin misin?')) return;
+  await signOut(auth);
+};
+
+// === DATA ===
+async function loadUserData() {
+  const ref = doc(db, 'users', currentUser.uid);
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    userData = { ...userData, ...snap.data() };
+  } else {
+    await setDoc(ref, userData);
+  }
+  // Streak güncelle
+  await updateStreak();
+}
+
+async function saveUserData() {
+  if (!currentUser) return;
+  const ref = doc(db, 'users', currentUser.uid);
+  await setDoc(ref, userData, { merge: true });
+}
+
+async function updateStreak() {
+  const today = new Date().toISOString().slice(0, 10);
+  if (userData.lastActiveDate === today) return;
+
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  if (userData.lastActiveDate === yesterday) {
+    userData.streak += 1;
+  } else if (userData.lastActiveDate && userData.lastActiveDate !== today) {
+    userData.streak = 1;
+  } else {
+    userData.streak = 1;
+  }
+  userData.lastActiveDate = today;
+  await saveUserData();
+}
+
+async function addAnswer(type, questionId, questionText, answerText) {
+  if (!answerText.trim()) return;
+  const ref = collection(db, 'users', currentUser.uid, 'answers');
+  await addDoc(ref, {
+    type: type,
+    questionId: questionId,
+    question: questionText,
+    answer: answerText.trim(),
+    date: new Date().toISOString().slice(0, 10),
+    timestamp: Timestamp.now()
+  });
+}
+
+async function loadHistory() {
+  const ref = collection(db, 'users', currentUser.uid, 'answers');
+  const q = query(ref, orderBy('timestamp', 'desc'));
+  const snap = await getDocs(q);
+  historyCache = [];
+  snap.forEach(doc => {
+    historyCache.push({ id: doc.id, ...doc.data() });
+  });
+  return historyCache;
+}
+
+// === UI YARDIMCI ===
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+window.showScreen = function(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.toggle('active', n.dataset.screen === name);
+  });
+  // Her ekran girişinde ilgili render
+  if (name === 'home') renderHome();
+  if (name === 'vision') renderVisionForm();
+  if (name === 'goals') renderGoalsForm();
+  if (name === 'history') renderHistory();
+  if (name === 'patterns') renderPatterns();
+  if (name === 'capsule') renderCapsule();
+  if (name === 'settings') renderSettings();
+  window.scrollTo(0, 0);
+};
+
+// === INIT ===
+async function initApp() {
+  // Kullanıcı bilgileri
+  document.getElementById('userImg').src = currentUser.photoURL || '';
+  document.getElementById('userName').textContent = currentUser.displayName?.split(' ')[0] || 'sen';
+
+  // Nav
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.addEventListener('click', () => showScreen(n.dataset.screen));
+  });
+
+  // Geçmiş ara
+  document.getElementById('historySearch').addEventListener('input', renderHistory);
+  document.querySelectorAll('.seg-group button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.seg-group button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      historyFilter = b.dataset.filter;
+      renderHistory();
+    });
+  });
+
+  // Quest navigasyonu
+  document.getElementById('questNext').addEventListener('click', onQuestNext);
+  document.getElementById('questPrev').addEventListener('click', onQuestPrev);
+
+  // İlk ekran
+  await loadHistory();
+  renderHome();
+
+  // Ritüel kontrolü
+  setTimeout(checkRituals, 600);
+}
+
+// === ANA SAYFA RENDER ===
+function renderHome() {
+  // Karakter
+  const level = calcLevel(userData.xp);
+  document.getElementById('charLabel').textContent = `karakter · seviye ${level.level}`;
+  document.getElementById('charName').textContent = userData.charName || 'Uyanan';
+  document.getElementById('streakNum').textContent = userData.streak || 0;
+  document.getElementById('xpNum').textContent = userData.xp || 0;
+  document.getElementById('identityStmt').textContent = userData.identity || 'Ben henüz kim olduğumu tanımlamadım.';
+
+  // Ana görev
+  const yg = userData.yearGoal || {};
+  document.getElementById('mainQuestTitle').textContent = yg.title || '1 yıllık hedefini belirle';
+  const yp = yg.progress || 0;
+  document.getElementById('mainQuestPct').textContent = yp + '%';
+  document.getElementById('mainQuestBar').style.width = yp + '%';
+  if (yg.deadline) {
+    const days = Math.max(0, Math.ceil((new Date(yg.deadline) - Date.now()) / 86400000));
+    document.getElementById('mainQuestMeta').textContent = `${days} gün kaldı · son güncelleme bugün`;
+  } else {
+    document.getElementById('mainQuestMeta').textContent = 'Hedef ekle → oyun başlasın';
+  }
+
+  // Boss
+  const mg = userData.monthGoal || {};
+  document.getElementById('bossTitle').textContent = mg.title || 'Bu ayki proje?';
+  const mp = mg.progress || 0;
+  document.getElementById('bossBar').style.width = mp + '%';
+  document.getElementById('bossMeta').textContent = mp + '% · ' + (mg.deadline ? new Date(mg.deadline).toLocaleDateString('tr-TR') : 'tarih yok');
+
+  // Anti-vizyon kısa
+  const av = userData.antiVision || 'Kaçtığın hayatı tanımla.';
+  document.getElementById('antiVisionShort').textContent = av.length > 100 ? av.slice(0, 100) + '...' : av;
+
+  // Bugünün Tarihi
+  document.getElementById('todayDate').textContent = new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  // Bugünün questleri
+  renderTodayQuests();
+
+  // İçgörüler / uyarılar
+  renderInsights();
+}
+
+function renderTodayQuests() {
+  const today = new Date().toISOString().slice(0, 10);
+  const todayAnswers = historyCache.filter(a => a.date === today);
+
+  const box = document.getElementById('todayQuests');
+  let html = '';
+
+  // Kuruluş tamamlanmamışsa önce o
+  if (!userData.kurulusCompleted) {
+    html += questRowHTML({
+      title: 'Kuruluş · Psikolojik Kazı',
+      sub: `${userData.kurulusIndex || 0}/${QUESTIONS.kurulus.length} soru tamamlandı`,
+      xp: '+150 XP',
+      state: 'active',
+      onclick: `startQuest('kurulus')`
+    });
+  }
+
+  const sabahDone = todayAnswers.some(a => a.type === 'sabah');
+  const guniciCount = todayAnswers.filter(a => a.type === 'gunici').length;
+  const aksamDone = todayAnswers.some(a => a.type === 'aksam');
+
+  // Sabah
+  html += questRowHTML({
+    title: 'Sabah kazısı · 3 soru',
+    sub: sabahDone ? 'Tamamlandı' : 'Bu sabahki soruların',
+    xp: '+50 XP',
+    state: sabahDone ? 'done' : (userData.kurulusCompleted ? 'active' : 'locked'),
+    onclick: sabahDone || !userData.kurulusCompleted ? '' : `startQuest('sabah')`
+  });
+
+  // Gün içi
+  html += questRowHTML({
+    title: 'Gün içi kontroller · 3 mini',
+    sub: guniciCount >= 3 ? 'Tamamlandı' : `${guniciCount}/3 tamamlandı`,
+    xp: '+30 XP',
+    state: guniciCount >= 3 ? 'done' : (userData.kurulusCompleted ? 'active' : 'locked'),
+    onclick: guniciCount >= 3 || !userData.kurulusCompleted ? '' : `startQuest('gunici')`
+  });
+
+  // Akşam
+  const hour = new Date().getHours();
+  const aksamLocked = hour < 20;
+  html += questRowHTML({
+    title: 'Akşam sentezi · 3 soru',
+    sub: aksamDone ? 'Tamamlandı' : (aksamLocked ? '20:00\'den sonra açılır' : 'Günün muhasebesi'),
+    xp: '+80 XP',
+    state: aksamDone ? 'done' : (aksamLocked || !userData.kurulusCompleted ? 'locked' : 'active'),
+    onclick: aksamDone || aksamLocked || !userData.kurulusCompleted ? '' : `startQuest('aksam')`
+  });
+
+  box.innerHTML = html;
+}
+
+function questRowHTML({ title, sub, xp, state, onclick }) {
+  let dotHTML = '';
+  if (state === 'done') dotHTML = `<div class="quest-dot done"><svg fill="none" stroke="#1a1b2e" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>`;
+  else if (state === 'active') dotHTML = `<div class="quest-dot active"></div>`;
+  else dotHTML = `<div class="quest-dot pending"></div>`;
+
+  return `
+  <div class="quest-row ${state}" ${onclick ? `onclick="${onclick}"` : ''}>
+    <div class="q-left">
+      ${dotHTML}
+      <div class="q-info">
+        <div class="q-title">${escapeHtml(title)}</div>
+        <div class="q-sub">${escapeHtml(sub)}</div>
+      </div>
+    </div>
+    <div class="q-xp">${xp}</div>
+  </div>`;
+}
+
+function calcLevel(xp) {
+  // Her seviye artan şekilde zorlaşır
+  const levels = [0, 200, 500, 1000, 1800, 3000, 5000, 8000, 12000, 18000];
+  const names = ['Uyanan', 'Sorgulayıcı', 'Vicdanlı', 'Bireyci', 'Stratejist', 'Yapı-farkında', 'Birleşik', 'Usta', 'Bilge', 'Özgür'];
+  let level = 1, name = names[0];
+  for (let i = 0; i < levels.length; i++) {
+    if (xp >= levels[i]) { level = i + 1; name = names[i]; }
+  }
+  return { level, name };
+}
+
+// === İÇGÖRÜLER ===
+function renderInsights() {
+  const box = document.getElementById('insightBox');
+  let html = '';
+  const insights = detectPatterns();
+
+  // Son 3 içgörü
+  insights.slice(0, 3).forEach(ins => {
+    const cls = ins.type || '';
+    html += `<div class="insight-card ${cls}">
+      <div class="lbl">${escapeHtml(ins.label)}</div>
+      <div class="msg">${ins.msg}</div>
+    </div>`;
+  });
+
+  if (html) {
+    box.innerHTML = '<div class="section-label"><span>Sistem Ne Fark Etti</span></div>' + html;
+  } else {
+    box.innerHTML = '';
+  }
+
+  // Rozetleri güncelle
+  updateBadges(insights);
+}
+
+function updateBadges(insights) {
+  const patternCount = insights.filter(i => i.type === 'warn' || !i.type).length;
+  const patternsBadge = document.getElementById('patternsBadge');
+  if (patternCount > 0) {
+    patternsBadge.textContent = patternCount;
+    patternsBadge.classList.remove('hidden');
+  } else {
+    patternsBadge.classList.add('hidden');
+  }
+
+  // Kapsül rozeti
+  const cap = getCapsuleEntries();
+  const capsuleBadge = document.getElementById('capsuleBadge');
+  if (cap.length > 0) {
+    capsuleBadge.textContent = cap.length;
+    capsuleBadge.classList.remove('hidden');
+  } else {
+    capsuleBadge.classList.add('hidden');
+  }
+}
+
+// === ÖRÜNTÜ ALGILAYICI ===
+function detectPatterns() {
+  const out = [];
+  if (!historyCache.length) return out;
+
+  // 1) Son 14 gün kelime tekrarı
+  const recent = historyCache.slice(0, 100);
+  const words = {};
+  recent.forEach(a => {
+    const clean = (a.answer || '').toLowerCase().replace(/[^\wçğıöşü\s]/gi, ' ');
+    clean.split(/\s+/).forEach(w => {
+      if (w.length > 4 && !STOPWORDS.has(w)) {
+        words[w] = (words[w] || 0) + 1;
+      }
+    });
+  });
+  const top = Object.entries(words).filter(([w, c]) => c >= 4).sort((a, b) => b[1] - a[1]);
+  if (top.length) {
+    const w = top[0];
+    out.push({
+      type: '',
+      label: 'Tekrarlayan Tema',
+      msg: `Son cevaplarında <em>"${escapeHtml(w[0])}"</em> kelimesi <em>${w[1]}</em> kez geçti. Bir mesaj mı taşıyor?`
+    });
+  }
+
+  // 2) Streak kutlama
+  if (userData.streak >= 7) {
+    out.push({
+      type: 'celebrate',
+      label: 'Kimlik Kanıtın Birikiyor',
+      msg: `<em>${userData.streak} gün</em> üst üste gösterdin. Artık "yapan kişi" sen oluyorsun.`
+    });
+  }
+
+  // 3) Tutarsızlık
+  if (userData.yearGoal?.title && historyCache.length > 5) {
+    const last7Days = new Set();
+    for (let i = 0; i < 7; i++) {
+      last7Days.add(new Date(Date.now() - i * 86400000).toISOString().slice(0, 10));
+    }
+    const activeDays = new Set(historyCache.filter(a => last7Days.has(a.date)).map(a => a.date));
+    if (activeDays.size < 3) {
+      out.push({
+        type: 'warn',
+        label: 'Tutarsızlık',
+        msg: `Vizyonunda "<em>${escapeHtml(userData.yearGoal.title)}</em>" yazıyor ama son 7 günde sadece <em>${activeDays.size} gün</em> göründün. Hangisi gerçek sen?`
+      });
+    }
+  }
+
+  // 4) Art arda kaçırma
+  const today = new Date().toISOString().slice(0, 10);
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  const twoDaysAgo = new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10);
+  const missedDays = [yesterday, twoDaysAgo].filter(d => !historyCache.some(a => a.date === d));
+  if (missedDays.length === 2 && !historyCache.some(a => a.date === today)) {
+    out.push({
+      type: 'warn',
+      label: 'Kaçıyor musun?',
+      msg: `3 gündür gelmedin. Bu da bir cevap — neden kaçıyorsun?`
+    });
+  }
+
+  // 5) Zaman kapsülü varsa
+  const capsules = getCapsuleEntries();
+  if (capsules.length) {
+    out.push({
+      type: 'celebrate',
+      label: 'Geçmişten Mesaj',
+      msg: `<em>${capsules.length}</em> yeni kapsül açıldı. Eski senin sesi seni bekliyor.`
+    });
+  }
+
+  return out;
+}
+
+const STOPWORDS = new Set(['bile','için','olan','olarak','benim','senin','sonra','önce','gibi','daha','çok','çünkü','ama','fakat','sadece','kadar','belki','şöyle','böyle','nasıl','neden','zaman','şimdi','bugün','yarın','dün','biraz','hiç','evet','hayır','aslında','yani','hep','her','ben','sen','biz','onlar','bu','şu','o','var','yok','ve','veya','ile','de','da','ki','mi','mu','mü','değil','olmak','etmek','yapmak','gelmek','gitmek','istemek','bilmek','kendi','kendimi','kendimden','kendine','kendime','olduğumu','yaptığım','ediyorum','yapıyorum','oluyor','olmaz','olacak','sanırım','galiba','hissediyorum','düşünüyorum','çünkü','eğer']);
+
+// === QUEST MOTORU ===
+window.startQuest = function(type) {
+  currentQuestType = type;
+  currentAnswers = [];
+
+  if (type === 'kurulus') {
+    currentQuestList = QUESTIONS.kurulus.slice(userData.kurulusIndex || 0);
+    currentQuestIndex = 0;
+  } else if (type === 'sabah') {
+    // Rotasyon: o güne düşen 3 soru
+    currentQuestList = pickRotating(QUESTIONS.sabah, 3);
+    currentQuestIndex = 0;
+  } else if (type === 'gunici') {
+    // Bugün henüz kaç tane yapılmış? kalan kadar göster
+    const today = new Date().toISOString().slice(0, 10);
+    const done = historyCache.filter(a => a.type === 'gunici' && a.date === today).length;
+    const remain = Math.max(1, 3 - done);
+    currentQuestList = pickRotating(QUESTIONS.gunici, remain);
+    currentQuestIndex = 0;
+  } else if (type === 'aksam') {
+    currentQuestList = QUESTIONS.aksam.slice();
+    currentQuestIndex = 0;
+  } else if (type === 'haftalik') {
+    currentQuestList = QUESTIONS.haftalik.slice();
+    currentQuestIndex = 0;
+  } else if (type === 'aylik') {
+    currentQuestList = QUESTIONS.aylik.slice();
+    currentQuestIndex = 0;
+  }
+
+  showScreen('quest');
+  renderQuest();
+};
+
+function pickRotating(arr, count) {
+  // Günün sayısına göre döngüsel seçim
+  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+  const start = (dayOfYear * count) % arr.length;
+  const out = [];
+  for (let i = 0; i < count; i++) {
+    out.push(arr[(start + i) % arr.length]);
+  }
+  return out;
+}
+
+function renderQuest() {
+  const labels = {
+    kurulus: 'KURULUŞ · PSİKOLOJİK KAZI',
+    sabah: 'SABAH · KAZI',
+    gunici: 'GÜN İÇİ · KONTROL',
+    aksam: 'AKŞAM · SENTEZ',
+    haftalik: 'HAFTALIK RİTÜEL',
+    aylik: 'AYLIK RİTÜEL'
+  };
+  document.getElementById('questLabel').textContent = labels[currentQuestType] || 'QUEST';
+  document.getElementById('questMiniLabel').textContent = 'SORU';
+
+  const q = currentQuestList[currentQuestIndex];
+  if (!q) { finishQuest(); return; }
+
+  document.getElementById('questText').textContent = q.q;
+  document.getElementById('questHint').textContent = q.hint || '';
+  document.getElementById('questCount').textContent = `${currentQuestIndex + 1} / ${currentQuestList.length}`;
+  document.getElementById('questProgress').style.width = ((currentQuestIndex) / currentQuestList.length * 100) + '%';
+
+  const ta = document.getElementById('questAnswer');
+  ta.value = currentAnswers[currentQuestIndex] || '';
+  setTimeout(() => ta.focus(), 200);
+
+  document.getElementById('questPrev').style.visibility = currentQuestIndex === 0 ? 'hidden' : 'visible';
+  document.getElementById('questNext').textContent = currentQuestIndex === currentQuestList.length - 1 ? 'Bitir ✓' : 'Sonraki →';
+}
+
+async function onQuestNext() {
+  const ta = document.getElementById('questAnswer');
+  currentAnswers[currentQuestIndex] = ta.value;
+  if (!ta.value.trim()) {
+    if (!confirm('Bu soruyu boş bırakmak istediğine emin misin?')) return;
+  }
+
+  const q = currentQuestList[currentQuestIndex];
+  if (ta.value.trim()) {
+    await addAnswer(currentQuestType, q.id, q.q, ta.value);
+  }
+
+  currentQuestIndex++;
+  if (currentQuestIndex >= currentQuestList.length) {
+    await finishQuest();
+  } else {
+    renderQuest();
+  }
+}
+
+function onQuestPrev() {
+  const ta = document.getElementById('questAnswer');
+  currentAnswers[currentQuestIndex] = ta.value;
+  currentQuestIndex--;
+  if (currentQuestIndex < 0) currentQuestIndex = 0;
+  renderQuest();
+}
+
+async function finishQuest() {
+  // XP ver
+  const xpMap = { kurulus: 150, sabah: 50, gunici: 30, aksam: 80, haftalik: 100, aylik: 200 };
+  const filledCount = currentAnswers.filter(a => a && a.trim()).length;
+  const totalXP = Math.round((xpMap[currentQuestType] || 30) * (filledCount / currentQuestList.length));
+
+  userData.xp = (userData.xp || 0) + totalXP;
+
+  if (currentQuestType === 'kurulus') {
+    userData.kurulusIndex = (userData.kurulusIndex || 0) + filledCount;
+    if (userData.kurulusIndex >= QUESTIONS.kurulus.length) {
+      userData.kurulusCompleted = true;
+      showToast('🎉 Kuruluş tamamlandı! Tüm günlük questler açıldı.', 'xp');
+    }
+  }
+
+  if (currentQuestType === 'haftalik') {
+    userData.lastWeeklyRitual = new Date().toISOString().slice(0, 10);
+  }
+  if (currentQuestType === 'aylik') {
+    userData.lastMonthlyRitual = new Date().toISOString().slice(0, 10);
+  }
+
+  await saveUserData();
+  await loadHistory();
+  showToast(`${totalXP} XP kazandın`, 'xp');
+  showScreen('home');
+}
+
+// === VİZYON FORM ===
+function renderVisionForm() {
+  document.getElementById('antiVision').value = userData.antiVision || '';
+  document.getElementById('vision').value = userData.vision || '';
+  document.getElementById('identityInput').value = userData.identity || '';
+}
+
+window.saveVision = async function() {
+  userData.antiVision = document.getElementById('antiVision').value;
+  userData.vision = document.getElementById('vision').value;
+  userData.identity = document.getElementById('identityInput').value;
+  await saveUserData();
+  userData.xp = (userData.xp || 0) + 40;
+  await saveUserData();
+  showToast('Kaydedildi (+40 XP)', 'xp');
+  showScreen('home');
+};
+
+// === HEDEFLER FORM ===
+function renderGoalsForm() {
+  document.getElementById('yearGoal').value = userData.yearGoal?.title || '';
+  document.getElementById('yearDeadline').value = userData.yearGoal?.deadline || '';
+  document.getElementById('yearProgress').value = userData.yearGoal?.progress || 0;
+  document.getElementById('monthGoal').value = userData.monthGoal?.title || '';
+  document.getElementById('monthDeadline').value = userData.monthGoal?.deadline || '';
+  document.getElementById('monthProgress').value = userData.monthGoal?.progress || 0;
+
+  renderGoalList('daily-levers', userData.dailyLevers || []);
+  renderGoalList('constraints', userData.constraints || []);
+}
+
+function renderGoalList(id, list) {
+  const el = document.getElementById(id);
+  if (!list.length) list.push('');
+  el.innerHTML = list.map((item, i) => `
+    <div class="goal-row">
+      <input type="text" value="${escapeAttr(item)}" data-list="${id}" data-idx="${i}" placeholder="Yaz...">
+      <button class="del-btn" onclick="delGoal('${id}', ${i})">×</button>
+    </div>
+  `).join('');
+}
+
+window.addGoal = function(id) {
+  const list = id === 'daily-levers' ? userData.dailyLevers : userData.constraints;
+  // Mevcut inputları topla
+  document.querySelectorAll(`input[data-list="${id}"]`).forEach((inp, i) => {
+    list[i] = inp.value;
+  });
+  list.push('');
+  renderGoalList(id, list);
+};
+
+window.delGoal = function(id, idx) {
+  const list = id === 'daily-levers' ? userData.dailyLevers : userData.constraints;
+  // Önce güncel değerleri al
+  document.querySelectorAll(`input[data-list="${id}"]`).forEach((inp, i) => {
+    list[i] = inp.value;
+  });
+  list.splice(idx, 1);
+  if (id === 'daily-levers') userData.dailyLevers = list;
+  else userData.constraints = list;
+  renderGoalList(id, list);
+};
+
+window.saveGoals = async function() {
+  userData.yearGoal = {
+    title: document.getElementById('yearGoal').value,
+    deadline: document.getElementById('yearDeadline').value,
+    progress: parseInt(document.getElementById('yearProgress').value) || 0
+  };
+  userData.monthGoal = {
+    title: document.getElementById('monthGoal').value,
+    deadline: document.getElementById('monthDeadline').value,
+    progress: parseInt(document.getElementById('monthProgress').value) || 0
+  };
+  userData.dailyLevers = [];
+  document.querySelectorAll('input[data-list="daily-levers"]').forEach(inp => {
+    if (inp.value.trim()) userData.dailyLevers.push(inp.value.trim());
+  });
+  userData.constraints = [];
+  document.querySelectorAll('input[data-list="constraints"]').forEach(inp => {
+    if (inp.value.trim()) userData.constraints.push(inp.value.trim());
+  });
+
+  await saveUserData();
+  showToast('Hedefler güncellendi');
+  showScreen('home');
+};
+
+// === GEÇMİŞ ===
+function renderHistory() {
+  const box = document.getElementById('historyList');
+  const search = document.getElementById('historySearch').value.toLowerCase().trim();
+
+  let filtered = historyCache;
+  if (historyFilter !== 'all') {
+    filtered = filtered.filter(a => a.type === historyFilter);
+  }
+  if (search) {
+    filtered = filtered.filter(a =>
+      (a.answer || '').toLowerCase().includes(search) ||
+      (a.question || '').toLowerCase().includes(search)
+    );
+  }
+
+  if (!filtered.length) {
+    box.innerHTML = `<div class="empty">
+      <h3>Henüz kayıt yok</h3>
+      <p>Günlük quest'leri tamamladıkça cevapların burada birikmeye başlar.</p>
+    </div>`;
+    return;
+  }
+
+  box.innerHTML = filtered.map(a => {
+    const d = a.timestamp?.toDate ? a.timestamp.toDate() : new Date();
+    const typeLabel = { sabah: 'Sabah', gunici: 'Gün içi', aksam: 'Akşam', kurulus: 'Kuruluş', haftalik: 'Haftalık', aylik: 'Aylık' }[a.type] || a.type;
+    return `
+    <div class="history-entry ${a.type}">
+      <div class="meta">
+        <span>${d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })} · ${d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>
+        <span>${typeLabel}</span>
+      </div>
+      <div class="q">${escapeHtml(a.question)}</div>
+      <div class="a">${escapeHtml(a.answer)}</div>
+    </div>`;
+  }).join('');
+}
+
+// === ÖRÜNTÜLER EKRANI ===
+function renderPatterns() {
+  const box = document.getElementById('patternsList');
+  const insights = detectPatterns();
+  if (!insights.length) {
+    box.innerHTML = `<div class="empty">
+      <h3>Henüz örüntü yok</h3>
+      <p>Birkaç gün cevap verdikten sonra sistem senin tekrarlayan temalarını, tutarsızlıklarını ve örüntülerini burada gösterecek.</p>
+    </div>`;
+    return;
+  }
+  box.innerHTML = insights.map(ins => `
+    <div class="insight-card ${ins.type || ''}">
+      <div class="lbl">${escapeHtml(ins.label)}</div>
+      <div class="msg">${ins.msg}</div>
+    </div>
+  `).join('');
+}
+
+// === ZAMAN KAPSÜLÜ ===
+function getCapsuleEntries() {
+  // 30, 60, 90 gün öncesine ait önemli cevaplar (kurulus + aksam)
+  const out = [];
+  const targets = [30, 60, 90];
+  for (const days of targets) {
+    const targetDate = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+    const candidates = historyCache.filter(a => a.date === targetDate && (a.type === 'kurulus' || a.type === 'aksam'));
+    if (candidates.length) {
+      out.push({
+        daysAgo: days,
+        entry: candidates[0]
+      });
+    }
+  }
+  return out;
+}
+
+function renderCapsule() {
+  const box = document.getElementById('capsuleList');
+  const capsules = getCapsuleEntries();
+  if (!capsules.length) {
+    box.innerHTML = `<div class="empty">
+      <h3>Kapsüller henüz boş</h3>
+      <p>30, 60, 90 gün önceki cevapların burada açılacak. Geçmişteki sen, şimdiki sana hesap soracak.</p>
+    </div>`;
+    return;
+  }
+  box.innerHTML = capsules.map(c => {
+    const d = c.entry.timestamp?.toDate ? c.entry.timestamp.toDate() : new Date();
+    const challenges = [
+      'Bu cümleyi yazan sen, bugünkü sene ne derdi?',
+      'Ne değişti? Ne aynı kaldı? Dürüst ol.',
+      'Bu cevap hâlâ seni temsil ediyor mu?',
+      'O günden bugüne kanıt var mı, yoksa aynı yalan mı?'
+    ];
+    return `
+    <div class="capsule-card">
+      <div class="header">
+        <div class="title">${c.daysAgo} gün önce</div>
+        <div class="date">${d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+      </div>
+      <div class="old-q">${escapeHtml(c.entry.question)}</div>
+      <div class="old-a">${escapeHtml(c.entry.answer)}</div>
+      <div class="challenge">→ ${challenges[c.daysAgo % challenges.length]}</div>
+    </div>`;
+  }).join('');
+}
+
+// === RİTÜELLER ===
+function checkRituals() {
+  const today = new Date();
+  const dow = today.getDay(); // 0 = Pazar
+  const dom = today.getDate();
+
+  // Haftalık (Pazar) - 7 günde en az 1
+  const lastW = userData.lastWeeklyRitual ? new Date(userData.lastWeeklyRitual) : null;
+  const daysSinceLastW = lastW ? Math.floor((today - lastW) / 86400000) : 999;
+
+  if (dow === 0 && daysSinceLastW >= 6) {
+    // Pazar günü ve son 6+ gündür yapılmamış
+    setTimeout(() => {
+      if (confirm('🌙 Pazar geldi. Haftalık ritüeli yapmak ister misin? (Geçen haftaya bakış, 3 soru)')) {
+        startWeeklyRitual();
+      }
+    }, 1000);
+  }
+
+  // Aylık - ayın son 3 günü
+  const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  const lastM = userData.lastMonthlyRitual ? new Date(userData.lastMonthlyRitual) : null;
+  const sameMonth = lastM && lastM.getMonth() === today.getMonth() && lastM.getFullYear() === today.getFullYear();
+
+  if (dom >= lastDayOfMonth - 2 && !sameMonth) {
+    setTimeout(() => {
+      if (confirm('🗓 Ay kapanıyor. Aylık ritüel zamanı (4 soru). Yapmak ister misin?')) {
+        startMonthlyRitual();
+      }
+    }, 2500);
+  }
+}
+
+function startWeeklyRitual() { startQuest('haftalik'); }
+function startMonthlyRitual() { startQuest('aylik'); }
+
+// === AYARLAR ===
+function renderSettings() {
+  document.getElementById('charNameInput').value = userData.charName || '';
+  // Değişiklikte kaydet
+  const inp = document.getElementById('charNameInput');
+  inp.oninput = async () => {
+    userData.charName = inp.value;
+    await saveUserData();
+  };
+}
+
+window.exportData = async function() {
+  const data = {
+    profile: userData,
+    answers: historyCache,
+    exportDate: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `zinciri-kirma-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+window.resetData = async function() {
+  if (!confirm('TÜM verilerin silinecek. Emin misin?')) return;
+  if (!confirm('Gerçekten emin misin? Bu geri alınamaz.')) return;
+
+  const answersRef = collection(db, 'users', currentUser.uid, 'answers');
+  const snap = await getDocs(answersRef);
+  for (const d of snap.docs) { await deleteDoc(d.ref); }
+  const userRef = doc(db, 'users', currentUser.uid);
+  await deleteDoc(userRef);
+  showToast('Tüm veriler silindi');
+  setTimeout(() => signOut(auth), 1500);
+};
+
+// === YARDIMCI ===
+function escapeHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function escapeAttr(s) {
+  if (!s) return '';
+  return String(s).replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+</script>
+
+</body>
+</html>
