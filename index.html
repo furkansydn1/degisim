@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0e1014">
+<title>Kaizen — 改善</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="txt">Defterin açılıyor...</div>
+</div>
+
+<div class="login-screen hidden" id="login">
+  <div class="brand">Kaizen</div>
+  <div class="brand-sub">改善 — sürekli iyileşme</div>
+  <div class="tagline">Büyük değişim diye bir şey yok. Sadece <em>her gün</em> biraz daha fazlası var.</div>
+  <div class="quote">
+    "Sadece harekete güven. Hayat kelimelerde değil, olaylarda geçer."
+    <div class="quote-author">— Alfred Adler</div>
+  </div>
+  <button class="google-btn" id="loginBtn">
+    <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+    Google ile başla
+  </button>
+  <div class="login-footer">Yazdıkların sadece sana ait. Şifrelenmiş, güvende.</div>
+</div>
+
+<div class="onboard" id="onboard">
+  <div class="slides" id="onboardSlides">
+
+    <div class="slide">
+      <div class="step-num">01 — Hoş geldin</div>
+      <h2>Değişmek istiyorsun ama bir türlü <em>değişemiyor musun?</em></h2>
+      <div class="body">
+        Sorun senin zayıflığın değil. Yanlış yerden tutuyorsun, o kadar.
+      </div>
+      <div class="body">
+        "Bu hafta cidden başlayacağım" diyorsun, bir iki hafta idare ediyor, sonra eski hâline dönüyorsun. Çünkü alışkanlık, <strong>kim olduğunun</strong> altındaki bir katmanda yaşar — kimliğini değiştirmeden davranışı zorlamak, çürük temele beton dökmeye benzer.
+      </div>
+      <div class="quote">
+        Formda olan insan kendini zorlamıyor spor yapmak için. Aksine, <em>yapmamak</em> ona tuhaf geliyor. Fark orada.
+      </div>
+    </div>
+
+    <div class="slide">
+      <div class="step-num">02 — Kimlik</div>
+      <h2>"Olmak istiyorum" değil. <em>"Ben zaten buyum."</em></h2>
+      <div class="body">
+        Kaizen'in omurgası bu: <strong>önce kimliğin, sonra davranış.</strong> Kimliğin yerine oturduğunda davranış kendiliğinden geliyor.
+      </div>
+      <div class="compare">
+        <div class="compare-box wrong">
+          <div class="lbl">Eski cümle</div>
+          "Yazar olmak istiyorum. Yarın başlayacağım."
+        </div>
+        <div class="compare-box right">
+          <div class="lbl">Yeni cümle</div>
+          "Ben her gün yazan biriyim. Bugün 200 kelime yeter."
+        </div>
+      </div>
+      <div class="body">
+        İki cümlenin farkı küçük, sonuçları uçurum. İkincisinde artık kendinle pazarlık yok — sadece eylem var. Birincisinde ise her sabah yeniden ikna olman gerekiyor.
+      </div>
+    </div>
+
+    <div class="slide">
+      <div class="step-num">03 — Sistem</div>
+      <h2>Günde üç kez dur. Kendine <em>sor.</em> Yaz.</h2>
+      <div class="body">
+        Kaizen sana gün içinde üç farklı yerde el uzatır:
+      </div>
+      <div class="body">
+        <strong>Sabah</strong> — Güne başlamadan içeri bir bak. Ne hissediyorsun, neyle yüzleşmekten kaçıyorsun?<br>
+        <strong>Gün içi</strong> — 11:00, 13:30, 15:15, 17:00, 19:30. Otopilottan çıkmak için kısa molalar.<br>
+        <strong>Akşam</strong> — Günü kapat. En canlı an, en ölü an, yarına kısa bir not.
+      </div>
+      <div class="quote">
+        Tek başına bir cevap fazla şey söylemez. Ama 30 gün üst üste "yorgunum" yazıp sistemin sana "peki neden?" diye sorması — işte yüzleşme orada başlar.
+      </div>
+    </div>
+
+    <div class="slide">
+      <div class="step-num">04 — Oyun</div>
+      <h2>Hayatını bir oyun gibi <em>kur.</em></h2>
+      <div class="body">
+        Oyunlar insanı saatlerce içine çekiyor çünkü her şey net: <strong>ana hedef, boss, günlük görevler, kurallar.</strong> Aynı netliği hayatına taşıyınca odak kendiliğinden geliyor.
+      </div>
+      <div class="body">
+        <strong>Ana yol</strong> (1 yıllık vizyon) — Nasıl kazanırsın?<br>
+        <strong>Boss</strong> (1 aylık proje) — Bu ay neyi devirirsin?<br>
+        <strong>Günlük görev</strong> — Her gün seni bir adım ileri taşıyanlar.<br>
+        <strong>Gölge</strong> — Devam etmezsen nerede olursun? (Anti-vizyon)
+      </div>
+      <div class="body">
+        İlerleme otomatik: Cevap verdikçe yol ilerliyor, verdiğin cevap azaldıkça yavaşlıyor. <strong>Kanıtın, eylemin.</strong>
+      </div>
+    </div>
+
+    <div class="slide">
+      <div class="step-num">05 — Başla</div>
+      <h2>Şimdi bir <em>kuruluş</em> seni bekliyor.</h2>
+      <div class="body">
+        Önce 14 soru var. 20-30 dakikanı alır. Vizyonunun, gölgenin, kimliğinin ilk halini burada çıkarıyorsun — bu yüzden kritik.
+      </div>
+      <div class="body">
+        <strong>Hepsini bir oturuşta bitirmek zorunda değilsin.</strong> Kaldığın yerden devam edersin. Önemli olan oturup başlamak.
+      </div>
+      <div class="quote">
+        Yapay zekâya danışma. Kendi kelimelerinle yaz. İnsan kendini yazarak tanır.
+      </div>
+      <div class="body" style="margin-top: 30px;">
+        <strong style="color: var(--copper);">Hazır hissedene kadar beklersen, hiç başlamazsın.</strong> Şimdi başla.
+      </div>
+    </div>
+
+  </div>
+  <div class="nav-bar">
+    <div class="dots" id="onboardDots"></div>
+    <button class="skip" id="onboardSkip">Geç</button>
+    <button class="btn-next" id="onboardNext">İleri →</button>
+  </div>
+</div>
+
+<div class="app" id="app">
+
+  <div class="top-header">
+    <div class="logo-block">
+      <div class="logo">Kaizen</div>
+      <div class="logo-sub">— 改善</div>
+    </div>
+    <div class="date-chip">
+      <div class="date-dot"></div>
+      <span id="todayDate">—</span>
+    </div>
+  </div>
+
+  <div class="screen active" id="screen-home">
+
+    <div class="hero-block">
+      <div class="day-counter" id="dayCounter">1. gün</div>
+      <div class="slogan" id="slogan">Küçük değişimler, <em>büyük oluş.</em></div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-col">
+        <div class="lbl">Süreklilik</div>
+        <div class="val amber"><span id="streakNum">0</span><span class="unit">gün</span></div>
+      </div>
+      <div class="stat-col">
+        <div class="lbl">Tutarlılık</div>
+        <div class="val"><span id="consistencyNum">0</span><span class="unit" style="color: var(--sage);">%</span></div>
+      </div>
+      <div class="stat-col">
+        <div class="lbl">Yazılan söz</div>
+        <div class="val"><span id="writtenCount">0</span></div>
+      </div>
+    </div>
+
+    <div class="identity-block">
+      <div class="lbl">Kimlik</div>
+      <div class="stmt empty" id="identityStmt" onclick="showScreen('vision')">
+        Henüz kim olduğumu yazmadım.
+      </div>
+    </div>
+
+    <div class="main-quest" onclick="showScreen('goals')">
+      <div class="top">
+        <div class="lbl">Ana yol · 1 yıl</div>
+        <div class="pct"><span id="mainQuestPct">0</span><span class="unit">%</span></div>
+      </div>
+      <div class="ttl" id="mainQuestTitle">1 yıllık vizyonunu yaz.</div>
+      <div class="bar"><div class="fill" id="mainQuestBar" style="width: 0%"></div></div>
+      <div class="meta">
+        <span id="mainQuestDays">Henüz yola çıkmadın</span>
+        <span class="right" id="mainQuestRemain"></span>
+      </div>
+    </div>
+
+    <div class="dual-row">
+      <div class="boss-card" onclick="showScreen('goals')">
+        <div class="lbl">Boss · bu ay</div>
+        <div class="ttl" id="bossTitle">Bu ayki projen?</div>
+        <div class="bar"><div class="fill" id="bossBar" style="width: 0%"></div></div>
+        <div class="meta" id="bossMeta">-</div>
+      </div>
+      <div class="shadow-card" onclick="showScreen('vision')">
+        <div class="lbl">Gölge</div>
+        <div class="txt empty" id="shadowText">Kaçtığın hayatı yaz.</div>
+      </div>
+    </div>
+
+    <div id="insightsSection"></div>
+
+    <div class="today-header">
+      <div class="lbl">Bugün</div>
+      <div class="count" id="todayCount">0 / 7 tamam</div>
+    </div>
+
+    <div class="time-slots" id="timeSlots"></div>
+
+    <div class="daily-quote">
+      <div class="text" id="dailyQuote">"Sadece küçük adımlar. Ama her gün."</div>
+      <div class="author" id="dailyQuoteAuthor"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-quest">
+    <div class="quest-screen">
+      <div class="quest-header">
+        <div>
+          <div class="stamp" id="questStamp">SORU</div>
+          <div class="count" id="questCount">1 / 1</div>
+        </div>
+        <button class="close" onclick="showScreen('home')">×</button>
+      </div>
+
+      <div class="quest-body">
+        <div class="big-quote">"</div>
+        <div class="q-text" id="questText">Soru yükleniyor...</div>
+      </div>
+
+      <div class="quest-hint" id="questHintBox" style="display: none;">
+        <div class="lbl">İpucu</div>
+        <div class="txt" id="questHint"></div>
+      </div>
+
+      <div class="quest-prev-answers" id="questPrevBox" style="display: none;" onclick="toggleQuestPrev()">
+        <span class="lbl" id="questPrevLabel">Bu soruya önceki cevapların</span>
+        <span id="questPrevSummary"></span>
+        <div id="questPrevList" style="display: none;"></div>
+      </div>
+
+      <textarea class="quest-answer" id="questAnswer" placeholder="Acele etme. Ne akıyorsa onu yaz — kendi kelimelerinle."></textarea>
+
+      <div class="quest-footer">
+        <div class="note" id="questNote">Otomatik kaydediliyor</div>
+        <div class="btn-group">
+          <button class="btn btn-ghost" id="questPrev">Önceki</button>
+          <button class="btn btn-primary" id="questNext">Kaydet →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-vision">
+    <div class="screen-header">
+      <h2>Vizyon & Gölge</h2>
+      <div class="sub">Bir yönün var, bir de kaçtığın karanlık. İkisi de zamanla şekil alır — şimdi mükemmel yazmana gerek yok.</div>
+    </div>
+
+    <div class="form-card shadow">
+      <h3>Gölge (Anti-Vizyon)</h3>
+      <p class="sub">Bir daha asla dönmek istemediğin hayat. Tek cümle. Okuduğunda içinde bir şey oynamalı.</p>
+      <span class="help-link" onclick="goToGuide('anti-vision')">Nasıl yazılır? →</span>
+      <textarea class="form-textarea" id="antiVision" placeholder="Hayatımı ... bir yere sürüklenmesine izin vermeyeceğim..."></textarea>
+    </div>
+
+    <div class="form-card vision">
+      <h3>Vizyon</h3>
+      <p class="sub">Nereye gittiğini tek cümleyle anlat. Mükemmel olmasına gerek yok — yolda evrilir.</p>
+      <span class="help-link" onclick="goToGuide('vision')">Vizyon nasıl olmalı? →</span>
+      <textarea class="form-textarea" id="vision" placeholder="Ben ... biriyim ve ... yapıyorum..."></textarea>
+    </div>
+
+    <div class="form-card">
+      <h3>Kimlik İfaden</h3>
+      <p class="sub">"Ben şöyle biriyim..." diye başla. Tam olarak o kişi olmasan bile — önce cümle, sonra kanıt.</p>
+      <span class="help-link" onclick="goToGuide('identity')">Kimlik nasıl inşa edilir? →</span>
+      <input type="text" class="form-input" id="identityInput" placeholder="Ben ... türü biriyim">
+    </div>
+
+    <button class="btn-save" onclick="saveVision()">Kaydet</button>
+  </div>
+
+  <div class="screen" id="screen-goals">
+    <div class="screen-header">
+      <h2>Hedefler</h2>
+      <div class="sub">Ana yol, boss, günlük kaldıraçlar, kurallar. Oyun tahtanı sen kur.</div>
+    </div>
+
+    <div class="form-card">
+      <h3>Ana Yol · 1 Yıllık Hedef</h3>
+      <p class="sub">1 yıl sonra "eski kalıbımı kırdım" diyebilmen için ne olması gerekiyor? Tek, somut bir şey yaz.</p>
+      <span class="help-link" onclick="goToGuide('progress')">Yüzde nasıl ilerliyor? →</span>
+      <label>Başlık</label>
+      <input type="text" class="form-input" id="yearGoal" placeholder="Örn: Yazmayı kimliğimin bir parçası yaptım">
+      <label>Başlangıç tarihi</label>
+      <input type="date" class="form-input" id="yearStart">
+      <label>Hedef tarih (yaklaşık 1 yıl sonrası)</label>
+      <input type="date" class="form-input" id="yearDeadline">
+    </div>
+
+    <div class="form-card">
+      <h3>Boss · 1 Aylık Proje</h3>
+      <p class="sub">1 yıllık hedefinin hâlâ mümkün kalması için bu ay sonu ne doğru olmalı?</p>
+      <label>Başlık</label>
+      <input type="text" class="form-input" id="monthGoal" placeholder="Örn: İlk 10 bin kelimeyi yazdım">
+      <label>Bitiş tarihi</label>
+      <input type="date" class="form-input" id="monthDeadline">
+      <label>İlerleme (%)</label>
+      <input type="number" min="0" max="100" class="form-input" id="monthProgress" placeholder="0">
+    </div>
+
+    <div class="form-card">
+      <h3>Günlük Kaldıraçlar</h3>
+      <p class="sub">Olmak istediğin kişinin düşünmeden yapacağı 2-3 küçük eylem.</p>
+      <div id="daily-levers"></div>
+      <button class="add-btn" onclick="addGoal('daily-levers')">+ Kaldıraç ekle</button>
+    </div>
+
+    <div class="form-card">
+      <h3>Kurallar · Kısıtlamalar</h3>
+      <p class="sub">Vizyonun uğruna bile feda etmeyeceğin şeyler. Oyunun sınırları.</p>
+      <div id="constraints"></div>
+      <button class="add-btn" onclick="addGoal('constraints')">+ Kural ekle</button>
+    </div>
+
+    <button class="btn-save" onclick="saveGoals()">Kaydet</button>
+  </div>
+
+  <div class="screen" id="screen-history">
+    <div class="screen-header">
+      <h2>Geçmişinle yüzleş</h2>
+      <div class="sub">Kendi kelimelerine tanık ol. Zaman geçtikçe örüntüler su yüzüne çıkar.</div>
+    </div>
+
+    <div class="history-mode-toggle">
+      <button class="active" data-mode="timeline">Kronolojik</button>
+      <button data-mode="by-question">Soruya göre</button>
+    </div>
+
+    <input type="text" class="history-search" id="historySearch" placeholder="Kelime, tema, duygu... ara">
+
+    <div class="seg-group">
+      <button class="active" data-filter="all">Tümü</button>
+      <button data-filter="sabah">Sabah</button>
+      <button data-filter="gunici">Gün içi</button>
+      <button data-filter="aksam">Akşam</button>
+    </div>
+
+    <div id="historyList"></div>
+  </div>
+
+  <div class="screen" id="screen-patterns">
+    <div class="screen-header">
+      <h2>Örüntülerin</h2>
+      <div class="sub">Sustuğun yerler seni ele vermez, tekrarladıkların verir. Zamanla ne söylediğin değil, neyi tekrar ettiğin görünür olur.</div>
+    </div>
+    <div id="patternsList"></div>
+  </div>
+
+  <div class="screen" id="screen-capsule">
+    <div class="screen-header">
+      <h2>Zaman kapsülü</h2>
+      <div class="sub">Geçmişteki sen, şimdiki sana hesap soruyor. 30, 60, 90 gün önceki sesin burada açılır.</div>
+    </div>
+    <div id="capsuleList"></div>
+  </div>
+
+  <div class="screen" id="screen-guide">
+    <div class="screen-header">
+      <h2>Rehber</h2>
+      <div class="sub">Niye böyle soruyoruz, nasıl cevaplarsın, sonunda ne oluyor — hepsi burada.</div>
+    </div>
+    <div id="guideContent"></div>
+  </div>
+
+  <div class="screen" id="screen-settings">
+    <div class="screen-header">
+      <h2>Ayarlar</h2>
+    </div>
+
+    <div class="form-card">
+      <h3>Bildirimler</h3>
+      <p class="sub">Gün içi sorular açıldığında tarayıcıdan kısa bir hatırlatma al.</p>
+      <div class="settings-toggle">
+        <div>
+          <div class="lbl">Tarayıcı bildirimleri</div>
+          <div class="sub">11:00, 13:30, 15:15, 17:00, 19:30 — ve akşam 21:00</div>
+        </div>
+        <div class="switch" id="notifSwitch" onclick="toggleNotif()"></div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <h3>Onboarding</h3>
+      <p class="sub">Giriş rehberini baştan görmek istersen.</p>
+      <button class="btn btn-ghost" style="width: 100%;" onclick="replayOnboard()">Yeniden göster</button>
+    </div>
+
+    <div class="form-card">
+      <h3>Veri</h3>
+      <p class="sub">Cevaplarını JSON olarak indir ya da tamamen sil.</p>
+      <button class="btn btn-ghost" style="width: 100%; margin-bottom: 8px;" onclick="exportData()">Verilerimi indir</button>
+      <button class="btn btn-ghost" style="width: 100%; color: #b06b6b; border-color: rgba(139, 58, 58, 0.3);" onclick="resetData()">Tüm verilerimi sil</button>
+    </div>
+
+    <div class="form-card">
+      <h3>Çıkış</h3>
+      <p class="sub">Hesabından çıkış yap.</p>
+      <button class="btn btn-ghost" style="width: 100%;" onclick="doLogout()">Çıkış yap</button>
+    </div>
+
+    <div class="form-card">
+      <h3>Hakkında</h3>
+      <p class="sub">Bu uygulamanın metodolojik temeli Dan Koe'nun <em>"How to Change Your Life in 1 Day"</em> makalesinden ilham alınmıştır. Soruların yapısı ve gün içi ritim o makaleye dayanır, Türkçeye ve Kaizen'e kendi yorumumla uyarlandı.</p>
+      <a class="btn btn-ghost" style="display: block; text-align: center; text-decoration: none;" href="https://thedankoe.com/" target="_blank" rel="noopener">Dan Koe'nun sitesi →</a>
+    </div>
+
+    <div style="text-align: center; color: var(--paper-ghost); font-size: 12px; margin-top: 40px; font-family: var(--fs-serif); font-style: italic; line-height: 1.6;">
+      "İnsan olağanüstü uyum sağlar. Kendine yeterince iyi bir sebep verdiğinde."
+    </div>
+  </div>
+
+</div>
+
+
+<div class="app-footer" id="appFooter" style="display: none;">
+  <div>Metodolojik ilham: <a href="https://thedankoe.com/" target="_blank" rel="noopener">Dan Koe — How to Change Your Life in 1 Day</a></div>
+  <div style="margin-top: 6px; opacity: 0.7;">Kaizen · 改善</div>
+</div>
+
+<nav class="bottom-nav" id="bottomNav">
+  <a class="nav-item active" data-screen="home">
+    <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 12l9-9 9 9M5 10v10h14V10"/></svg>
+    <span>Bugün</span>
+  </a>
+  <a class="nav-item" data-screen="history">
+    <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+    <span>Geçmiş</span>
+  </a>
+  <a class="nav-item" data-screen="patterns">
+    <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>
+    <span>Örüntü</span>
+    <span class="badge hidden" id="patternsBadge">1</span>
+  </a>
+  <a class="nav-item" data-screen="capsule">
+    <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 7h16v13H4zM8 7V4h8v3"/></svg>
+    <span>Kapsül</span>
+    <span class="badge hidden" id="capsuleBadge">1</span>
+  </a>
+  <a class="nav-item" data-screen="guide">
+    <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 4h12a3 3 0 013 3v13H7a3 3 0 01-3-3V4z"/><path d="M4 4v13a3 3 0 003 3"/></svg>
+    <span>Rehber</span>
+  </a>
+  <a class="nav-item" data-screen="settings">
+    <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.2 4.2l2.9 2.9M16.9 16.9l2.9 2.9M1 12h4M19 12h4M4.2 19.8l2.9-2.9M16.9 7.1l2.9-2.9"/></svg>
+    <span>Ayar</span>
+  </a>
+</nav>
+
+<div class="toast" id="toast">Mesaj</div>
+<!-- SCRIPTS -->
+<script type="module" src="app.js"></script>
+</body>
+</html>
