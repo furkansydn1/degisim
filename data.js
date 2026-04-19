@@ -19,7 +19,7 @@ const SLOGANS = [
   { a: 'Kimlik önce,', b: 'davranış sonra.' },
   { a: 'Ben olmak bir an değil,', b: 'bir alışkanlıktır.' },
   { a: 'Bir cümle yaz,', b: 'bir adım at.' },
-  { a: 'Gölgeni tanı,', b: 'kaç.' },
+  { a: 'Kaçtığını tanı,', b: 'kaç.' },
   { a: 'Sözün değil,', b: 'tekrarların seni yapar.' },
   { a: 'Zincir kırılır,', b: 'her gün biraz.' },
   { a: 'Korkunu yaz,', b: 'büyüsü kaçsın.' },
@@ -28,7 +28,7 @@ const SLOGANS = [
   { a: 'Kaçış da bir cevaptır,', b: 'görmek yeter.' },
   { a: 'Küçük söz,', b: 'büyük eylem.' },
   { a: 'Değişim sessizdir,', b: 'dinlemeyi bil.' },
-  { a: 'İlerlemek yavaşlıktır,', b: 'hep aynı yönde.' },
+  { a: 'Hep aynı yöne,', b: 'her gün biraz.' },
   { a: 'Dürüstlük,', b: 'en kısa yoldur.' },
   { a: 'Sert gerçek,', b: 'tatlı yalandan iyidir.' },
   { a: 'Her gün,', b: 'yeniden seç.' },
@@ -134,7 +134,7 @@ const QUESTIONS = {
   gunici: [
     { id: 'g1', q: 'Şu an yaptığım şeyle neyi erteliyorum?', hint: 'Bu sekme, bu video, bu "bir bakayım"lar hangi işin üzerini örtüyor? Genelde bildiğin ama yapmaktan çekindiğin şeyin üstüne kapatılan bir bardır bu.' },
     { id: 'g2', q: 'Son 2 saatimi izleyen biri, ne istediğimi söylerdi?', hint: 'Sessiz bir kamera seni izliyor. Ne yaptığını görünce ne söylerdi? "Bu kişi odaklanmak istiyor" mu? "Bu kişi kaçmak istiyor" mu? Davranış niyetten daha dürüsttür.' },
-    { id: 'g3', q: 'Nefret ettiğim hayata mı, istediğim hayata mı doğru hareket ediyorum?', hint: 'Bu an bir oya dönüşüyor. Son 30 dakikan, 5 yıl sonraki hangi Salı\'ya çıkıyor? Gölgene mi, vizyonuna mı? Şu anki yön gerçek yöndür.' },
+    { id: 'g3', q: 'Nefret ettiğim hayata mı, istediğim hayata mı doğru hareket ediyorum?', hint: 'Bu an bir oya dönüşüyor. Son 30 dakikan, 5 yıl sonraki hangi Salı\'ya çıkıyor? Kaçtığın hayata mı, vizyonuna mı? Şu anki yön gerçek yöndür.' },
     { id: 'g4', q: 'Önemsiz numarası yaptığım en önemli şey ne?', hint: '"Yarın halledilir" dediğin. "Zaten çok büyük mesele değil" diye geçiştirdiğin. İçindeki ses ise "aslında çok önemli" diyor. Adını koymaktan kaçtığın şey ne?' },
     { id: 'g5', q: 'Şu an gerçek bir istekten mi, kimlik korumasından mı hareket ediyorum?', hint: 'Bu işi gerçekten istediğin için mi yapıyorsun, yoksa "ben böyle biriyim" dediğin kişiyi kaybetmemek için mi? Çalıştığını göstermek çalışmaktan yorucudur.' },
     { id: 'g6', q: 'Şu an beni en çok tüketen düşünce ne?', hint: 'Arka planda sessizce çalışan, enerjini emen o düşünce. Bir konuşma. Bir karar. Bir suçluluk. Adını yazmak bile onu yarı yarıya küçültür — dene.' }
@@ -157,7 +157,7 @@ const QUESTIONS = {
 
   // ---------- AYLIK — Ay sonu, 4 soru ----------
   aylik: [
-    { id: 'ay1', q: 'Bu ay anti-vizyonuma ne kadar yaklaştım?', hint: '1-10 arası. Korktuğun o hayata benzeyen davranışların hangileriydi bu ay? Sert ol — kaçtığını bilirsen, yönünü düzeltmek kolay.' },
+    { id: 'ay1', q: 'Bu ay kaçtığım hayata ne kadar yaklaştım?', hint: '1-10 arası. Korktuğun o hayata benzeyen davranışların hangileriydi bu ay? Sert ol — kaçtığını bilirsen, yönünü düzeltmek kolay.' },
     { id: 'ay2', q: 'Bu ay kimlik ifademe en çok hangi eylem kanıt oldu?', hint: '"Ben ... biriyim" dediğin cümlenin altını dolduran tek bir eylem. Büyük olmak zorunda değil — sadece gerçek olmalı. Kanıt birikir, kimlik kendi kendini inşa eder.' },
     { id: 'ay3', q: 'Vizyonum evrilmeli mi? Öyleyse nasıl?', hint: 'Bir ay önceki vizyonun hâlâ seni çekiyor mu? Artık küçük mü geliyor, yoksa yön mü değişti? Vizyon sabit değil, canlıdır — değiştirmek kararsızlık değil, olgunluktur.' },
     { id: 'ay4', q: 'Bu ay kendime söylediğim en büyük yalan neydi?', hint: 'Tek bir günün değil, 30 günün yalanı. Belki "çok yoğunum"du. Belki "sonra başlarım"dı. Belki "bu sefer cidden" idi. Farkındasın ama söylemek istemiyorsun — burada söyle.' }
@@ -218,7 +218,7 @@ const GUIDE_ARTICLES = [
     body: `
       <p>Kaizen'deki sorular karışık değil, net bir hiyerarşi var.</p>
       <h4>1. Kuruluş — Tek seferlik (14 soru)</h4>
-      <p>İlk girdiğinde karşına çıkar. Vizyonunun, gölgenin, kimliğinin temelini atarsın. 20-30 dakika sürer. Bir oturuşta bitirmek zorunda değilsin — kaldığın yerden devam edersin.</p>
+      <p>İlk girdiğinde karşına çıkar. Vizyonunun, kaçtığın hayatın, kimliğinin temelini atarsın. 20-30 dakika sürer. Bir oturuşta bitirmek zorunda değilsin — kaldığın yerden devam edersin.</p>
       <h4>2. Günlük ritim — Her gün (3 + 5 + 3 soru)</h4>
       <p><em>Sabah (3 soru)</em> — Gün başlamadan niyetini topla.<br>
       <em>Gün içi (5 sabit saat, her saate 1 soru)</em> — Otopilotu kır. 11:00, 13:30, 15:15, 17:00, 19:30.<br>
@@ -258,10 +258,10 @@ const GUIDE_ARTICLES = [
   },
   {
     id: 'anti-vision',
-    title: 'Anti-vizyon (Gölge) nasıl yazılır?',
+    title: 'Kaçtığın Hayatı (Anti-Vizyon) nasıl yazılır?',
     lead: 'Kaçtığın hayat, gideceğin hayattan çoğu zaman daha güçlü motive eder.',
     body: `
-      <p>İnsanlar "pozitif motivasyon"u över, ama sinir sistemi <em>kaybetmek</em> riskine çok daha güçlü tepki verir. Gölgeni yazmak, bu yüzden vizyonun kadar önemlidir.</p>
+      <p>İnsanlar "pozitif motivasyon"u över, ama sinir sistemi <em>kaybetmek</em> riskine çok daha güçlü tepki verir. Kaçtığın hayatı yazmak, bu yüzden vizyonun kadar önemlidir.</p>
       <h4>Nasıl yazılır?</h4>
       <p>Kendini 10 yıl sonra hayal et — <em>hiçbir şey değişmemiş</em>. Aynı iş, aynı şikayetler, aynı bahaneler. Bu hayatın detaylarını içini acıtacak kadar gerçekçi yaz.</p>
       <div class="example">
@@ -274,7 +274,7 @@ const GUIDE_ARTICLES = [
           "40 yaşında, hâlâ aynı şikayetleri eden, yazmadığı kitaptan bahseden, vaktinden önce yorulmuş biri olmak."
         </div>
       </div>
-      <blockquote>"Gölgeni tanıyana kadar ondan kaçamazsın. Tanıdığında ise kaçmana gerek kalmaz."</blockquote>
+      <blockquote>"Kaçtığın hayatı tanıyana kadar ondan kaçamazsın. Tanıdığında ise kaçmana gerek kalmaz."</blockquote>
     `
   },
   {
