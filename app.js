@@ -2286,6 +2286,34 @@ function renderProfile() {
   const box = document.getElementById('profileContent');
   if (!box) return;
 
+  // Beklemede kalmış bir test var mı kontrol et
+  try {
+    const pending = localStorage.getItem('kaizen_bfi_pending');
+    if (pending) {
+      const data = JSON.parse(pending);
+      const hoursSince = (Date.now() - data.savedAt) / 3600000;
+      // 7 günden eskiyse sil, göster değme
+      if (hoursSince > 168) {
+        localStorage.removeItem('kaizen_bfi_pending');
+      } else {
+        box.innerHTML = `
+          <div class="bfi-pending-notice">
+            <div class="bfi-pending-icon">●</div>
+            <div class="bfi-pending-body">
+              <h3>Beklemede bir testin var</h3>
+              <p>Geçen sefer kaydedilemedi ama cevapların tarayıcında duruyor. Tekrar gönderelim mi?</p>
+              <div class="bfi-pending-actions">
+                <button class="btn btn-primary" onclick="retryBfiSave()">Şimdi gönder</button>
+                <button class="btn btn-ghost" onclick="discardPendingBfi()">Vazgeç</button>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+    }
+  } catch (_) {}
+
   const status = canTakeBfi();
   const hasResults = bfiCache.length > 0;
 
@@ -2295,6 +2323,12 @@ function renderProfile() {
     renderBfiResults(box, status);
   }
 }
+
+window.discardPendingBfi = function() {
+  if (!confirm('Beklemede kalan testi silecek. Emin misin?')) return;
+  try { localStorage.removeItem('kaizen_bfi_pending'); } catch (_) {}
+  renderProfile();
+};
 
 function renderBfiIntro(box, status) {
   box.innerHTML = `
@@ -2561,19 +2595,95 @@ async function finishBfiTest() {
   `;
 
   const scores = calcBfiScores(bfiAnswers);
+  const answersSnapshot = { ...bfiAnswers }; // Yedek al
+
+  // Cevapları localStorage'a da yedekle — tarayıcı kapansa bile kaybolmasın
   try {
-    await saveBfiResult(scores, bfiAnswers);
+    localStorage.setItem('kaizen_bfi_pending', JSON.stringify({
+      scores: scores,
+      answers: answersSnapshot,
+      savedAt: Date.now()
+    }));
+  } catch (_) {}
+
+  // 3 kez dene, her seferinde biraz bekle
+  let lastError = null;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      await saveBfiResult(scores, answersSnapshot);
+      await loadBfiResults();
+      // Başarılı — yedeği temizle
+      try { localStorage.removeItem('kaizen_bfi_pending'); } catch (_) {}
+      bfiAnswers = {};
+      bfiCurrentIndex = 0;
+      showToast('Test tamamlandı!');
+      renderProfile();
+      return;
+    } catch (e) {
+      console.error(`[BFI] Kaydetme denemesi ${attempt}/3 başarısız:`, e);
+      lastError = e;
+      if (attempt < 3) {
+        // 1sn, sonra 2sn bekle
+        await new Promise(r => setTimeout(r, attempt * 1000));
+      }
+    }
+  }
+
+  // 3 deneme de başarısız — kullanıcıya kurtarma seç
+  box.innerHTML = `
+    <div class="bfi-error-recover">
+      <div class="bfi-error-icon">⚠</div>
+      <h3>Bağlantı sorunu</h3>
+      <p>Cevapların kaybolmadı — güvende. Sunucuya ulaşamadık sadece. Tekrar deneyelim mi?</p>
+      <div class="bfi-error-detail">${escapeHtml(lastError ? lastError.message : 'Bilinmeyen hata')}</div>
+      <div class="bfi-error-actions">
+        <button class="btn btn-primary" onclick="retryBfiSave()">Tekrar dene</button>
+        <button class="btn btn-ghost" onclick="showScreen('profile')">Sonra</button>
+      </div>
+      <div class="bfi-error-note">Cevapların tarayıcında yedekli — sayfayı yenileyip Profil'e dönersen "Beklemede" uyarısıyla tekrar gönderebilirsin.</div>
+    </div>
+  `;
+}
+
+// Kaydedilememiş testi yeniden göndermek için
+window.retryBfiSave = async function() {
+  let pending;
+  try {
+    const raw = localStorage.getItem('kaizen_bfi_pending');
+    if (!raw) {
+      showToast('Beklemede test yok.');
+      renderProfile();
+      return;
+    }
+    pending = JSON.parse(raw);
+  } catch (_) {
+    showToast('Yedek bozulmuş, tekrar teste girmen gerek.');
+    renderProfile();
+    return;
+  }
+
+  const box = document.getElementById('profileContent');
+  if (box) {
+    box.innerHTML = `
+      <div class="bfi-finishing">
+        <div class="bfi-finishing-spinner"></div>
+        <div class="bfi-finishing-text">Tekrar gönderiliyor...</div>
+      </div>
+    `;
+  }
+
+  try {
+    await saveBfiResult(pending.scores, pending.answers);
     await loadBfiResults();
-    bfiAnswers = {};
-    bfiCurrentIndex = 0;
-    showToast('Test tamamlandı!');
+    try { localStorage.removeItem('kaizen_bfi_pending'); } catch (_) {}
+    showToast('Test başarıyla kaydedildi!');
     renderProfile();
   } catch (e) {
-    console.error(e);
-    showToast('Kaydetme hatası: ' + e.message);
+    console.error('[BFI] Yeniden gönderme başarısız:', e);
+    showToast('Hâlâ bağlanamıyor. Biraz sonra dene.');
     renderProfile();
   }
-}
+};
 
 function escapeHtml(s) {
   if (!s) return '';
