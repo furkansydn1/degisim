@@ -31,7 +31,7 @@ let userData = {
   antiVision: '',
   identity: '',
   yearGoal: { title: '', start: '', deadline: '' },
-  monthGoal: { title: '', deadline: '', progress: 0 },
+  monthGoal: { title: '', deadline: '', tasks: [], startDate: null, celebrated: false },
   dailyLevers: [],
   constraints: [],
   streak: 0,
@@ -116,6 +116,18 @@ async function loadUserData() {
     if (!userData.joinedDate) {
       userData.joinedDate = todayStr();
       await setDoc(ref, { joinedDate: userData.joinedDate }, { merge: true });
+    }
+    // Migration: eski monthGoal yapısından yeni yapıya geç
+    if (userData.monthGoal) {
+      if (!Array.isArray(userData.monthGoal.tasks)) {
+        userData.monthGoal.tasks = [];
+      }
+      if (userData.monthGoal.celebrated === undefined) {
+        userData.monthGoal.celebrated = false;
+      }
+      if (!userData.monthGoal.startDate && userData.monthGoal.title) {
+        userData.monthGoal.startDate = userData.joinedDate || todayStr();
+      }
     }
   } else {
     userData.joinedDate = todayStr();
@@ -219,6 +231,115 @@ async function hashPin(pin) {
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// =========================================================
+// BOSS GÖREV YARDIMCI FONKSİYONLARI
+// =========================================================
+
+function getWeekKey(date) {
+  const d = date ? new Date(date) : new Date();
+  const onejan = new Date(d.getFullYear(), 0, 1);
+  const week = Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+  return `${d.getFullYear()}-W${String(week).padStart(2, '0')}`;
+}
+
+function isTaskDoneToday(task) {
+  if (!task) return false;
+  if (task.type === 'milestone') {
+    return !!task.completedAt;
+  }
+  if (task.type === 'daily') {
+    return (task.completions || []).includes(todayStr());
+  }
+  if (task.type === 'weekly') {
+    const weekKey = getWeekKey();
+    const weekCompletions = (task.completions || []).filter(d => getWeekKey(d) === weekKey);
+    return weekCompletions.length >= (task.targetPerWeek || 1);
+  }
+  return false;
+}
+
+function getTaskWeekProgress(task) {
+  // weekly görev için bu haftaki N/hedef durumu
+  if (task.type !== 'weekly') return null;
+  const weekKey = getWeekKey();
+  const thisWeek = (task.completions || []).filter(d => getWeekKey(d) === weekKey).length;
+  return { current: thisWeek, target: task.targetPerWeek || 1 };
+}
+
+function calcBossProgress() {
+  const tasks = userData.monthGoal?.tasks || [];
+  if (!tasks.length) return 0;
+
+  const mg = userData.monthGoal;
+  const start = mg.startDate ? new Date(mg.startDate) : new Date();
+  const end = mg.deadline ? new Date(mg.deadline) : new Date(Date.now() + 30 * 86400000);
+  const now = new Date();
+  const totalDays = Math.max(1, Math.round((end - start) / 86400000));
+  const passedDays = Math.max(1, Math.round((now - start) / 86400000) + 1);
+  const totalWeeks = Math.max(1, Math.ceil(totalDays / 7));
+  const passedWeeks = Math.max(1, Math.ceil(passedDays / 7));
+
+  let totalExpected = 0;
+  let totalDone = 0;
+
+  tasks.forEach(task => {
+    if (task.type === 'milestone') {
+      totalExpected += 1;
+      if (task.completedAt) totalDone += 1;
+    } else if (task.type === 'daily') {
+      const expected = Math.min(passedDays, totalDays);
+      const done = (task.completions || []).filter(d => {
+        const dd = new Date(d);
+        return dd >= start && dd <= now;
+      }).length;
+      totalExpected += expected;
+      totalDone += Math.min(done, expected);
+    } else if (task.type === 'weekly') {
+      const target = task.targetPerWeek || 1;
+      const expected = Math.min(passedWeeks, totalWeeks) * target;
+      const done = (task.completions || []).filter(d => {
+        const dd = new Date(d);
+        return dd >= start && dd <= now;
+      }).length;
+      totalExpected += expected;
+      totalDone += Math.min(done, expected);
+    }
+  });
+
+  if (totalExpected === 0) return 0;
+  return Math.min(100, Math.round((totalDone / totalExpected) * 100));
+}
+
+async function toggleTaskCompletion(taskId) {
+  const task = (userData.monthGoal?.tasks || []).find(t => t.id === taskId);
+  if (!task) return;
+
+  const today = todayStr();
+
+  if (task.type === 'milestone') {
+    task.completedAt = task.completedAt ? null : today;
+  } else if (task.type === 'daily') {
+    task.completions = task.completions || [];
+    if (task.completions.includes(today)) {
+      task.completions = task.completions.filter(d => d !== today);
+    } else {
+      task.completions.push(today);
+    }
+  } else if (task.type === 'weekly') {
+    task.completions = task.completions || [];
+    // weekly için, bugün işaretli mi check et
+    const todayIdx = task.completions.indexOf(today);
+    if (todayIdx >= 0) {
+      task.completions.splice(todayIdx, 1);
+    } else {
+      task.completions.push(today);
+    }
+  }
+
+  await saveUserData();
+  renderHome();
 }
 
 function todayStr() { return new Date().toISOString().slice(0, 10); }
@@ -340,9 +461,26 @@ function renderHome() {
 
   const mg = userData.monthGoal || {};
   document.getElementById('bossTitle').textContent = mg.title || 'Bu ayki proje?';
-  const mp = mg.progress || 0;
+  const mp = calcBossProgress();
   document.getElementById('bossBar').style.width = mp + '%';
-  document.getElementById('bossMeta').textContent = mp + '%' + (mg.deadline ? ` · ${new Date(mg.deadline).toLocaleDateString('tr-TR')}` : '');
+  const tasks = mg.tasks || [];
+  const todayDoneCount = tasks.filter(t => {
+    if (t.type === 'milestone') return !!t.completedAt;
+    if (t.type === 'daily') return (t.completions || []).includes(todayStr());
+    if (t.type === 'weekly') {
+      const weekKey = getWeekKey();
+      return (t.completions || []).some(d => getWeekKey(d) === weekKey && d === todayStr());
+    }
+    return false;
+  }).length;
+  const relevantTodayCount = tasks.filter(t => t.type !== 'milestone' || !t.completedAt).length;
+  document.getElementById('bossMeta').textContent = mp + '%' + (tasks.length ? ` · bugün ${todayDoneCount}/${relevantTodayCount}` : ' · görev ekle');
+
+  // Boss görevlerini render et
+  renderBossTasks();
+
+  // Ay bitti mi, kutlama var mı?
+  checkBossCelebration();
 
   const av = userData.antiVision;
   const shadowEl = document.getElementById('shadowText');
@@ -388,6 +526,160 @@ function getCurrentHourDecimal() {
   const d = new Date();
   return d.getHours() + d.getMinutes() / 60;
 }
+
+function renderBossTasks() {
+  const box = document.getElementById('bossTasksBox');
+  if (!box) return;
+
+  const tasks = userData.monthGoal?.tasks || [];
+  if (!tasks.length) {
+    box.innerHTML = `
+      <div class="boss-empty-tasks" onclick="showScreen('goals')">
+        <span>Henüz görev yok.</span>
+        <em>Hedeflerden ekle →</em>
+      </div>
+    `;
+    return;
+  }
+
+  // Sıralama: milestone tamamlanmamışlar önce, sonra daily, sonra weekly, sonra tamamlanmış milestone'lar
+  const sorted = [...tasks].sort((a, b) => {
+    const aDone = a.type === 'milestone' && a.completedAt;
+    const bDone = b.type === 'milestone' && b.completedAt;
+    if (aDone && !bDone) return 1;
+    if (!aDone && bDone) return -1;
+    const order = { daily: 1, weekly: 2, milestone: 3 };
+    return (order[a.type] || 99) - (order[b.type] || 99);
+  });
+
+  box.innerHTML = sorted.map(task => {
+    const done = isTaskDoneToday(task);
+    const todayMark = (task.completions || []).includes(todayStr());
+
+    let typeLabel = '';
+    let metaText = '';
+
+    if (task.type === 'daily') {
+      typeLabel = 'Her gün';
+      metaText = todayMark ? 'Bugün tamamlandı' : 'Bugün henüz yapılmadı';
+    } else if (task.type === 'weekly') {
+      const wp = getTaskWeekProgress(task);
+      typeLabel = `Haftada ${wp.target}`;
+      metaText = `Bu hafta ${wp.current}/${wp.target}`;
+    } else if (task.type === 'milestone') {
+      typeLabel = 'Tek seferlik';
+      metaText = task.completedAt ? `✓ ${new Date(task.completedAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}` : 'Bitirilecek';
+    }
+
+    const isChecked = (task.type === 'milestone' && task.completedAt) || (task.type !== 'milestone' && todayMark);
+    const doneClass = done ? 'all-done' : '';
+
+    return `
+      <div class="boss-task ${doneClass}" onclick="event.stopPropagation(); toggleBossTask('${task.id}')">
+        <div class="boss-task-check ${isChecked ? 'on' : ''}">
+          ${isChecked ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+        </div>
+        <div class="boss-task-body">
+          <div class="boss-task-title ${isChecked ? 'done' : ''}">${escapeHtml(task.title)}</div>
+          <div class="boss-task-meta">
+            <span class="boss-task-type">${typeLabel}</span>
+            <span class="boss-task-dot">·</span>
+            <span class="boss-task-status">${metaText}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+window.toggleBossTask = async function(taskId) {
+  await toggleTaskCompletion(taskId);
+};
+
+window.toggleBossExpand = function() {
+  const panel = document.getElementById('bossTasksPanel');
+  const icon = document.getElementById('bossExpandIcon');
+  if (!panel) return;
+  const isOpen = panel.classList.contains('open');
+  if (isOpen) {
+    panel.classList.remove('open');
+    icon.classList.remove('open');
+  } else {
+    panel.classList.add('open');
+    icon.classList.add('open');
+    renderBossTasks();
+  }
+};
+
+function checkBossCelebration() {
+  const mg = userData.monthGoal;
+  if (!mg || !mg.tasks?.length || !mg.deadline) return;
+  if (mg.celebrated) return;
+
+  const end = new Date(mg.deadline);
+  const now = new Date();
+  if (now < end) return;
+
+  // Boss süresi bitti, kutlama göster
+  setTimeout(() => showBossCelebration(), 800);
+}
+
+function showBossCelebration() {
+  const mg = userData.monthGoal;
+  const modal = document.getElementById('celebrationModal');
+  if (!modal) return;
+
+  const pct = calcBossProgress();
+  const tasks = mg.tasks || [];
+  const doneCount = tasks.filter(t => {
+    if (t.type === 'milestone') return !!t.completedAt;
+    return (t.completions || []).length > 0;
+  }).length;
+
+  const level = pct >= 80 ? 'zafer' : pct >= 50 ? 'dengeli' : 'dersler';
+  const titles = {
+    zafer: 'Boss yenildi!',
+    dengeli: 'Boss geçildi',
+    dersler: 'Ay bitti'
+  };
+  const subs = {
+    zafer: 'Hakettin. Kanıt birikti, kimliğin büyüdü.',
+    dengeli: 'Tam değil ama anlamlı. Neyin işe yaradığını biliyorsun artık.',
+    dersler: 'Tamamlanmamış bir ay da bir cevaptır. Ne fark etti?'
+  };
+
+  document.getElementById('celebrationTitle').textContent = titles[level];
+  document.getElementById('celebrationSub').textContent = subs[level];
+  document.getElementById('celebrationPct').textContent = pct;
+  document.getElementById('celebrationBossName').textContent = mg.title || 'Boss';
+  document.getElementById('celebrationTaskCount').textContent = doneCount;
+  document.getElementById('celebrationTaskTotal').textContent = tasks.length;
+
+  modal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+window.closeCelebration = async function() {
+  userData.monthGoal.celebrated = true;
+  await saveUserData();
+  document.getElementById('celebrationModal').classList.remove('show');
+  document.body.style.overflow = '';
+};
+
+window.startNewBoss = async function() {
+  userData.monthGoal.celebrated = true;
+  await saveUserData();
+  document.getElementById('celebrationModal').classList.remove('show');
+  document.body.style.overflow = '';
+  showScreen('goals');
+  setTimeout(() => {
+    const el = document.getElementById('monthGoal');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.focus();
+    }
+  }, 300);
+};
 
 function renderTimeSlots() {
   const now = getCurrentHourDecimal();
@@ -820,10 +1112,93 @@ function renderGoalsForm() {
   const mg = userData.monthGoal || {};
   document.getElementById('monthGoal').value = mg.title || '';
   document.getElementById('monthDeadline').value = mg.deadline || '';
-  document.getElementById('monthProgress').value = mg.progress || 0;
+  renderBossTasksEditor();
   renderGoalList('daily-levers', userData.dailyLevers || []);
   renderGoalList('constraints', userData.constraints || []);
 }
+
+function renderBossTasksEditor() {
+  const el = document.getElementById('boss-tasks-editor');
+  if (!el) return;
+  const tasks = userData.monthGoal?.tasks || [];
+
+  if (!tasks.length) {
+    el.innerHTML = `<div class="boss-editor-empty">Henüz görev eklenmemiş. Boss'unu somutlaştır — her gün/hafta ne yapacaksın?</div>`;
+    return;
+  }
+
+  el.innerHTML = tasks.map((task, i) => {
+    const typeLabels = {
+      daily: 'Her gün',
+      weekly: 'Haftada N',
+      milestone: 'Tek seferlik'
+    };
+    const weekField = task.type === 'weekly'
+      ? `<input type="number" min="1" max="7" value="${task.targetPerWeek || 1}" class="task-week-input" data-task-idx="${i}" data-field="targetPerWeek" title="Haftada kaç kez?">`
+      : '';
+    return `
+      <div class="boss-editor-row">
+        <div class="boss-editor-top">
+          <select class="task-type-select" data-task-idx="${i}" data-field="type" onchange="updateTaskField(${i}, 'type', this.value)">
+            <option value="daily" ${task.type === 'daily' ? 'selected' : ''}>Her gün</option>
+            <option value="weekly" ${task.type === 'weekly' ? 'selected' : ''}>Haftada N</option>
+            <option value="milestone" ${task.type === 'milestone' ? 'selected' : ''}>Tek seferlik</option>
+          </select>
+          ${weekField}
+          <button class="del-btn" onclick="delBossTask(${i})">×</button>
+        </div>
+        <input type="text" class="task-title-input" placeholder="Görev adı..." value="${escapeAttr(task.title || '')}" data-task-idx="${i}" data-field="title">
+      </div>
+    `;
+  }).join('');
+}
+
+window.updateTaskField = function(idx, field, value) {
+  if (!userData.monthGoal.tasks[idx]) return;
+  userData.monthGoal.tasks[idx][field] = value;
+  if (field === 'type' && value === 'weekly' && !userData.monthGoal.tasks[idx].targetPerWeek) {
+    userData.monthGoal.tasks[idx].targetPerWeek = 3;
+  }
+  renderBossTasksEditor();
+};
+
+window.addBossTask = function() {
+  if (!userData.monthGoal.tasks) userData.monthGoal.tasks = [];
+  // Önce mevcut inputları oku, kaybolmasın
+  document.querySelectorAll('[data-task-idx]').forEach(inp => {
+    const idx = parseInt(inp.dataset.taskIdx);
+    const field = inp.dataset.field;
+    if (userData.monthGoal.tasks[idx]) {
+      let val = inp.value;
+      if (field === 'targetPerWeek') val = parseInt(val) || 1;
+      userData.monthGoal.tasks[idx][field] = val;
+    }
+  });
+  userData.monthGoal.tasks.push({
+    id: 't_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+    title: '',
+    type: 'daily',
+    completions: [],
+    completedAt: null
+  });
+  renderBossTasksEditor();
+};
+
+window.delBossTask = function(idx) {
+  if (!confirm('Bu görevi silmek istediğine emin misin? Tamamlama kayıtları da silinir.')) return;
+  // Önce diğer inputları oku
+  document.querySelectorAll('[data-task-idx]').forEach(inp => {
+    const ti = parseInt(inp.dataset.taskIdx);
+    const field = inp.dataset.field;
+    if (userData.monthGoal.tasks[ti] && ti !== idx) {
+      let val = inp.value;
+      if (field === 'targetPerWeek') val = parseInt(val) || 1;
+      userData.monthGoal.tasks[ti][field] = val;
+    }
+  });
+  userData.monthGoal.tasks.splice(idx, 1);
+  renderBossTasksEditor();
+};
 
 function renderGoalList(id, list) {
   const el = document.getElementById(id);
@@ -860,11 +1235,35 @@ window.saveGoals = async function() {
     start: document.getElementById('yearStart').value,
     deadline: document.getElementById('yearDeadline').value
   };
+
+  // Boss inputlarını oku
+  const existingTasks = userData.monthGoal?.tasks || [];
+  document.querySelectorAll('[data-task-idx]').forEach(inp => {
+    const idx = parseInt(inp.dataset.taskIdx);
+    const field = inp.dataset.field;
+    if (existingTasks[idx]) {
+      let val = inp.value;
+      if (field === 'targetPerWeek') val = parseInt(val) || 1;
+      existingTasks[idx][field] = val;
+    }
+  });
+  // Boş başlıklı görevleri sil
+  const cleanTasks = existingTasks.filter(t => (t.title || '').trim());
+
+  const newMonthTitle = document.getElementById('monthGoal').value.trim();
+  const newDeadline = document.getElementById('monthDeadline').value;
+
+  // Eğer yeni boss ise (başlık değişti veya startDate yoksa), celebrate flag'i sıfırla
+  const isNewBoss = !userData.monthGoal?.startDate || userData.monthGoal?.title !== newMonthTitle;
+
   userData.monthGoal = {
-    title: document.getElementById('monthGoal').value.trim(),
-    deadline: document.getElementById('monthDeadline').value,
-    progress: parseInt(document.getElementById('monthProgress').value) || 0
+    title: newMonthTitle,
+    deadline: newDeadline,
+    tasks: cleanTasks,
+    startDate: isNewBoss ? todayStr() : userData.monthGoal.startDate,
+    celebrated: isNewBoss ? false : (userData.monthGoal.celebrated || false)
   };
+
   userData.dailyLevers = [];
   document.querySelectorAll('input[data-list="daily-levers"]').forEach(inp => {
     if (inp.value.trim()) userData.dailyLevers.push(inp.value.trim());
