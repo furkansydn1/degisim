@@ -356,5 +356,210 @@ const GUIDE_ARTICLES = [
   }
 ];
 
+// ---------- BFI-44 KİŞİLİK TESTİ ----------
+// Her maddenin "d" alanı boyut kodu, "r" alanı ters-kodlu mu
+// Boyutlar: E=Dışa dönüklük, A=Uyumluluk, C=Sorumluluk, N=Nevrotiklik, O=Yeniliğe açıklık
+const BFI_QUESTIONS = [
+  { n: 1, t: 'Konuşkan biriyim.', d: 'E' },
+  { n: 2, t: 'Başkalarında hata bulmaya eğilimliyim.', d: 'A', r: true },
+  { n: 3, t: 'İşleri tam ve eksiksiz yaparım.', d: 'C' },
+  { n: 4, t: 'Depresif hissetmeye veya moralim bozulmaya eğilimliyim.', d: 'N' },
+  { n: 5, t: 'Orijinal biriyimdir, yeni fikirlere açığım.', d: 'O' },
+  { n: 6, t: 'Ketumumdur (kendimi zor açarım).', d: 'E', r: true },
+  { n: 7, t: 'Genel olarak yardımsever ve özverili biriyim.', d: 'A' },
+  { n: 8, t: 'Biraz dikkatsiz veya umursamaz olabilirim.', d: 'C', r: true },
+  { n: 9, t: 'Rahat biriyim, stresle kolay başa çıkarım.', d: 'N', r: true },
+  { n: 10, t: 'Birçok farklı konuya ilgi duyarım.', d: 'O' },
+  { n: 11, t: 'Enerji doluyumdur.', d: 'E' },
+  { n: 12, t: 'Başkalarıyla sık sık tartışır veya ters düşerim.', d: 'A', r: true },
+  { n: 13, t: 'Güvenilir ve sadık bir çalışanım.', d: 'C' },
+  { n: 14, t: 'Sık sık gergin hissedebilirim.', d: 'N' },
+  { n: 15, t: 'Zeki ve derin düşünen biriyim.', d: 'O' },
+  { n: 16, t: 'Heyecan yaratırım (dikkat çekmeyi severim).', d: 'E' },
+  { n: 17, t: 'İnsanları kolay bağışlarım.', d: 'A' },
+  { n: 18, t: 'İşleri düzensiz veya dağınık yaparım.', d: 'C', r: true },
+  { n: 19, t: 'Sık sık endişelenirim.', d: 'N' },
+  { n: 20, t: 'Hayal gücü yüksek biriyim.', d: 'O' },
+  { n: 21, t: 'Sessiz biriyimdir.', d: 'E', r: true },
+  { n: 22, t: 'Genelde insanlara güvenirim.', d: 'A' },
+  { n: 23, t: 'Tembel olmaya eğilimliyimdir.', d: 'C', r: true },
+  { n: 24, t: 'Duygusal olarak dengeliyimdir, kolay sarsılmam.', d: 'N', r: true },
+  { n: 25, t: 'Keşfetmeyi seven, yaratıcı biriyim.', d: 'O' },
+  { n: 26, t: 'Girişken ve atılgan biriyim.', d: 'E' },
+  { n: 27, t: 'Bazen başkalarına karşı soğuk veya mesafeli olabilirim.', d: 'A', r: true },
+  { n: 28, t: 'Bir göreve başlayıp bitirene kadar devam ederim.', d: 'C' },
+  { n: 29, t: 'Karamsarlığa kapılıp huysuzlaşabilirim.', d: 'N' },
+  { n: 30, t: 'Sanata ve estetiğe değer veririm.', d: 'O' },
+  { n: 31, t: 'Utangaç veya çekingen biriyim.', d: 'E', r: true },
+  { n: 32, t: 'Hemen hemen herkese karşı nazik ve saygılıyım.', d: 'A' },
+  { n: 33, t: 'İşleri verimli ve hızlı bir şekilde yaparım.', d: 'C' },
+  { n: 34, t: 'Zor durumlarda sakin kalırım.', d: 'N', r: true },
+  { n: 35, t: 'Rutin ve alışılmış işleri tercih ederim.', d: 'O', r: true },
+  { n: 36, t: 'Sosyal ortamlarda dışa dönük biriyim.', d: 'E' },
+  { n: 37, t: 'Bazen başkalarına karşı kaba davranabilirim.', d: 'A', r: true },
+  { n: 38, t: 'Kendi planlarımı yapar ve onlara uyarım.', d: 'C' },
+  { n: 39, t: 'Kolayca sinirlenebilirim.', d: 'N' },
+  { n: 40, t: 'Düşünmeyi veya teorik fikirlerle uğraşmayı severim.', d: 'O' },
+  { n: 41, t: 'Sanata veya sanatsal etkinliklere çok ilgi duymam.', d: 'O', r: true },
+  { n: 42, t: 'Diğer insanlarla işbirliği yapmayı severim.', d: 'A' },
+  { n: 43, t: 'Dikkatim kolayca dağılır.', d: 'C', r: true },
+  { n: 44, t: 'Müzik ve sanat alanlarında sofistike zevklerim vardır.', d: 'O' }
+];
+
+// Boyut bilgileri (ad, renk, kısa açıklama)
+const BFI_DIMENSIONS = {
+  E: {
+    name: 'Dışa Dönüklük',
+    key: 'E',
+    color: 'copper',
+    short: 'Sosyal enerjin, etrafındaki insanlara yönelişin',
+  },
+  A: {
+    name: 'Uyumluluk',
+    key: 'A',
+    color: 'sage',
+    short: 'İnsanlarla uyum kurma eğilimin, sıcaklığın',
+  },
+  C: {
+    name: 'Sorumluluk',
+    key: 'C',
+    color: 'copper',
+    short: 'Disiplin, hedef odaklılık, düzen sevgin',
+  },
+  N: {
+    name: 'Duygusal Denge',
+    key: 'N',
+    color: 'crimson',
+    short: 'Stres altında kalma, duygu yoğunluğun',
+  },
+  O: {
+    name: 'Yeniliğe Açıklık',
+    key: 'O',
+    color: 'violet',
+    short: 'Merak, yaratıcılık, yeniye açıklığın',
+  }
+};
+
+// Her boyut için 3 seviye yorum: düşük, orta, yüksek
+const BFI_INTERPRETATIONS = {
+  E: {
+    low: {
+      label: 'İçe dönük',
+      text: 'Sessizliği, derin düşünceyi ve yalnız kalmayı seviyorsun. Enerjini kalabalıkta değil, kendi alanında toparlıyorsun. Bu bir zayıflık değil — güçlü bir düşünür olabilirsin.',
+      kaizen: 'Gün içi kontrollerin senin için altın — içsel sesine dönmek zaten doğal yeteneğin.'
+    },
+    mid: {
+      label: 'Orta (dengeli)',
+      text: 'Hem sosyalleşmeyi hem yalnız zamanı dengeli yönetiyorsun. İhtiyacına göre iki modu da kullanabiliyorsun. Esneksin.',
+      kaizen: 'Çeşitli sosyal durumlarda kendini test etmek için iyi bir fırsat — hangi modun seni gerçekten beslediğini fark et.'
+    },
+    high: {
+      label: 'Yüksek (dışa dönük)',
+      text: 'İnsanlarla vakit geçirmek seni canlandırıyor. Girişken, enerjik ve sosyal ortamlarda parlayan birisin. Ama bazen içsel işe zaman ayırmak zor gelebilir.',
+      kaizen: 'Akşam sentezi senin için özellikle değerli — dış enerjiden kopup içine dönmen kimliğini kuran şey.'
+    }
+  },
+  A: {
+    low: {
+      label: 'Düşük (rekabetçi)',
+      text: 'Fikrini savunmaktan çekinmezsin. Eleştirel düşünürsün, kolay "evet" demezsin. Bu liderlik avantajı ama ilişkilerde bazen sert algılanabilirsin.',
+      kaizen: 'Uyumluluk sorularında kendini dürüstçe gözlemle — empati kasın, disiplin kasın gibi geliştirilebilir.'
+    },
+    mid: {
+      label: 'Orta (dengeli)',
+      text: 'Hem kendi çıkarını gözetiyorsun hem başkalarını önemsiyorsun. Gerektiğinde hayır diyebilen, gerektiğinde yardım eden bir denge.',
+      kaizen: 'Sınırlarını yazmak için "Kurallar" bölümü senin için önemli — kendini neyin için feda etmeyeceğini netleştir.'
+    },
+    high: {
+      label: 'Yüksek (uyumlu)',
+      text: 'Başkalarına karşı yumuşaksın, işbirlikçi ve affedicisin. Güven veriyor, etrafını yumuşatıyorsun. Ama kendi ihtiyaçlarını geri plana atma riskin var.',
+      kaizen: '"Kaçtığın hayat" bölümünü dolduruken kendi için iste — herkesi memnun eden bir hayat değil, seni besleyen bir hayat.'
+    }
+  },
+  C: {
+    low: {
+      label: 'Düşük (esnek, spontane)',
+      text: 'Yapıya değil akışa göre yaşıyorsun. Yaratıcı olabilirsin ama hedeflere ulaşmak zorlaşabilir. Planlı değilsin — iyi ve kötü yönüyle.',
+      kaizen: 'Günlük kaldıraçları ÇOK KÜÇÜK başlat — "her gün 5 dakika yaz" gibi. Büyük planlar seni ezer. Kaizen\'in mantığı tam senin için.'
+    },
+    mid: {
+      label: 'Orta',
+      text: 'Planlı olabiliyorsun ama zorlandığında vazgeçebiliyorsun. Hedeflere sadakatin durumsal — motivasyon varsa çok iyi, yoksa zor.',
+      kaizen: 'Streak\'e bağlan. Ardışık gün sayısı sende motivasyon yaratır — tutarlılık bir kez oluşunca kendini besler.'
+    },
+    high: {
+      label: 'Yüksek (disiplinli)',
+      text: 'Planlı, güvenilir, hedef odaklısın. Söz verdiğinde tutan biri. Kaizen\'in ritmi sana doğal gelir. Dikkat: mükemmellikçilik tuzağına düşme.',
+      kaizen: '"Sessizliğe Hakkım Var" anlayışını benimse — bir gün kaçırmak dünyanın sonu değil. Esneklik, disiplinden kolay gelmez sana.'
+    }
+  },
+  N: {
+    low: {
+      label: 'Düşük (sakin, dengeli)',
+      text: 'Duygusal olarak dengeli, sakin, stres altında bile stabil kalıyorsun. Yıkılmaz bir karakter. Ama bazen duygularından uzak kalma riski olabilir.',
+      kaizen: 'Duygusal farkındalık için "bugün neye canlı hissettim?" sorusu önemli — denge bazen hissizliğe dönüşebilir.'
+    },
+    mid: {
+      label: 'Orta (normal dalgalanmalar)',
+      text: 'Bazı günler iyi, bazıları zor — insan olmanın normal seyrinde bir yerdesin. Yoğun stresle yüzleşince zorlanabilirsin ama genelde tutunursun.',
+      kaizen: 'Örüntü algılayıcı senin için değerli — hangi dönemlerde düşüşe girdiğini fark edersen önlem alabilirsin.'
+    },
+    high: {
+      label: 'Yüksek (duygusal yoğunluk)',
+      text: 'Duyguların yoğun — bu bir güç (empati, sezgi, yaratıcılık) ama stres dönemlerinde seni zorlayabilir. Kolay etkilenirsin. Duygularınla yaşamayı öğrenmek senin yolun.',
+      kaizen: 'Gün içi kontrolleri kaçırma — duyguların patlamadan önce fark etmek, patladıktan sonra temizlemekten kolay. Günlük sekmesi senin için can simidi.'
+    }
+  },
+  O: {
+    low: {
+      label: 'Düşük (somut, pratik)',
+      text: 'Alışılmış, denenmiş, pratik olanı seviyorsun. Soyut fikirlere değil, somut sonuçlara yönelirsin. Güvenilir, yere basan birisin.',
+      kaizen: 'Vizyonunu soyut tutma — "mutlu olmak" değil, "her Cumartesi dağa çıkmak". Somut olduğunda sende çalışır.'
+    },
+    mid: {
+      label: 'Orta',
+      text: 'Hem yeni fikirlere açıksın hem pratikliği seversin. Bir ayağın yerde, bir ayağın hayalde. Dengeli bir keşifçi.',
+      kaizen: 'Vizyonunu 3 ayda bir gözden geçir — evrilsin ama savrulmasın. "Kaizen" felsefesi sana çok uygun.'
+    },
+    high: {
+      label: 'Yüksek (meraklı, yaratıcı)',
+      text: 'Meraklı, yaratıcı, derin düşünensin. Yeni fikirleri kovalıyor, sanat ve felsefeyi seviyorsun. Ama bazen "başlamadan düşünme" tuzağına düşebilirsin.',
+      kaizen: 'Vizyonunu çok karmaşıklaştırma. Dan Koe\'nun felsefesi tam senin için: "hazır hissetmeyi bekleme, başla". Hareket, düşünceden ağırdır sende.'
+    }
+  }
+};
+
+// Genel profil sentezi — skorlara göre tek paragraf
+function generateProfileSummary(scores) {
+  const getLvl = (s) => s < 2.5 ? 'low' : s > 3.5 ? 'high' : 'mid';
+  const parts = [];
+
+  const E = getLvl(scores.E);
+  const A = getLvl(scores.A);
+  const C = getLvl(scores.C);
+  const N = getLvl(scores.N);
+  const O = getLvl(scores.O);
+
+  if (C === 'high') parts.push('Hedeflerini takip eden <em>disiplinli</em> biriyim');
+  else if (C === 'low') parts.push('<em>Esnek ve spontane</em> biriyim');
+  else parts.push('Planlılıkla esneklik arasında <em>dengeli</em> biriyim');
+
+  if (O === 'high') parts.push('yeni fikirlere <em>çok açığım</em>');
+  else if (O === 'low') parts.push('<em>somut ve pratik</em> düşünürüm');
+
+  if (A === 'high') parts.push('insanlarla <em>uyumluyum</em>');
+  else if (A === 'low') parts.push('fikrimi <em>açıkça söylerim</em>');
+
+  if (E === 'high') parts.push('sosyal ortamlarda <em>canlanırım</em>');
+  else if (E === 'low') parts.push('<em>kendi alanıma</em> çekilirim');
+
+  if (N === 'high') parts.push('ama stres anlarında <em>kırılganlaşabiliyorum</em>');
+  else if (N === 'low') parts.push('ve <em>sakin</em> kalmayı başarırım');
+
+  return parts.join(', ') + '.';
+}
+
+
+
 // ES modül olarak dışa aç — app.js import eder
-export { SLOGANS, QUOTES, QUESTIONS, TIME_SLOTS, STOPWORDS, GUIDE_ARTICLES };
+export { SLOGANS, QUOTES, QUESTIONS, TIME_SLOTS, STOPWORDS, GUIDE_ARTICLES, BFI_QUESTIONS, BFI_DIMENSIONS, BFI_INTERPRETATIONS, generateProfileSummary };
