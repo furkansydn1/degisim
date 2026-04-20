@@ -826,8 +826,7 @@ function renderActiveQuestHero() {
         <div class="aqh-head">
           <div>
             <div class="aqh-label sage-label">BUGÜN TAMAM</div>
-            <div class="aqh-title">Bu günün kanıtı yazıldı</div>
-            <div class="aqh-sub">${doneCount}/${totalSlots} soru · yarın yeni bir gün</div>
+            <div class="aqh-title">Bugünki soruları cevapladın</div>
           </div>
           <div class="aqh-arrow sage-arrow">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -1911,48 +1910,93 @@ function scheduleNotifs() {
 window.cleanupDuplicates = async function() {
   if (!confirm('Aynı cevapları (bire bir aynı olanları) temizleyeceğim. Benzer ama farklı cevaplar korunacak. Devam?')) return;
 
-  showToast('Tarama başladı...');
+  showToast('Tarama başladı, bekle...');
 
   try {
-    // Cevapları grupla: aynı slotKey + aynı date + aynı questionId + aynı answer metni = kopya
+    // TAZE VERİ YÜKLE - cache eski olabilir
+    await loadHistory();
+
+    console.log('[Cleanup] Toplam kayıt:', historyCache.length);
+    console.log('[Cleanup] İlk kayıt örneği:', historyCache[0]);
+
+    // STRATEJİ: Birden fazla anahtar kombinasyonu dene
+    // En güvenlisi: aynı answer metni + aynı date (en sık görülen duplikay tipi)
     const groups = {};
     historyCache.forEach(a => {
-      const key = `${a.slotKey || ''}::${a.date || ''}::${a.questionId || ''}::${(a.answer || '').trim()}`;
+      // Normalize et: boşlukları temizle, lowercase'e çevirme YOK (dürüst kal)
+      const normalizedAnswer = (a.answer || '').trim().replace(/\s+/g, ' ');
+      if (!normalizedAnswer) return; // Boş cevapları atla
+
+      // PRIMARY KEY: tarih + soru metni + cevap metni (en güvenilir)
+      const questionText = (a.question || '').trim();
+      const key = `${a.date || ''}::${questionText}::${normalizedAnswer}`;
+
       if (!groups[key]) groups[key] = [];
       groups[key].push(a);
     });
 
     let toDelete = [];
-    Object.values(groups).forEach(group => {
+    let duplicateGroups = 0;
+    Object.entries(groups).forEach(([key, group]) => {
       if (group.length > 1) {
-        // En eskisi kalsın, diğerlerini sil
+        duplicateGroups++;
+        console.log(`[Cleanup] Kopya grubu (${group.length} kez):`, key.slice(0, 80), group.map(g => g.id));
+
+        // Timestamp'e göre sırala, en eski (ilk yazılan) kalsın
         group.sort((a, b) => {
-          const ta = a.timestamp?.toDate ? a.timestamp.toDate().getTime() : 0;
-          const tb = b.timestamp?.toDate ? b.timestamp.toDate().getTime() : 0;
+          let ta = 0, tb = 0;
+          try {
+            ta = a.timestamp?.toDate ? a.timestamp.toDate().getTime() : (a.timestamp?.seconds ? a.timestamp.seconds * 1000 : 0);
+          } catch (e) {}
+          try {
+            tb = b.timestamp?.toDate ? b.timestamp.toDate().getTime() : (b.timestamp?.seconds ? b.timestamp.seconds * 1000 : 0);
+          } catch (e) {}
           return ta - tb;
         });
+
+        // İlk (en eski) kalır, gerisi silinir
         toDelete.push(...group.slice(1));
       }
     });
 
+    console.log('[Cleanup] Bulunan kopya grubu sayısı:', duplicateGroups);
+    console.log('[Cleanup] Silinecek kayıt sayısı:', toDelete.length);
+
     if (toDelete.length === 0) {
-      showToast('Kopya bulunamadı, veriler temiz.');
+      alert('Hiç kopya bulamadım. Eğer hâlâ aynı cevapları görüyorsan:\n\n1. F12 tuşuna bas, Console sekmesini aç\n2. "Aynı cevapları temizle" butonuna tekrar bas\n3. Console\'da ne yazdığını gördüğünde bana yapıştır\n\nVeya Firebase Console\'dan manuel silebilirsin.');
       return;
     }
 
-    if (!confirm(`${toDelete.length} adet bire bir aynı cevap bulundu. Silinsin mi?`)) return;
+    const msg = `${toDelete.length} adet kopya bulundu (${duplicateGroups} farklı sorudan). Silinsin mi?\n\n(En eski kayıt korunur, sonra gelenler silinir.)`;
+    if (!confirm(msg)) return;
+
+    showToast(`${toDelete.length} kopya siliniyor...`);
+    let deleted = 0;
+    let failed = 0;
 
     for (const a of toDelete) {
-      const ref = doc(db, 'users', currentUser.uid, 'answers', a.id);
-      await deleteDoc(ref);
+      try {
+        const ref = doc(db, 'users', currentUser.uid, 'answers', a.id);
+        await deleteDoc(ref);
+        deleted++;
+      } catch (e) {
+        console.error('[Cleanup] Silme hatası:', a.id, e);
+        failed++;
+      }
     }
 
     await loadHistory();
-    showToast(`${toDelete.length} kopya temizlendi.`);
+    if (failed > 0) {
+      alert(`${deleted} kopya silindi, ${failed} tanesi silinemedi (hata). Tekrar denemek istersen butona basman yeterli.`);
+    } else {
+      showToast(`✓ ${deleted} kopya temizlendi!`);
+    }
+
     if (document.getElementById('screen-home').classList.contains('active')) renderHome();
+    if (document.getElementById('screen-history').classList.contains('active')) renderHistory();
   } catch (e) {
-    console.error(e);
-    showToast('Hata: ' + e.message);
+    console.error('[Cleanup] Genel hata:', e);
+    alert('Hata oluştu: ' + e.message + '\n\nF12 → Console\'da detaylarına bak.');
   }
 };
 
@@ -2562,13 +2606,69 @@ function renderVentCategoryList() {
     `;
   }).join('');
 
+  const totalCount = ventCache.length;
+  const allLink = totalCount > 0
+    ? `<button class="vent-all-link" onclick="renderVentAllList()">Tüm yazdıklarımı gör (${totalCount})</button>`
+    : '';
+
   box.innerHTML = `
     <div class="vent-intro">
-      <p>Hayatın bir alanına odaklan. Seni en çok zorlayan, en çok düşündüğün hangi konu? Oraya gir, 10 soru seni bekliyor. İstediğine yaz, istediğini atla — baskı yok.</p>
+      <p>Hayatın bir alanına odaklan. Seni en çok zorlayan, en çok düşündüğün hangi konu? Oraya gir, 10 soru seni bekliyor. İstediğine yaz, istediğini atla — baskı yok. Yazdıkların burada saklı kalır, dilediğin zaman dönüp okuyabilirsin.</p>
     </div>
+    ${allLink}
     <div class="vent-cat-grid">${cards}</div>
   `;
 }
+
+window.renderVentAllList = function() {
+  const box = document.getElementById('ventContent');
+  if (!ventCache.length) {
+    box.innerHTML = `
+      <div class="vent-intro"><p>Henüz hiçbir şey yazmamışsın. Bir kategoriye gir, başla.</p></div>
+      <button class="vent-back-btn" onclick="backToVentCategories()">← Kategorilere dön</button>
+    `;
+    return;
+  }
+
+  // Tarihe göre azalan sırala
+  const sorted = [...ventCache].sort((a, b) => {
+    const ta = a.timestamp?.toDate ? a.timestamp.toDate().getTime() : 0;
+    const tb = b.timestamp?.toDate ? b.timestamp.toDate().getTime() : 0;
+    return tb - ta;
+  });
+
+  const items = sorted.map(v => {
+    const cat = VENT_CATEGORIES.find(c => c.key === v.category);
+    if (!cat) return '';
+    const qText = cat.questions[v.questionIndex] || '';
+    const d = v.timestamp?.toDate ? v.timestamp.toDate() : new Date();
+    const dateStr = d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+    const excerpt = (v.content || '').slice(0, 220);
+
+    return `
+      <div class="vent-all-card c-${cat.color}" onclick="openExistingVent('${v.id}'); selectVentCategory('${cat.key}');">
+        <div class="vent-all-head">
+          <span class="vent-all-cat">${escapeHtml(cat.name)}</span>
+          <span class="vent-all-date">${dateStr}</span>
+        </div>
+        <div class="vent-all-q">${escapeHtml(qText.slice(0, 100))}${qText.length > 100 ? '...' : ''}</div>
+        <div class="vent-all-excerpt">${escapeHtml(excerpt)}${v.content && v.content.length > 220 ? '...' : ''}</div>
+      </div>
+    `;
+  }).join('');
+
+  box.innerHTML = `
+    <button class="vent-back-btn" onclick="backToVentCategories()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Kategorilere dön
+    </button>
+    <div class="vent-all-header">
+      <h3>Tüm yazdıklarım</h3>
+      <p>${ventCache.length} dertleşme · en yeniden eskiye</p>
+    </div>
+    <div class="vent-all-list">${items}</div>
+  `;
+};
 
 window.selectVentCategory = function(key) {
   currentVentCategory = VENT_CATEGORIES.find(c => c.key === key);
