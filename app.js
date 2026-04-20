@@ -6,7 +6,7 @@
 
 console.log('[Kaizen] app.js yükleniyor...');
 
-import { SLOGANS, QUOTES, QUESTIONS, TIME_SLOTS, STOPWORDS, GUIDE_ARTICLES, BFI_QUESTIONS, BFI_DIMENSIONS, BFI_INTERPRETATIONS, generateProfileSummary } from './data.js';
+import { SLOGANS, QUOTES, QUESTIONS, TIME_SLOTS, STOPWORDS, GUIDE_ARTICLES, BFI_QUESTIONS, BFI_DIMENSIONS, BFI_INTERPRETATIONS, generateProfileSummary, VENT_CATEGORIES } from './data.js';
 
 console.log('[Kaizen] data.js içe aktarıldı');
 
@@ -159,6 +159,8 @@ async function loadUserData() {
   await loadJournal();
   console.log('[Kaizen] loadUserData: loadBfiResults çağrılıyor');
   await loadBfiResults();
+  console.log('[Kaizen] loadUserData: loadVentings çağrılıyor');
+  await loadVentings();
   console.log('[Kaizen] loadUserData: updateStreak çağrılıyor');
   await updateStreak();
   console.log('[Kaizen] loadUserData: TAMAM');
@@ -254,6 +256,54 @@ async function updateJournalEntry(id, title, content) {
 
 async function deleteJournalEntry(id) {
   const ref = doc(db, 'users', currentUser.uid, 'journal', id);
+  await deleteDoc(ref);
+}
+
+// =========================================================
+// DERTLEŞME (VENTING) — Firebase CRUD
+// =========================================================
+let ventCache = [];
+let currentVentCategory = null;
+let currentVentQuestion = null;
+let currentVentEntry = null;
+
+async function loadVentings() {
+  try {
+    const ref = collection(db, 'users', currentUser.uid, 'ventings');
+    const q = query(ref, orderBy('timestamp', 'desc'));
+    const snap = await getDocs(q);
+    ventCache = [];
+    snap.forEach(d => {
+      ventCache.push({ id: d.id, ...d.data() });
+    });
+  } catch (e) {
+    console.warn('Dertleşme yüklenemedi:', e);
+    ventCache = [];
+  }
+}
+
+async function addVentEntry(categoryKey, questionIndex, content) {
+  const ref = collection(db, 'users', currentUser.uid, 'ventings');
+  const docRef = await addDoc(ref, {
+    category: categoryKey,
+    questionIndex: questionIndex,
+    content: content.trim(),
+    date: todayStr(),
+    timestamp: Timestamp.now()
+  });
+  return docRef.id;
+}
+
+async function updateVentEntry(id, content) {
+  const ref = doc(db, 'users', currentUser.uid, 'ventings', id);
+  await setDoc(ref, {
+    content: content.trim(),
+    timestamp: Timestamp.now()
+  }, { merge: true });
+}
+
+async function deleteVentEntry(id) {
+  const ref = doc(db, 'users', currentUser.uid, 'ventings', id);
   await deleteDoc(ref);
 }
 
@@ -459,7 +509,7 @@ window.showScreen = function(name) {
   if (name === 'goals') renderGoalsForm();
   if (name === 'history') renderHistory();
   if (name === 'patterns') renderPatterns();
-  if (name === 'capsule') renderCapsule();
+  if (name === 'vent') renderVent();
   if (name === 'guide') renderGuide();
   if (name === 'journal') renderJournal();
   if (name === 'profile') renderProfile();
@@ -509,7 +559,7 @@ function renderSetupBanner() {
   if (!userData.antiVision) missing.push({ label: 'Kaçtığın Hayat', screen: 'vision' });
   if (!userData.identity) missing.push({ label: 'Kimlik', screen: 'vision' });
   if (!userData.yearGoal?.title) missing.push({ label: '1 Yıllık Hedef', screen: 'goals' });
-  if (!userData.monthGoal?.title) missing.push({ label: 'Bu Ayki Boss', screen: 'goals' });
+  if (!userData.monthGoal?.title) missing.push({ label: 'Aylık Hedef', screen: 'goals' });
 
   if (missing.length === 0) {
     box.innerHTML = '';
@@ -548,7 +598,10 @@ function renderSetupBanner() {
 
 function renderHome() {
   const today = new Date();
-  document.getElementById('todayDate').textContent = today.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' });
+  const dateEl = document.getElementById('homeDate');
+  if (dateEl) {
+    dateEl.textContent = today.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
 
   // Kayıt gününden itibaren kaçıncı gün
   let dayNumber = 1;
@@ -559,26 +612,29 @@ function renderHome() {
   }
   document.getElementById('dayCounter').textContent = `${dayNumber}. gün`;
 
-  // Günlük alıntı için hâlâ yılın günü (çeşitlilik olsun diye)
+  // Slogan
   const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
   const seed = today.getDate() + today.getMonth() * 31;
   const slogan = SLOGANS[seed % SLOGANS.length];
   document.getElementById('slogan').innerHTML = `${escapeHtml(slogan.a)}<br><em>${escapeHtml(slogan.b)}</em>`;
 
+  // Günlük alıntı
   const hour = today.getHours();
   const quoteSeed = dayOfYear * 6 + Math.floor(hour / 4);
   const quote = QUOTES[quoteSeed % QUOTES.length];
   document.getElementById('dailyQuote').textContent = `"${quote.t}"`;
   document.getElementById('dailyQuoteAuthor').textContent = quote.a || '';
 
+  // Mikro istatistikler
   document.getElementById('streakNum').textContent = userData.streak || 0;
   const consistency = calcConsistency();
   document.getElementById('consistencyNum').textContent = Math.round(consistency * 100);
   document.getElementById('writtenCount').textContent = historyCache.length;
 
-  // Setup banner — vizyon/kimlik/hedef yoksa belirgin çağrı
+  // Setup banner — eksiklerin listesi
   renderSetupBanner();
 
+  // Kimlik ifadesi
   const identity = userData.identity;
   const stmtEl = document.getElementById('identityStmt');
   if (identity) {
@@ -589,6 +645,7 @@ function renderHome() {
     stmtEl.innerHTML = 'Kimlik ifadeni henüz yazmadın. <span class="tap-hint">Tıkla, başla →</span>';
   }
 
+  // 1 yıllık hedef
   const yg = userData.yearGoal || {};
   const mqPct = calcMainProgress();
   document.getElementById('mainQuestTitle').innerHTML = yg.title
@@ -607,10 +664,11 @@ function renderHome() {
     document.getElementById('mainQuestRemain').textContent = '';
   }
 
+  // Aylık hedef
   const mg = userData.monthGoal || {};
   document.getElementById('bossTitle').innerHTML = mg.title
     ? escapeHtml(mg.title)
-    : 'Bu ayki projen? <span class="tap-hint">Tıkla →</span>';
+    : 'Bu ayki hedefini yaz. <span class="tap-hint">Tıkla →</span>';
   const mp = calcBossProgress();
   document.getElementById('bossBar').style.width = mp + '%';
   const tasks = mg.tasks || [];
@@ -626,24 +684,158 @@ function renderHome() {
   const relevantTodayCount = tasks.filter(t => t.type !== 'milestone' || !t.completedAt).length;
   document.getElementById('bossMeta').textContent = mp + '%' + (tasks.length ? ` · bugün ${todayDoneCount}/${relevantTodayCount}` : ' · görev ekle');
 
-  // Boss görevlerini render et
   renderBossTasks();
-
-  // Ay bitti mi, kutlama var mı?
   checkBossCelebration();
 
-  const av = userData.antiVision;
-  const shadowEl = document.getElementById('shadowText');
-  if (av) {
-    shadowEl.classList.remove('empty');
-    shadowEl.textContent = '"' + (av.length > 110 ? av.slice(0, 110) + '...' : av) + '"';
-  } else {
-    shadowEl.classList.add('empty');
-    shadowEl.innerHTML = 'Kaçtığın hayatı henüz yazmadın. <span class="tap-hint">Tıkla →</span>';
+  renderTimeSlots();
+  renderActiveQuestHero();
+}
+
+// Ana sayfadaki "aktif quest" büyük kartı — en üstte gözüken
+function renderActiveQuestHero() {
+  const box = document.getElementById('activeQuestBlock');
+  if (!box) return;
+
+  const now = getCurrentHourDecimal();
+  const today = todayStr();
+
+  // Kuruluş tamamlanmadı mı?
+  if (!userData.kurulusCompleted) {
+    box.innerHTML = `
+      <div class="active-quest-hero" onclick="startQuest('kurulus', null)">
+        <div class="aqh-accent-bar"></div>
+        <div class="aqh-head">
+          <div>
+            <div class="aqh-label">KURULUŞ</div>
+            <div class="aqh-title">Kendinin haritasını çıkar</div>
+            <div class="aqh-sub">${userData.kurulusIndex || 0} / ${QUESTIONS.kurulus.length} soru · 20-30 dk</div>
+          </div>
+          <div class="aqh-arrow">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </div>
+        </div>
+      </div>
+    `;
+    return;
   }
 
-  renderTimeSlots();
-  renderInsights();
+  // Aktif slot var mı?
+  let activeSlot = null;
+  let nextSlot = null;
+  let doneCount = 0;
+  let sabahDone = false, gunIciDone = false, aksamDone = false;
+
+  TIME_SLOTS.forEach(slot => {
+    const todayAnswers = historyCache.filter(a => a.date === today && a.slotKey === slot.key);
+    const isDone = todayAnswers.length >= slot.count;
+    if (isDone) {
+      doneCount++;
+      if (slot.type === 'sabah') sabahDone = true;
+      if (slot.type === 'gunici') gunIciDone = true;
+      if (slot.type === 'aksam') aksamDone = true;
+    }
+    const isActive = !isDone && now >= slot.start && now < slot.end;
+    if (isActive && !activeSlot) activeSlot = slot;
+    if (!isDone && !activeSlot && now < slot.start && !nextSlot) nextSlot = slot;
+  });
+
+  // Aktif slot varsa
+  if (activeSlot) {
+    const endH = Math.floor(activeSlot.end);
+    const endM = Math.round((activeSlot.end - endH) * 60);
+    const endTime = `${String(endH).padStart(2,'0')}:${String(endM).padStart(2,'0')}`;
+
+    // Durum göstergesi
+    const pillSabah = sabahDone ? '<span class="aqh-pill on">sabah ✓</span>' : (activeSlot.type === 'sabah' ? '<span class="aqh-pill active">sabah</span>' : '<span class="aqh-pill">sabah</span>');
+    const pillGun = gunIciDone ? '<span class="aqh-pill on">gün içi ✓</span>' : (activeSlot.type === 'gunici' ? '<span class="aqh-pill active">gün içi</span>' : '<span class="aqh-pill">gün içi</span>');
+    const pillAksam = aksamDone ? '<span class="aqh-pill on">akşam ✓</span>' : (activeSlot.type === 'aksam' ? '<span class="aqh-pill active">akşam</span>' : '<span class="aqh-pill">akşam</span>');
+
+    box.innerHTML = `
+      <div class="active-quest-hero pulsing" onclick="startQuest('${activeSlot.type}', '${activeSlot.key}')">
+        <div class="aqh-accent-bar"></div>
+        <div class="aqh-head">
+          <div>
+            <div class="aqh-label">GÜNLÜK SORU · ${activeSlot.time}</div>
+            <div class="aqh-title">${escapeHtml(activeSlot.label)}</div>
+            <div class="aqh-sub">${endTime}'e kadar açık · 1 soru</div>
+          </div>
+          <div class="aqh-arrow">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </div>
+        </div>
+        <div class="aqh-pills">${pillSabah}${pillGun}${pillAksam}</div>
+      </div>
+    `;
+    return;
+  }
+
+  // Kaçırılmış slot var mı?
+  let missedSlot = null;
+  TIME_SLOTS.forEach(slot => {
+    const todayAnswers = historyCache.filter(a => a.date === today && a.slotKey === slot.key);
+    const isDone = todayAnswers.length >= slot.count;
+    if (!isDone && now >= slot.end && !missedSlot) missedSlot = slot;
+  });
+
+  if (missedSlot) {
+    box.innerHTML = `
+      <div class="active-quest-hero missed" onclick="startQuest('${missedSlot.type}', '${missedSlot.key}')">
+        <div class="aqh-accent-bar missed-bar"></div>
+        <div class="aqh-head">
+          <div>
+            <div class="aqh-label missed-label">KAÇIRILDI · ${missedSlot.time}</div>
+            <div class="aqh-title">${escapeHtml(missedSlot.label)}</div>
+            <div class="aqh-sub">Penceresi kapandı — ama hâlâ cevaplayabilirsin</div>
+          </div>
+          <div class="aqh-arrow">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // Sıradaki slot (gelecekte)
+  if (nextSlot) {
+    const untilMin = Math.round((nextSlot.start - now) * 60);
+    const untilText = untilMin >= 60 ? `${Math.floor(untilMin / 60)} saat ${untilMin % 60} dk sonra` : `${untilMin} dk sonra`;
+
+    box.innerHTML = `
+      <div class="active-quest-hero upcoming">
+        <div class="aqh-head">
+          <div>
+            <div class="aqh-label upcoming-label">BİR SONRAKİ · ${nextSlot.time}</div>
+            <div class="aqh-title upcoming-title">${escapeHtml(nextSlot.label)}</div>
+            <div class="aqh-sub">${untilText} açılacak</div>
+          </div>
+          <div class="aqh-arrow upcoming-arrow">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // Bütün gün bitti — hepsi tamam
+  const totalSlots = TIME_SLOTS.length;
+  if (doneCount === totalSlots) {
+    box.innerHTML = `
+      <div class="active-quest-hero all-done">
+        <div class="aqh-head">
+          <div>
+            <div class="aqh-label sage-label">BUGÜN TAMAM</div>
+            <div class="aqh-title">Bu günün kanıtı yazıldı</div>
+            <div class="aqh-sub">${doneCount}/${totalSlots} soru · yarın yeni bir gün</div>
+          </div>
+          <div class="aqh-arrow sage-arrow">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </div>
+      </div>
+    `;
+  }
 }
 
 function calcConsistency() {
@@ -788,8 +980,8 @@ function showBossCelebration() {
 
   const level = pct >= 80 ? 'zafer' : pct >= 50 ? 'dengeli' : 'dersler';
   const titles = {
-    zafer: 'Boss yenildi!',
-    dengeli: 'Boss geçildi',
+    zafer: 'Hedef bitti!',
+    dengeli: 'Hedef geçildi',
     dersler: 'Ay bitti'
   };
   const subs = {
@@ -801,7 +993,7 @@ function showBossCelebration() {
   document.getElementById('celebrationTitle').textContent = titles[level];
   document.getElementById('celebrationSub').textContent = subs[level];
   document.getElementById('celebrationPct').textContent = pct;
-  document.getElementById('celebrationBossName').textContent = mg.title || 'Boss';
+  document.getElementById('celebrationBossName').textContent = mg.title || 'Aylık Hedef';
   document.getElementById('celebrationTaskCount').textContent = doneCount;
   document.getElementById('celebrationTaskTotal').textContent = tasks.length;
 
@@ -1716,6 +1908,54 @@ function scheduleNotifs() {
   });
 }
 
+window.cleanupDuplicates = async function() {
+  if (!confirm('Aynı cevapları (bire bir aynı olanları) temizleyeceğim. Benzer ama farklı cevaplar korunacak. Devam?')) return;
+
+  showToast('Tarama başladı...');
+
+  try {
+    // Cevapları grupla: aynı slotKey + aynı date + aynı questionId + aynı answer metni = kopya
+    const groups = {};
+    historyCache.forEach(a => {
+      const key = `${a.slotKey || ''}::${a.date || ''}::${a.questionId || ''}::${(a.answer || '').trim()}`;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(a);
+    });
+
+    let toDelete = [];
+    Object.values(groups).forEach(group => {
+      if (group.length > 1) {
+        // En eskisi kalsın, diğerlerini sil
+        group.sort((a, b) => {
+          const ta = a.timestamp?.toDate ? a.timestamp.toDate().getTime() : 0;
+          const tb = b.timestamp?.toDate ? b.timestamp.toDate().getTime() : 0;
+          return ta - tb;
+        });
+        toDelete.push(...group.slice(1));
+      }
+    });
+
+    if (toDelete.length === 0) {
+      showToast('Kopya bulunamadı, veriler temiz.');
+      return;
+    }
+
+    if (!confirm(`${toDelete.length} adet bire bir aynı cevap bulundu. Silinsin mi?`)) return;
+
+    for (const a of toDelete) {
+      const ref = doc(db, 'users', currentUser.uid, 'answers', a.id);
+      await deleteDoc(ref);
+    }
+
+    await loadHistory();
+    showToast(`${toDelete.length} kopya temizlendi.`);
+    if (document.getElementById('screen-home').classList.contains('active')) renderHome();
+  } catch (e) {
+    console.error(e);
+    showToast('Hata: ' + e.message);
+  }
+};
+
 window.exportData = async function() {
   const data = { profile: userData, answers: historyCache, exportDate: new Date().toISOString() };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -2279,6 +2519,265 @@ window.deleteCurrentJournal = async function() {
 };
 
 // =========================================================
+// DERTLEŞME (VENTING) — kategori seçimi, soru listesi, yazma
+// =========================================================
+
+function renderVent() {
+  const box = document.getElementById('ventContent');
+  if (!box) return;
+
+  if (currentVentEntry !== null) {
+    renderVentEditor();
+    return;
+  }
+
+  if (currentVentCategory) {
+    renderVentCategoryQuestions();
+    return;
+  }
+
+  renderVentCategoryList();
+}
+
+function renderVentCategoryList() {
+  const box = document.getElementById('ventContent');
+
+  // Her kategorinin kaç dertleşmesi var, say
+  const categoryCounts = {};
+  ventCache.forEach(v => {
+    categoryCounts[v.category] = (categoryCounts[v.category] || 0) + 1;
+  });
+
+  const cards = VENT_CATEGORIES.map(cat => {
+    const count = categoryCounts[cat.key] || 0;
+    return `
+      <button class="vent-cat-card c-${cat.color}" onclick="selectVentCategory('${cat.key}')">
+        <div class="vent-cat-head">
+          <div class="vent-cat-name">${escapeHtml(cat.name)}</div>
+          ${count > 0 ? `<div class="vent-cat-count">${count}</div>` : ''}
+        </div>
+        <div class="vent-cat-sub">${escapeHtml(cat.sub)}</div>
+        <div class="vent-cat-arrow">→</div>
+      </button>
+    `;
+  }).join('');
+
+  box.innerHTML = `
+    <div class="vent-intro">
+      <p>Hayatın bir alanına odaklan. Seni en çok zorlayan, en çok düşündüğün hangi konu? Oraya gir, 10 soru seni bekliyor. İstediğine yaz, istediğini atla — baskı yok.</p>
+    </div>
+    <div class="vent-cat-grid">${cards}</div>
+  `;
+}
+
+window.selectVentCategory = function(key) {
+  currentVentCategory = VENT_CATEGORIES.find(c => c.key === key);
+  if (!currentVentCategory) return;
+  renderVent();
+};
+
+window.backToVentCategories = function() {
+  currentVentCategory = null;
+  currentVentQuestion = null;
+  renderVent();
+};
+
+function renderVentCategoryQuestions() {
+  const box = document.getElementById('ventContent');
+  const cat = currentVentCategory;
+
+  const answeredMap = {};
+  ventCache.forEach(v => {
+    if (v.category === cat.key && v.questionIndex !== undefined) {
+      if (!answeredMap[v.questionIndex]) answeredMap[v.questionIndex] = [];
+      answeredMap[v.questionIndex].push(v);
+    }
+  });
+
+  const questionCards = cat.questions.map((q, i) => {
+    const answers = answeredMap[i] || [];
+    const hasAnswers = answers.length > 0;
+
+    return `
+      <div class="vent-q-card ${hasAnswers ? 'answered' : ''}" onclick="openVentQuestion(${i})">
+        <div class="vent-q-head">
+          <div class="vent-q-num">${String(i + 1).padStart(2, '0')}</div>
+          ${hasAnswers ? `<div class="vent-q-badge">${answers.length} yazı</div>` : ''}
+        </div>
+        <div class="vent-q-text">${escapeHtml(q)}</div>
+        <div class="vent-q-action">${hasAnswers ? 'Yazdıkların →' : 'Dert dök →'}</div>
+      </div>
+    `;
+  }).join('');
+
+  box.innerHTML = `
+    <div class="vent-category-header c-${cat.color}">
+      <button class="vent-back-btn" onclick="backToVentCategories()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Kategoriler
+      </button>
+      <h3 class="vent-cat-title">${escapeHtml(cat.name)}</h3>
+      <p class="vent-cat-lead">${escapeHtml(cat.sub)}</p>
+    </div>
+    <div class="vent-questions">${questionCards}</div>
+  `;
+}
+
+window.openVentQuestion = function(qIndex) {
+  currentVentQuestion = qIndex;
+  currentVentEntry = { id: null, new: true, content: '', category: currentVentCategory.key, questionIndex: qIndex };
+  renderVent();
+};
+
+window.closeVentEntry = function() {
+  currentVentEntry = null;
+  currentVentQuestion = null;
+  renderVent();
+};
+
+function renderVentEditor() {
+  const box = document.getElementById('ventContent');
+  const cat = currentVentCategory;
+  const qIndex = currentVentEntry.questionIndex;
+  const qText = cat.questions[qIndex];
+
+  // Bu soruya olan tüm geçmiş cevaplar
+  const prevEntries = ventCache.filter(v => v.category === cat.key && v.questionIndex === qIndex);
+
+  let prevHtml = '';
+  if (prevEntries.length > 0) {
+    prevHtml = `
+      <div class="vent-prev-section">
+        <div class="vent-prev-header">
+          <span>ÖNCEKİ YAZDIKLARIN (${prevEntries.length})</span>
+        </div>
+        <div class="vent-prev-list">
+          ${prevEntries.map(e => {
+            const d = e.timestamp?.toDate ? e.timestamp.toDate() : new Date();
+            const dateStr = d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+            return `
+              <div class="vent-prev-card" onclick="openExistingVent('${e.id}')">
+                <div class="vent-prev-date">${dateStr}</div>
+                <div class="vent-prev-excerpt">${escapeHtml((e.content || '').slice(0, 180))}${e.content && e.content.length > 180 ? '...' : ''}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  box.innerHTML = `
+    <div class="vent-editor">
+      <div class="vent-editor-header c-${cat.color}">
+        <button class="vent-back-btn" onclick="closeVentEntry()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Geri
+        </button>
+        <div class="vent-editor-cat">${escapeHtml(cat.name)} · Soru ${qIndex + 1}/10</div>
+      </div>
+
+      <div class="vent-editor-question">
+        ${escapeHtml(qText)}
+      </div>
+
+      <textarea
+        class="vent-editor-area"
+        id="ventEditorArea"
+        placeholder="Ne hissediyorsan onu yaz. Kısa olsun uzun olsun, parça parça olsun — fark etmez. Seni kimse görmüyor."
+      >${escapeHtml(currentVentEntry.content || '')}</textarea>
+
+      <div class="vent-editor-footer">
+        <div class="vent-editor-status" id="ventEditorStatus">Otomatik kaydediliyor</div>
+        <div class="vent-editor-actions">
+          ${!currentVentEntry.new && currentVentEntry.id ? `<button class="btn-ghost vent-delete-btn" onclick="deleteCurrentVent()">Sil</button>` : ''}
+          <button class="btn-primary" onclick="saveVentManual()">Kaydet & Kapat</button>
+        </div>
+      </div>
+
+      ${prevHtml}
+    </div>
+  `;
+
+  setTimeout(() => {
+    const ta = document.getElementById('ventEditorArea');
+    if (ta && currentVentEntry.new) ta.focus();
+
+    let saveTimer = null;
+    const doAutoSave = async () => {
+      const content = document.getElementById('ventEditorArea').value;
+      if (!content.trim()) return;
+
+      const status = document.getElementById('ventEditorStatus');
+      if (status) status.textContent = 'Kaydediliyor...';
+
+      try {
+        if (currentVentEntry.new && !currentVentEntry.id) {
+          const id = await addVentEntry(currentVentCategory.key, currentVentEntry.questionIndex, content);
+          currentVentEntry.id = id;
+          currentVentEntry.new = false;
+        } else if (currentVentEntry.id) {
+          await updateVentEntry(currentVentEntry.id, content);
+        }
+        await loadVentings();
+        if (status) {
+          status.textContent = 'Kaydedildi ✓';
+          setTimeout(() => { if (status) status.textContent = 'Otomatik kaydediliyor'; }, 1500);
+        }
+      } catch (e) {
+        console.error(e);
+        if (status) status.textContent = 'Kayıt hatası';
+      }
+    };
+
+    const scheduleAutoSave = () => {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(doAutoSave, 1500);
+    };
+
+    if (ta) ta.addEventListener('input', scheduleAutoSave);
+  }, 100);
+}
+
+window.openExistingVent = function(id) {
+  const entry = ventCache.find(v => v.id === id);
+  if (!entry) return;
+  currentVentEntry = { ...entry, new: false };
+  currentVentQuestion = entry.questionIndex;
+  renderVent();
+};
+
+window.saveVentManual = async function() {
+  const content = document.getElementById('ventEditorArea')?.value || '';
+  if (!content.trim()) {
+    closeVentEntry();
+    return;
+  }
+
+  try {
+    if (currentVentEntry.new && !currentVentEntry.id) {
+      await addVentEntry(currentVentCategory.key, currentVentEntry.questionIndex, content);
+    } else if (currentVentEntry.id) {
+      await updateVentEntry(currentVentEntry.id, content);
+    }
+    await loadVentings();
+    showToast('Kaydedildi.');
+    closeVentEntry();
+  } catch (e) {
+    showToast('Hata: ' + e.message);
+  }
+};
+
+window.deleteCurrentVent = async function() {
+  if (!currentVentEntry?.id) return;
+  if (!confirm('Bu dertleşmeyi silmek istediğine emin misin?')) return;
+  await deleteVentEntry(currentVentEntry.id);
+  await loadVentings();
+  showToast('Silindi.');
+  closeVentEntry();
+};
+
+// =========================================================
 // BFI-44 KİŞİLİK TESTİ
 // =========================================================
 
@@ -2368,6 +2867,37 @@ function renderBfiIntro(box, status) {
       </div>
 
       <button class="btn-save bfi-start-btn" onclick="startBfiTest()">Testi Başlat →</button>
+    </div>
+    ${renderTimeCapsuleBlock()}
+  `;
+}
+
+function renderTimeCapsuleBlock() {
+  const capsules = getCapsuleEntries();
+  if (!capsules.length) return '';
+
+  return `
+    <div class="time-capsule-block">
+      <div class="time-capsule-header">
+        <div class="tc-label">ZAMAN KAPSÜLÜ</div>
+        <div class="tc-sub">Geçmişteki sen, şimdiki sana hesap soruyor.</div>
+      </div>
+      <div class="time-capsule-list">
+        ${capsules.map(c => {
+          const d = c.entry.timestamp?.toDate ? c.entry.timestamp.toDate() : new Date(c.entry.date);
+          const dateStr = d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' });
+          return `
+            <div class="tc-card">
+              <div class="tc-card-head">
+                <span class="tc-days">${c.daysAgo} gün önce</span>
+                <span class="tc-date">${dateStr}</span>
+              </div>
+              <div class="tc-q">${escapeHtml(c.entry.question || '')}</div>
+              <div class="tc-a">${escapeHtml((c.entry.answer || '').slice(0, 260))}${c.entry.answer && c.entry.answer.length > 260 ? '...' : ''}</div>
+            </div>
+          `;
+        }).join('')}
+      </div>
     </div>
   `;
 }
@@ -2489,6 +3019,7 @@ function renderBfiResults(box, status) {
       </div>
       ` : ''}
     </div>
+    ${renderTimeCapsuleBlock()}
   `;
 }
 
