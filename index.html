@@ -457,6 +457,23 @@
 </nav>
 
 <div class="toast" id="toast">Mesaj</div>
+
+<div class="answer-modal" id="answerModal" onclick="if(event.target===this) closeAnswerView()">
+  <div class="answer-modal-sheet">
+    <div class="answer-modal-header">
+      <div>
+        <div class="answer-modal-title" id="answerModalTitle">Cevaplar</div>
+        <div class="answer-modal-sub" id="answerModalSub"></div>
+      </div>
+      <button class="answer-modal-close" onclick="closeAnswerView()">×</button>
+    </div>
+    <div class="answer-modal-body" id="answerModalList"></div>
+    <div class="answer-modal-footer">
+      Bu cevap kilitli. Değiştiremezsin — <em>kendi dürüst anın</em> olarak kalır.
+    </div>
+  </div>
+</div>
+
 <!-- SCRIPTS -->
 <script type="module" src="app.js"></script>
 </body>
