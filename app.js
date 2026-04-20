@@ -42,7 +42,9 @@ let userData = {
   lastWeeklyRitual: null,
   lastMonthlyRitual: null,
   onboardingDone: false,
-  notifEnabled: false
+  notifEnabled: false,
+  journalPinHash: null,
+  journalIncludeInPatterns: false
 };
 let currentQuestType = null;
 let currentQuestSlot = null;
@@ -52,6 +54,9 @@ let currentAnswers = [];
 let historyCache = [];
 let historyFilter = 'all';
 let onboardIndex = 0;
+let journalCache = [];
+let journalUnlocked = false;
+let currentJournalEntry = null;
 
 document.getElementById('loginBtn').addEventListener('click', async () => {
   try {
@@ -108,6 +113,7 @@ async function loadUserData() {
     await setDoc(ref, userData);
   }
   await loadHistory();
+  await loadJournal();
   await updateStreak();
 }
 
@@ -157,6 +163,50 @@ async function loadHistory() {
   });
 }
 
+async function loadJournal() {
+  const ref = collection(db, 'users', currentUser.uid, 'journal');
+  const q = query(ref, orderBy('timestamp', 'desc'));
+  const snap = await getDocs(q);
+  journalCache = [];
+  snap.forEach(d => {
+    journalCache.push({ id: d.id, ...d.data() });
+  });
+}
+
+async function addJournalEntry(title, content) {
+  const ref = collection(db, 'users', currentUser.uid, 'journal');
+  const docRef = await addDoc(ref, {
+    title: title.trim(),
+    content: content.trim(),
+    date: todayStr(),
+    timestamp: Timestamp.now()
+  });
+  return docRef.id;
+}
+
+async function updateJournalEntry(id, title, content) {
+  const ref = doc(db, 'users', currentUser.uid, 'journal', id);
+  await setDoc(ref, {
+    title: title.trim(),
+    content: content.trim(),
+    date: todayStr(),
+    timestamp: Timestamp.now()
+  }, { merge: true });
+}
+
+async function deleteJournalEntry(id) {
+  const ref = doc(db, 'users', currentUser.uid, 'journal', id);
+  await deleteDoc(ref);
+}
+
+async function hashPin(pin) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(pin + '::kaizen::' + currentUser.uid);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 function todayStr() { return new Date().toISOString().slice(0, 10); }
 
 function showToast(msg) {
@@ -180,6 +230,7 @@ window.showScreen = function(name) {
   if (name === 'patterns') renderPatterns();
   if (name === 'capsule') renderCapsule();
   if (name === 'guide') renderGuide();
+  if (name === 'journal') renderJournal();
   if (name === 'settings') renderSettings();
   window.scrollTo(0, 0);
 };
@@ -478,6 +529,15 @@ function detectPatterns() {
       if (w.length > 4 && !STOPWORDS.has(w)) words[w] = (words[w] || 0) + 1;
     });
   });
+  // Kullanıcı isterse günlük yazılarını da analize dahil et
+  if (userData.journalIncludeInPatterns && journalCache.length) {
+    journalCache.slice(0, 100).forEach(entry => {
+      const text = ((entry.title || '') + ' ' + (entry.content || '')).toLowerCase().replace(/[^\wçğıöşü\s]/gi, ' ');
+      text.split(/\s+/).forEach(w => {
+        if (w.length > 4 && !STOPWORDS.has(w)) words[w] = (words[w] || 0) + 1;
+      });
+    });
+  }
   const top = Object.entries(words).filter(([w, c]) => c >= 4).sort((a, b) => b[1] - a[1]);
   if (top.length) {
     const w = top[0];
@@ -1217,6 +1277,442 @@ window.openAnswerView = function(slotKey, date) {
 window.closeAnswerView = function() {
   document.getElementById('answerModal').classList.remove('show');
   document.body.style.overflow = '';
+};
+
+// =========================================================
+// GÜNLÜK (JOURNAL) — Serbest Yazma
+// =========================================================
+
+function renderJournal() {
+  if (userData.journalPinHash && !journalUnlocked) {
+    renderJournalLock();
+    return;
+  }
+  if (!userData.journalPinHash) {
+    renderJournalPinSetup();
+    return;
+  }
+  renderJournalList();
+}
+
+function renderJournalPinSetup() {
+  const box = document.getElementById('journalContent');
+  box.innerHTML = `
+    <div class="journal-setup">
+      <div class="journal-setup-icon">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="5" y="11" width="14" height="10" rx="2"/>
+          <path d="M8 11V7a4 4 0 018 0v4"/>
+        </svg>
+      </div>
+      <h3>Günlüğünü şifrele</h3>
+      <p class="journal-setup-lead">Burada yazdıkların sadece sana ait. Telefonun başka birinin eline geçse bile erişemez.</p>
+      <div class="journal-pin-info">
+        <div class="pin-info-item">
+          <span class="pin-info-dot"></span>
+          <span>4-6 haneli sayısal PIN belirle</span>
+        </div>
+        <div class="pin-info-item">
+          <span class="pin-info-dot"></span>
+          <span>Google şifrenden ayrıdır — sadece günlük için</span>
+        </div>
+        <div class="pin-info-item warn">
+          <span class="pin-info-dot"></span>
+          <span>PIN'i unutursan, kurtarılamaz — eski yazıları silmeden göremezsin</span>
+        </div>
+      </div>
+      <div class="pin-input-block">
+        <label>Yeni PIN</label>
+        <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" class="pin-input" id="newPin1" placeholder="••••">
+        <label style="margin-top: 14px;">PIN'i tekrar gir</label>
+        <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" class="pin-input" id="newPin2" placeholder="••••">
+        <div class="pin-error hidden" id="pinError"></div>
+      </div>
+      <button class="btn-save" onclick="saveNewPin()">PIN'i kaydet ve günlüğe gir</button>
+    </div>
+  `;
+}
+
+window.saveNewPin = async function() {
+  const p1 = document.getElementById('newPin1').value.trim();
+  const p2 = document.getElementById('newPin2').value.trim();
+  const err = document.getElementById('pinError');
+  err.classList.add('hidden');
+
+  if (!/^\d{4,6}$/.test(p1)) {
+    err.textContent = 'PIN 4 ile 6 arası rakamdan oluşmalı';
+    err.classList.remove('hidden');
+    return;
+  }
+  if (p1 !== p2) {
+    err.textContent = 'İki PIN eşleşmiyor';
+    err.classList.remove('hidden');
+    return;
+  }
+
+  userData.journalPinHash = await hashPin(p1);
+  await saveUserData();
+  journalUnlocked = true;
+  showToast('PIN ayarlandı. Günlüğün güvende.');
+  renderJournal();
+};
+
+let pinAttempts = 0;
+let pinLockUntil = 0;
+
+function renderJournalLock() {
+  const box = document.getElementById('journalContent');
+  const now = Date.now();
+  const locked = now < pinLockUntil;
+  const remainSec = Math.ceil((pinLockUntil - now) / 1000);
+
+  box.innerHTML = `
+    <div class="journal-lock">
+      <div class="lock-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+          <rect x="5" y="11" width="14" height="10" rx="2"/>
+          <path d="M8 11V7a4 4 0 018 0v4"/>
+        </svg>
+      </div>
+      <h3>Günlüğüne PIN gir</h3>
+      <p class="lock-lead">Yazdıkların sadece sana ait.</p>
+      ${locked ? `
+        <div class="lock-countdown">
+          ${remainSec} saniye bekle...
+        </div>
+      ` : `
+        <div class="pin-input-block">
+          <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" class="pin-input pin-input-center" id="unlockPin" placeholder="••••" autofocus>
+          <div class="pin-error hidden" id="lockPinError"></div>
+        </div>
+        <button class="btn-save" onclick="tryUnlock()">Kilidi aç</button>
+        <div class="lock-footer" onclick="forgotPin()">PIN'imi unuttum</div>
+      `}
+    </div>
+  `;
+
+  if (locked) {
+    setTimeout(() => renderJournalLock(), 1000);
+  } else {
+    setTimeout(() => {
+      const inp = document.getElementById('unlockPin');
+      if (inp) {
+        inp.focus();
+        inp.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') window.tryUnlock();
+        });
+      }
+    }, 100);
+  }
+}
+
+window.tryUnlock = async function() {
+  const pin = document.getElementById('unlockPin').value.trim();
+  const err = document.getElementById('lockPinError');
+  err.classList.add('hidden');
+
+  if (!/^\d{4,6}$/.test(pin)) {
+    err.textContent = 'PIN 4-6 rakam olmalı';
+    err.classList.remove('hidden');
+    return;
+  }
+
+  const hash = await hashPin(pin);
+  if (hash === userData.journalPinHash) {
+    journalUnlocked = true;
+    pinAttempts = 0;
+    showToast('Hoş geldin.');
+    renderJournal();
+  } else {
+    pinAttempts++;
+    if (pinAttempts >= 3) {
+      pinLockUntil = Date.now() + 60000;
+      pinAttempts = 0;
+      err.textContent = '3 yanlış deneme. 60 saniye bekle.';
+    } else {
+      err.textContent = `Yanlış PIN. ${3 - pinAttempts} hakkın kaldı.`;
+    }
+    err.classList.remove('hidden');
+    document.getElementById('unlockPin').value = '';
+    if (pinLockUntil > Date.now()) renderJournalLock();
+  }
+};
+
+window.forgotPin = async function() {
+  const confirmed = confirm('PIN\'i sıfırlamak için tüm günlük yazılarını silmek gerekiyor. Devam etmek istiyor musun?');
+  if (!confirmed) return;
+  const confirmed2 = confirm('Emin misin? Bu işlem GERİ ALINAMAZ. Tüm günlük yazıların silinecek.');
+  if (!confirmed2) return;
+
+  const jRef = collection(db, 'users', currentUser.uid, 'journal');
+  const snap = await getDocs(jRef);
+  for (const d of snap.docs) await deleteDoc(d.ref);
+
+  userData.journalPinHash = null;
+  await saveUserData();
+  journalCache = [];
+  pinAttempts = 0;
+  pinLockUntil = 0;
+  journalUnlocked = false;
+  showToast('Günlük sıfırlandı. Yeni PIN belirle.');
+  if (document.getElementById('screen-journal').classList.contains('active')) {
+    renderJournal();
+  }
+};
+
+window.changeJournalPin = async function() {
+  if (!userData.journalPinHash) {
+    showToast('Henüz PIN belirlememişsin. Günlük sekmesinden belirle.');
+    showScreen('journal');
+    return;
+  }
+
+  const oldPin = prompt('Mevcut PIN\'ini gir:');
+  if (!oldPin) return;
+  const oldHash = await hashPin(oldPin.trim());
+  if (oldHash !== userData.journalPinHash) {
+    showToast('Mevcut PIN yanlış.');
+    return;
+  }
+
+  const newPin = prompt('Yeni PIN (4-6 rakam):');
+  if (!newPin || !/^\d{4,6}$/.test(newPin.trim())) {
+    showToast('Geçersiz PIN formatı.');
+    return;
+  }
+  const confirmPin = prompt('Yeni PIN\'i tekrar gir:');
+  if (confirmPin?.trim() !== newPin.trim()) {
+    showToast('PIN\'ler eşleşmiyor.');
+    return;
+  }
+
+  userData.journalPinHash = await hashPin(newPin.trim());
+  await saveUserData();
+  showToast('PIN güncellendi.');
+};
+
+function renderJournalList() {
+  const box = document.getElementById('journalContent');
+  if (currentJournalEntry !== null) {
+    renderJournalEditor();
+    return;
+  }
+
+  const patternStatus = userData.journalIncludeInPatterns
+    ? { txt: 'Örüntülere dahil', cls: 'on' }
+    : { txt: 'Örüntülerden ayrı', cls: 'off' };
+
+  let listHtml = '';
+  if (!journalCache.length) {
+    listHtml = `
+      <div class="journal-empty">
+        <p>Henüz yazılmış bir sayfa yok.</p>
+        <p class="small">Sağ üstteki "Yeni sayfa" ile başla.</p>
+      </div>
+    `;
+  } else {
+    listHtml = journalCache.map(entry => {
+      const d = entry.timestamp?.toDate ? entry.timestamp.toDate() : new Date();
+      const preview = entry.content.replace(/\s+/g, ' ').slice(0, 140);
+      const title = entry.title || 'Başlıksız';
+      return `
+        <div class="journal-card" onclick="openJournalEntry('${entry.id}')">
+          <div class="journal-card-date">
+            ${d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
+            · ${d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+          </div>
+          <div class="journal-card-title">${escapeHtml(title)}</div>
+          <div class="journal-card-preview">${escapeHtml(preview)}${entry.content.length > 140 ? '...' : ''}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  box.innerHTML = `
+    <div class="journal-top-bar">
+      <div class="journal-count">
+        <span class="count-num">${journalCache.length}</span>
+        <span class="count-lbl">${journalCache.length === 1 ? 'sayfa' : 'sayfa'}</span>
+      </div>
+      <div class="journal-actions">
+        <button class="journal-pattern-toggle ${patternStatus.cls}" onclick="toggleJournalPatterns()" title="${patternStatus.txt}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>
+          <span>${patternStatus.txt}</span>
+        </button>
+        <button class="journal-new-btn" onclick="openJournalEntry('new')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          <span>Yeni sayfa</span>
+        </button>
+      </div>
+    </div>
+    <div class="journal-list">${listHtml}</div>
+  `;
+}
+
+window.toggleJournalPatterns = function() {
+  const modal = document.getElementById('answerModal');
+  const title = document.getElementById('answerModalTitle');
+  const sub = document.getElementById('answerModalSub');
+  const list = document.getElementById('answerModalList');
+  const footer = document.querySelector('.answer-modal-footer');
+
+  const isOn = userData.journalIncludeInPatterns;
+  title.textContent = 'Örüntü Algılayıcı Nedir?';
+  sub.textContent = 'Günlük yazılarını dahil etmeli miyim?';
+
+  list.innerHTML = `
+    <div class="pattern-explain">
+      <p>Örüntü algılayıcı, cevaplarındaki <em>tekrarlayan kelimeleri</em> ve <em>kendi tutarsızlıklarını</em> sadece <strong>SANA</strong> gösterir.</p>
+      <p><strong>Kimse başka göremez.</strong> Ben de, arkadaşların da, kimse. Veriler Firebase'de şifreli duruyor — sadece senin Google hesabınla açılıyor.</p>
+      <p>Örnek: 14 günde 11 kez "yorgunum" yazmışsan, sistem sana "<em>bir mesaj mı taşıyor?</em>" diye sorar.</p>
+      <div class="pattern-explain-options">
+        <div class="pattern-option ${isOn ? '' : 'selected'}" onclick="setJournalPatterns(false)">
+          <div class="pattern-option-head">
+            <div class="pattern-option-radio ${isOn ? '' : 'on'}"></div>
+            <div class="pattern-option-title">Sadece soru cevapları</div>
+          </div>
+          <div class="pattern-option-desc">Günlüğün tamamen özel kalır. Sistem günlük yazılarından örüntü çıkarmaz.</div>
+        </div>
+        <div class="pattern-option ${isOn ? 'selected' : ''}" onclick="setJournalPatterns(true)">
+          <div class="pattern-option-head">
+            <div class="pattern-option-radio ${isOn ? 'on' : ''}"></div>
+            <div class="pattern-option-title">Soru cevapları + Günlük</div>
+          </div>
+          <div class="pattern-option-desc">Günlük yazıların da analiz edilir. Daha derin örüntüler görürsün ama yine kimse okumaz.</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  footer.innerHTML = 'İstediğin an buradan değiştirebilirsin.';
+  modal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+};
+
+window.setJournalPatterns = async function(val) {
+  userData.journalIncludeInPatterns = val;
+  await saveUserData();
+  window.closeAnswerView();
+  showToast(val ? 'Günlük örüntülere dahil edildi.' : 'Günlük örüntülerden ayrıldı.');
+  renderJournal();
+};
+
+window.openJournalEntry = function(idOrNew) {
+  if (idOrNew === 'new') {
+    currentJournalEntry = { id: null, title: '', content: '', new: true };
+  } else {
+    const entry = journalCache.find(e => e.id === idOrNew);
+    if (!entry) return;
+    currentJournalEntry = { ...entry, new: false };
+  }
+  renderJournalEditor();
+};
+
+window.closeJournalEntry = function() {
+  currentJournalEntry = null;
+  renderJournalList();
+};
+
+function renderJournalEditor() {
+  const box = document.getElementById('journalContent');
+  const today = new Date();
+  const dateStr = currentJournalEntry.new
+    ? today.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
+    : (() => {
+        const d = currentJournalEntry.timestamp?.toDate ? currentJournalEntry.timestamp.toDate() : new Date();
+        return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+      })();
+
+  box.innerHTML = `
+    <div class="journal-editor">
+      <div class="journal-page">
+        <div class="journal-page-header">
+          <button class="journal-back" onclick="closeJournalEntry()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            <span>Kapat</span>
+          </button>
+          <div class="journal-page-date">${dateStr}</div>
+          ${!currentJournalEntry.new ? `<button class="journal-delete" onclick="deleteCurrentJournal()" title="Sil"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>` : `<div style="width: 30px;"></div>`}
+        </div>
+        <input
+          type="text"
+          class="journal-title-input"
+          id="journalTitle"
+          placeholder="Başlık (istersen)..."
+          value="${escapeAttr(currentJournalEntry.title || '')}"
+        >
+        <textarea
+          class="journal-content"
+          id="journalContent_ta"
+          placeholder="İçinden ne geçiyorsa yaz. Saçma gelsin, mantıklı gelsin, dağınık olsun — fark etmez. Burası senin defterin."
+        >${escapeHtml(currentJournalEntry.content || '')}</textarea>
+      </div>
+      <div class="journal-editor-footer">
+        <div class="journal-save-status" id="journalSaveStatus">Otomatik kaydediliyor</div>
+        <button class="btn-primary journal-save-btn" onclick="saveJournalManual()">Kaydet & Kapat</button>
+      </div>
+    </div>
+  `;
+
+  setTimeout(() => {
+    const ta = document.getElementById('journalContent_ta');
+    if (ta && currentJournalEntry.new) ta.focus();
+
+    let saveTimer = null;
+    const doAutoSave = async () => {
+      const title = document.getElementById('journalTitle').value;
+      const content = document.getElementById('journalContent_ta').value;
+      if (!content.trim() && !title.trim()) return;
+
+      const status = document.getElementById('journalSaveStatus');
+      status.textContent = 'Kaydediliyor...';
+
+      if (currentJournalEntry.new && !currentJournalEntry.id) {
+        const id = await addJournalEntry(title, content);
+        currentJournalEntry.id = id;
+        currentJournalEntry.new = false;
+      } else if (currentJournalEntry.id) {
+        await updateJournalEntry(currentJournalEntry.id, title, content);
+      }
+      await loadJournal();
+      status.textContent = 'Kaydedildi ✓';
+      setTimeout(() => { if (status) status.textContent = 'Otomatik kaydediliyor'; }, 1500);
+    };
+
+    const scheduleAutoSave = () => {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(doAutoSave, 1200);
+    };
+
+    document.getElementById('journalTitle').addEventListener('input', scheduleAutoSave);
+    if (ta) ta.addEventListener('input', scheduleAutoSave);
+  }, 100);
+}
+
+window.saveJournalManual = async function() {
+  const title = document.getElementById('journalTitle').value;
+  const content = document.getElementById('journalContent_ta').value;
+  if (!content.trim() && !title.trim()) {
+    closeJournalEntry();
+    return;
+  }
+  if (currentJournalEntry.new && !currentJournalEntry.id) {
+    await addJournalEntry(title, content);
+  } else if (currentJournalEntry.id) {
+    await updateJournalEntry(currentJournalEntry.id, title, content);
+  }
+  await loadJournal();
+  showToast('Kaydedildi.');
+  closeJournalEntry();
+};
+
+window.deleteCurrentJournal = async function() {
+  if (!currentJournalEntry?.id) return;
+  if (!confirm('Bu sayfayı silmek istediğine emin misin?')) return;
+  await deleteJournalEntry(currentJournalEntry.id);
+  await loadJournal();
+  showToast('Sayfa silindi.');
+  closeJournalEntry();
 };
 
 function escapeHtml(s) {
