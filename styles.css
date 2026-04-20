@@ -3357,3 +3357,103 @@ input, textarea, select { font-family: inherit; color: inherit; }
   .nav-item { font-size: 8px; }
   .nav-item svg { width: 14px; height: 14px; }
 }
+
+/* === BFI HATA KURTARMA VE BEKLEMEDE TEST === */
+
+.bfi-error-recover {
+  max-width: 480px;
+  margin: 40px auto;
+  padding: 32px 24px;
+  text-align: center;
+  background: rgba(139, 58, 58, 0.04);
+  border: 0.5px solid rgba(139, 58, 58, 0.2);
+  border-radius: 12px;
+}
+.bfi-error-recover .bfi-error-icon {
+  font-size: 28px;
+  color: var(--crimson);
+  margin-bottom: 12px;
+}
+.bfi-error-recover h3 {
+  font-family: var(--fs-serif);
+  font-size: 22px;
+  font-weight: 400;
+  margin-bottom: 10px;
+  color: var(--paper);
+}
+.bfi-error-recover p {
+  font-size: 14px;
+  color: var(--paper-dim);
+  line-height: 1.55;
+  margin-bottom: 16px;
+  font-family: var(--fs-serif);
+}
+.bfi-error-recover .bfi-error-detail {
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--paper-ghost);
+  background: rgba(0, 0, 0, 0.15);
+  padding: 8px 10px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  word-break: break-word;
+}
+.bfi-error-recover .bfi-error-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.bfi-error-recover .bfi-error-note {
+  font-size: 11px;
+  color: var(--paper-ghost);
+  font-family: var(--fs-serif);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.bfi-pending-notice {
+  max-width: 520px;
+  margin: 20px auto;
+  padding: 20px 22px;
+  background: rgba(192, 133, 82, 0.06);
+  border: 0.5px solid rgba(192, 133, 82, 0.3);
+  border-radius: 12px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.bfi-pending-notice .bfi-pending-icon {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--copper);
+  flex-shrink: 0;
+  margin-top: 6px;
+  box-shadow: 0 0 0 3px rgba(192, 133, 82, 0.2);
+  animation: pulse-copper 1.8s ease-in-out infinite;
+}
+@keyframes pulse-copper {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.bfi-pending-notice .bfi-pending-body { flex: 1; }
+.bfi-pending-notice h3 {
+  font-family: var(--fs-serif);
+  font-size: 17px;
+  font-weight: 400;
+  margin-bottom: 6px;
+  color: var(--paper);
+}
+.bfi-pending-notice p {
+  font-size: 13px;
+  color: var(--paper-dim);
+  line-height: 1.5;
+  margin-bottom: 14px;
+  font-family: var(--fs-serif);
+}
+.bfi-pending-notice .bfi-pending-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
