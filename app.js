@@ -364,9 +364,10 @@ function renderTimeSlots() {
 
     if (isDone) {
       state = 'done';
-      icon = `<div class="q-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>`;
+      icon = `<div class="q-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>`;
       const t = todayAnswers[0].timestamp?.toDate();
-      meta = t ? `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}'de tamamlandı` : 'Tamamlandı';
+      const tStr = t ? `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}` : '';
+      meta = tStr ? `✓ ${tStr}'de cevapladın` : '✓ Cevaplandı';
     } else if (isActive) {
       state = 'active';
       icon = `<div class="q-arrow">→</div>`;
@@ -375,18 +376,22 @@ function renderTimeSlots() {
       meta = `ŞİMDİ — ${String(endH).padStart(2,'0')}:${String(endM).padStart(2,'0')}'e kadar açık`;
     } else if (isUpcoming) {
       state = 'locked';
-      icon = `<div class="q-lock">○</div>`;
+      icon = `<div class="q-lock">🔒</div>`;
       const untilMin = Math.round((slot.start - now) * 60);
-      meta = untilMin >= 60 ? `${Math.floor(untilMin / 60)} saat ${untilMin % 60} dk sonra` : `${untilMin} dk sonra`;
+      meta = untilMin >= 60 ? `${Math.floor(untilMin / 60)} saat ${untilMin % 60} dk sonra açılır` : `${untilMin} dk sonra açılır`;
       clickable = false;
     } else {
       state = 'missed late';
       icon = `<div class="q-missed">geç</div>`;
-      meta = 'Penceresi kapandı ama hâlâ cevaplayabilirsin';
+      meta = '⚠ Geç kaldın — yine de cevaplayabilirsin';
     }
 
+    const onclickAttr = isDone
+      ? `onclick="openAnswerView('${slot.key}', '${today}')"`
+      : (clickable ? `onclick="startQuest('${slot.type}', '${slot.key}')"` : '');
+
     html += `
-      <div class="time-slot ${state}" ${clickable ? `onclick="startQuest('${slot.type}', '${slot.key}')"` : ''}>
+      <div class="time-slot ${state}" ${onclickAttr}>
         <div class="time-stamp">${slot.time}</div>
         <div class="q-body">
           <div class="q-title">${escapeHtml(slot.label)}</div>
@@ -1177,6 +1182,42 @@ setInterval(() => {
     renderTimeSlots();
   }
 }, 60000);
+
+window.openAnswerView = function(slotKey, date) {
+  const answers = historyCache.filter(a => a.slotKey === slotKey && a.date === date);
+  if (!answers.length) return;
+  const slot = TIME_SLOTS.find(s => s.key === slotKey);
+  const slotLabel = slot ? slot.label : 'Cevaplar';
+  const slotTime = slot ? slot.time : '';
+
+  const modal = document.getElementById('answerModal');
+  const title = document.getElementById('answerModalTitle');
+  const sub = document.getElementById('answerModalSub');
+  const list = document.getElementById('answerModalList');
+
+  title.textContent = slotLabel;
+  sub.textContent = slotTime ? `${slotTime} · ${new Date(date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}` : '';
+
+  list.innerHTML = answers.map(a => {
+    const t = a.timestamp?.toDate ? a.timestamp.toDate() : null;
+    const timeStr = t ? `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}` : '';
+    return `
+      <div class="answer-view-card">
+        <div class="answer-view-time">${timeStr ? `✓ ${timeStr}'de yazıldı` : '✓ Kayıtlı'}</div>
+        <div class="answer-view-q">${escapeHtml(a.question)}</div>
+        <div class="answer-view-a">${escapeHtml(a.answer)}</div>
+      </div>
+    `;
+  }).join('');
+
+  modal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeAnswerView = function() {
+  document.getElementById('answerModal').classList.remove('show');
+  document.body.style.overflow = '';
+};
 
 function escapeHtml(s) {
   if (!s) return '';
