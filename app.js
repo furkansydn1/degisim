@@ -74,12 +74,21 @@ onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     document.getElementById('loading').classList.remove('hidden');
     document.getElementById('login').classList.add('hidden');
-    await loadUserData();
+    try {
+      await loadUserData();
+    } catch (e) {
+      console.error('loadUserData hatası:', e);
+      // Hata olsa bile uygulamayı aç, kullanıcı sonsuza kadar yükleme ekranında kalmasın
+    }
     if (!userData.onboardingDone) {
       document.getElementById('loading').classList.add('hidden');
       showOnboard();
     } else {
-      initApp();
+      try {
+        initApp();
+      } catch (e) {
+        console.error('initApp hatası:', e);
+      }
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('app').classList.add('active');
       document.getElementById('bottomNav').classList.add('show');
@@ -164,13 +173,18 @@ async function loadHistory() {
 }
 
 async function loadJournal() {
-  const ref = collection(db, 'users', currentUser.uid, 'journal');
-  const q = query(ref, orderBy('timestamp', 'desc'));
-  const snap = await getDocs(q);
-  journalCache = [];
-  snap.forEach(d => {
-    journalCache.push({ id: d.id, ...d.data() });
-  });
+  try {
+    const ref = collection(db, 'users', currentUser.uid, 'journal');
+    const q = query(ref, orderBy('timestamp', 'desc'));
+    const snap = await getDocs(q);
+    journalCache = [];
+    snap.forEach(d => {
+      journalCache.push({ id: d.id, ...d.data() });
+    });
+  } catch (e) {
+    console.warn('Journal yüklenemedi:', e);
+    journalCache = [];
+  }
 }
 
 async function addJournalEntry(title, content) {
@@ -1723,3 +1737,17 @@ function escapeAttr(s) {
   if (!s) return '';
   return String(s).replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
+
+// Acil durum: 15 saniye içinde hâlâ loading varsa otomatik kapat ve login göster
+setTimeout(() => {
+  const loading = document.getElementById('loading');
+  if (loading && !loading.classList.contains('hidden')) {
+    console.warn('Yükleme 15 saniyede bitmedi, acil durum kurtarması');
+    loading.classList.add('hidden');
+    const login = document.getElementById('login');
+    const app = document.getElementById('app');
+    if (login && (!app || !app.classList.contains('active'))) {
+      login.classList.remove('hidden');
+    }
+  }
+}, 15000);
