@@ -17,6 +17,38 @@
   <div class="txt">Defterin açılıyor...</div>
 </div>
 
+<!-- ACİL DURUM KURTARICI: Eğer app.js 8 saniye içinde loading'i kapatmazsa,
+     muhtemelen bir yükleme hatası var. Login ekranını göster, kullanıcı boşa beklemesin. -->
+<script>
+  window.__kaizenStart = Date.now();
+  setTimeout(function() {
+    var loading = document.getElementById('loading');
+    if (loading && !loading.classList.contains('hidden')) {
+      console.warn('[Kaizen] app.js 8 saniyede yüklenmedi. Kurtarma modu.');
+      loading.classList.add('hidden');
+      var login = document.getElementById('login');
+      var app = document.getElementById('app');
+      if (login && (!app || !app.classList.contains('active'))) {
+        login.classList.remove('hidden');
+      }
+      // Kullanıcıya toast göster
+      var toast = document.getElementById('toast');
+      if (toast) {
+        toast.textContent = 'Bağlantı yavaş. Sayfayı yenilemeyi dene.';
+        toast.classList.add('show');
+        setTimeout(function() { toast.classList.remove('show'); }, 5000);
+      }
+    }
+  }, 8000);
+
+  // Modül yükleme hatalarını yakala
+  window.addEventListener('error', function(e) {
+    if (e.filename && (e.filename.indexOf('app.js') > -1 || e.filename.indexOf('data.js') > -1)) {
+      console.error('[Kaizen] Modül yükleme hatası:', e.message, 'dosya:', e.filename);
+    }
+  });
+</script>
+
 <div class="login-screen hidden" id="login">
   <div class="brand">Kaizen</div>
   <div class="brand-sub">改善 — sürekli iyileşme</div>
