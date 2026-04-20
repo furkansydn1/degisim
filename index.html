@@ -186,17 +186,32 @@
       </div>
     </div>
 
-    <div class="dual-row">
-      <div class="boss-card" onclick="showScreen('goals')">
-        <div class="lbl">Boss · bu ay</div>
-        <div class="ttl" id="bossTitle">Bu ayki projen?</div>
+    <div class="boss-card-wrap">
+      <div class="boss-card" onclick="toggleBossExpand()">
+        <div class="boss-card-head">
+          <div>
+            <div class="lbl">Boss · bu ay</div>
+            <div class="ttl" id="bossTitle">Bu ayki projen?</div>
+          </div>
+          <div class="boss-expand-icon" id="bossExpandIcon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
         <div class="bar"><div class="fill" id="bossBar" style="width: 0%"></div></div>
         <div class="meta" id="bossMeta">-</div>
       </div>
-      <div class="shadow-card" onclick="showScreen('vision')">
-        <div class="lbl">Kaçtığın Hayat</div>
-        <div class="txt empty" id="shadowText">Kaçtığın hayatı yaz.</div>
+      <div class="boss-tasks-panel" id="bossTasksPanel">
+        <div class="boss-tasks-header">
+          <div class="boss-tasks-title">Görevler</div>
+          <button class="boss-tasks-edit" onclick="showScreen('goals')">Düzenle →</button>
+        </div>
+        <div id="bossTasksBox"></div>
       </div>
+    </div>
+
+    <div class="shadow-card" onclick="showScreen('vision')">
+      <div class="lbl">Kaçtığın Hayat</div>
+      <div class="txt empty" id="shadowText">Kaçtığın hayatı yaz.</div>
     </div>
 
     <div id="insightsSection"></div>
@@ -302,13 +317,20 @@
 
     <div class="form-card">
       <h3>Boss · 1 Aylık Proje</h3>
-      <p class="sub">1 yıllık hedefinin hâlâ mümkün kalması için bu ay sonu ne doğru olmalı?</p>
+      <p class="sub">1 yıllık hedefinin hâlâ mümkün kalması için bu ay sonu ne doğru olmalı? Sonra bu boss'u yenmek için yapman gereken görevleri ekle — her gün işaretlersin, yüzden otomatik ilerler.</p>
       <label>Başlık</label>
       <input type="text" class="form-input" id="monthGoal" placeholder="Örn: İlk 10 bin kelimeyi yazdım">
       <label>Bitiş tarihi</label>
       <input type="date" class="form-input" id="monthDeadline">
-      <label>İlerleme (%)</label>
-      <input type="number" min="0" max="100" class="form-input" id="monthProgress" placeholder="0">
+
+      <label style="margin-top: 20px;">Görevler</label>
+      <div class="boss-tasks-hint">
+        <div><strong>Her gün</strong> — Her gün yapman gereken (örn: "500 kelime yaz")</div>
+        <div><strong>Haftada N</strong> — Haftada belli sayıda (örn: "Haftada 3 kez koş")</div>
+        <div><strong>Tek seferlik</strong> — Ay içinde bir kez bitirilecek (örn: "Kapak tasarla")</div>
+      </div>
+      <div id="boss-tasks-editor"></div>
+      <button class="add-btn" onclick="addBossTask()">+ Görev ekle</button>
     </div>
 
     <div class="form-card">
@@ -492,6 +514,40 @@
     <div class="answer-modal-body" id="answerModalList"></div>
     <div class="answer-modal-footer">
       Bu cevap kilitli. Değiştiremezsin — <em>kendi dürüst anın</em> olarak kalır.
+    </div>
+  </div>
+</div>
+
+<div class="celebration-modal" id="celebrationModal">
+  <div class="celebration-sheet">
+    <div class="celebration-glow"></div>
+    <div class="celebration-content">
+      <div class="celebration-badge">BOSS · AY BİTTİ</div>
+      <h2 class="celebration-title" id="celebrationTitle">Boss yenildi!</h2>
+      <p class="celebration-sub" id="celebrationSub">Hakettin.</p>
+
+      <div class="celebration-score-block">
+        <div class="celebration-score">
+          <span id="celebrationPct">0</span><span class="pct-sign">%</span>
+        </div>
+        <div class="celebration-boss-name" id="celebrationBossName">Boss</div>
+      </div>
+
+      <div class="celebration-stats">
+        <div class="cstat">
+          <div class="cstat-num"><span id="celebrationTaskCount">0</span><span class="cstat-total">/<span id="celebrationTaskTotal">0</span></span></div>
+          <div class="cstat-lbl">görev bitti</div>
+        </div>
+      </div>
+
+      <div class="celebration-message">
+        <em>"Her tamamlanan boss, bir sonraki için daha az tereddüt."</em>
+      </div>
+
+      <div class="celebration-actions">
+        <button class="btn-ghost" onclick="closeCelebration()">Sonra bakarım</button>
+        <button class="btn-primary celebration-primary" onclick="startNewBoss()">Yeni Boss kur →</button>
+      </div>
     </div>
   </div>
 </div>
