@@ -561,9 +561,9 @@ function generateProfileSummary(scores) {
 
 
 
-// ---------- DERTLEŞME (VENTİNG) — 6 kategori × 10 vurucu soru ----------
+// ---------- DERTLEŞME (VENTING) — 6 kategori × 10 vurucu soru ----------
 // Kişi bir konu seçer, 10 sorudan istediğini (hepsini veya bazılarını) cevaplar.
-// Her soru uzun yazım davet eden, içe dönüşü tetikleyen tarzda.
+// Sorular bir psikolog/terapistin sorabileceği, yargılayan değil davet eden, doğal Türkçeyle.
 const VENT_CATEGORIES = [
   {
     key: 'aile',
@@ -571,16 +571,16 @@ const VENT_CATEGORIES = [
     sub: 'Anne, baba, kardeş, akraba. Kurduğun ve miras aldığın bağlar.',
     color: 'copper',
     questions: [
-      'Ailenle olan ilişkin seni hangi yönde şekillendirdi? Onlardan miras aldığın ama kendinde hiç istemediğin bir kalıp var mı? Hâlâ o kalıba göre mi yaşıyorsun, yoksa kırmaya çalışıyor musun?',
-      'Ailende söylenmemiş, ama herkesin bildiği bir gerçek var mı? Bu sessizlik sana ne öğretti? Söylemek isteyip söyleyemediğin bir şey, kime söylemek istiyorsun aslında?',
-      'Annenle ilişkin bugünkü kadınla/erkekle ilişkine nasıl yansıdı? Onun seni sevmediği ya da yeterince görmediği bir yön var mı? Şu an partnerinden onu mu arıyorsun?',
-      'Babanla ilişkin seni nasıl şekillendirdi? Ondan öğrendiğin ama ağır gelen bir şey var mı? Onun yerinde olsaydın, kendi çocuğuna ne yapardın, ne yapmazdın?',
-      'Kardeşinle aranızda hiç konuşulmayan ama ikinizin de bildiği bir kırgınlık ya da rekabet var mı? Sen onu, o seni ne zaman en çok incitti?',
-      'Ailen seni "ne olarak" görüyor? O kimlik sana uyuyor mu, yoksa rol yapıyor musun? Gerçek olsan, kim olurdun?',
-      'Çocukluğunda hiç anlatmadığın, içine attığın bir anı var mı? Bugün o çocuğa ne söylemek isterdin?',
-      'Ailenden uzaklaştığını, soğuduğunu hissettiğin oldu mu? Bunun sebebi sen miydin, onlar mı, yoksa hayatın akışı mı? Pişman olduğun bir mesafe var mı?',
-      'Ailenin içinde "kurban" gibi davranan biri var mı? Bu rolü neden bırakmıyor sence? Sen de bazen aynı rolü mü oynuyorsun?',
-      'Eğer bugün ailenden birine mektup yazsan ve o asla okumayacak olsa, kime yazardın ve ne derdin?'
+      'Ailenle olan ilişkin seni nasıl bir insan yaptı? Onlardan farkında olmadan miras aldığın ama içinden hiç istemediğin bir davranış kalıbı var mı? Bugün bile o kalıba göre mi yaşıyorsun, yoksa onu kırmaya çalışıyor musun?',
+      'Ailende herkesin bildiği ama hiç konuşulmayan bir gerçek var mı? Bu sessizlik sana ne öğretti? Aslında söylemek isteyip de söyleyemediğin bir şey varsa, onu kime söylemek istiyorsun?',
+      'Annenle olan ilişkin bugünkü romantik ilişkilerine nasıl yansıyor? Onun sana veremediğini düşündüğün bir şey var mı? Şimdi farkında olmadan partnerinden onu mu arıyor olabilir misin?',
+      'Babanla olan ilişkin seni nasıl şekillendirdi? Ondan öğrendiğin ama bugün taşımak sana ağır gelen bir şey var mı? Sen onun yerinde olsaydın, kendi çocuğuna neyi yapardın, neyi asla yapmazdın?',
+      'Kardeşinle aranızda hiç açıkça konuşulmamış ama ikinizin de bildiği bir kırgınlık ya da rekabet var mı? Sen onu, o seni en çok hangi anda incittiniz?',
+      'Ailen seni kim olarak görüyor? Onların gözündeki o kişi gerçekten sen misin, yoksa yıllardır sürdürdüğün bir rol mü? Eğer bütün maskeler düşseydi, kim olurdun?',
+      'Çocukluğundan kalma, kimseye anlatmadığın, içine attığın bir anı var mı? O zamanki çocuk haline bugün ne söylemek isterdin?',
+      'Ailenden uzaklaştığın, içinden soğuduğun bir dönem oldu mu? Bunun sebebi sen miydin, onlar mıydı, yoksa hayatın akışı mı? Bugün geriye baktığında pişman olduğun bir mesafe var mı?',
+      'Ailende sürekli kurban gibi davranan biri var mı? Bu rolü neden bırakmıyor sence? Sen de bazen, fark etmesen de, aynı rolü oynuyor olabilir misin?',
+      'Bugün ailenden birine, asla okumayacağını bilerek bir mektup yazsan — kime yazardın, ona en çok ne söylemek isterdin?'
     ]
   },
   {
@@ -589,16 +589,16 @@ const VENT_CATEGORIES = [
     sub: 'Partner ilişkin. Aşk, kırılganlık, vazgeçiş, bağlanma.',
     color: 'crimson',
     questions: [
-      'Eşinin/sevgilinin doğru kişi olduğunu düşünüyor musun? Değilse neden hâlâ birliktesiniz? Seni ona bağlayan, ayrılamadığın bir nokta mı var? Vazgeçememe sebebin sen misin, yoksa o mu? Onunla tekrar karşılaşsan yine sevgili olmak ister miydin?',
-      'Onu en son ne zaman gerçekten görmüştün, "vay, bu insan" diyerek? Şimdi ne değişti? Seni mi değiştirdi, onu mu, yoksa ikinizi de zaman mı?',
-      'Onunla olmasaydın kim olurdun? Sana kattığı bir şey mi daha çok, götürdüğü bir şey mi? Kendi sesini hâlâ duyabiliyor musun onunla birlikteyken?',
-      'Hiç söyleyemediğin bir şey var mı ona? Neden söylemiyorsun — korktuğun ne? Söylesen ne olur? Söylemezsen ne oluyor şu an?',
-      'Onu gerçekten affettiğin oldu mu bir kırgınlık üzerine — yoksa sadece "geçiştirdin" mi? İçinde hâlâ biriken bir defter var mı?',
-      'Beraber olduğunuz günün %80\'i nasıl geçiyor? O %80 seni besliyor mu, yoksa sadece %20\'lik "iyi anlar" için mi katlanıyorsun? Kendine yalan söylüyor olabilir misin?',
-      'Eğer bu ilişki yarın bitse, en çok neye üzülürdün? En çok neye — itiraf etmekten çekindiğin de olsa — rahatlardın?',
-      'Ondan gizlediğin bir yanın var mı — duygusal, zihinsel, fiziksel? Neden gizliyorsun? Bilse ne olurdu sence?',
-      'Beraber bir geleceğiniz olduğunu hayal ettiğinde canlılıkla mı, mecburiyetle mi hayal ediyorsun? "Olması gereken" mi yoksa "istediğin" mi?',
-      'Ona bugün yazsaydın ve hiç kızmayacağını, incinmeyeceğini bilseydin — sana söylemen gereken en önemli cümle ne olurdu?'
+      'Eşinin ya da sevgilinin senin için doğru kişi olduğunu düşünüyor musun? Eğer cevabın net bir evet değilse, seni hâlâ orada tutan ne? Vazgeçemediğin nokta nedir — onun sana verdiği bir şey mi, senin kendi içinde tamamlanmamış bir parça mı? Eğer onunla bugün ilk kez tanışsaydın, onu yine seçer miydin?',
+      'Şimdi bir an gözlerini kapat ve onun yerine geç. Onun gözünden, sana karşı kendine nasıl davranırdın? Hangi anlarda kendini sıkıcı, hangi anlarda kendini sevimli bulurdun? Onun sustuğu yerlerde sen ne hissedersin, sen sustuğunda o ne hissediyor olabilir? Bunu detaylıca, sanki gerçekten oymuşsun gibi, kendine partneriymişsin gibi yaz.',
+      'Onu en son ne zaman gerçekten görüp "vay, bu insan ne kadar özel" diye düşünmüştün? O bakış nasıl kayboldu? Onu mu değişti, seni mi, yoksa sadece zaman ikinizi de aşındırdı mı?',
+      'Ona bugüne kadar hiç söyleyemediğin bir şey var mı? Söylesen ne olur diye korkuyorsun? Söylemediğinde içinde biriken şey ne — ve bu birikim sizi aslında daha çok mu uzaklaştırıyor?',
+      'Onu kalbinde tam olarak affettiğin bir kırgınlık var mı, yoksa sadece "geçiştirip" örtbas mı ettin? İçinde, gece bazen aklına gelen ve hâlâ canının yandığı bir defter var mı?',
+      'Beraberken geçirdiğiniz günün büyük kısmı seni gerçekten besliyor mu, yoksa nadiren olan o iyi anlar için mi geri kalanına katlanıyorsun? Burada kendine yalan söylüyor olma ihtimalin var mı?',
+      'Eğer bu ilişki bir gün bitecek olsa, en çok neyi kaybedeceksin? Ve itiraf etmesi zor olsa da, en çok neye için için rahatlayacaksın?',
+      'Ondan sakladığın bir yanın var mı — duygusal, fiziksel ya da zihinsel? Onu neden saklıyorsun? Bilseydi nasıl tepki verirdi sence, ve o tepki seni neden bu kadar korkutuyor?',
+      'Onunla bir gelecek hayal ettiğinde içinde gerçek bir heyecan mı, yoksa "böyle olması gerekiyor" hissi mi var? "Olmasını istediğin" gelecek ile "olması gereken" gelecek arasındaki fark ne?',
+      'Eğer ona bugün bir mektup yazsan ve onun hiç incinmeyeceğini, kızmayacağını, terk etmeyeceğini bilsen — söylemen gereken en önemli cümle ne olurdu?'
     ]
   },
   {
@@ -607,16 +607,16 @@ const VENT_CATEGORIES = [
     sub: 'Mesleğin, zamanın, paran. Yaptığın işle kim olduğun arasındaki boşluk.',
     color: 'sage',
     questions: [
-      'Şu an yaptığın iş, 5 yıl sonraki seni gururlandırır mı? Yoksa sırf maaş için katlandığın bir zaman mı? İçin sızlıyor mu, rahat mı?',
-      'İşte olduğun "kişi" ile özelde olduğun "kişi" aynı mı? Değilse hangisi gerçek? Maskeni ne zaman takıp çıkardığını fark ediyor musun?',
-      'Para sana ne ifade ediyor — özgürlük mü, korku mu, statü mü, hayatta kalma aracı mı? Paran hakkında anneyle/babanla aynı şekilde mi düşünüyorsun? Bu miras, sana bir yük mü?',
-      'Bugün işten hiç gelmesen, kimse seni aramasa, hiçbir şey olmasa — ne hissederdin? Rahatlama mı, boşluk mu, suçluluk mu?',
-      'Hayalindeki işi yapmanı engelleyen gerçek şey ne? Para mı, korku mu, yetenek eksikliği mi, yoksa "ya başarısız olursam?" mı? Kendine dürüst ol.',
-      'Bugüne kadar işte verdiğin en büyük taviz neydi? Değer miydi? Aynısını bugün tekrar verir miydin?',
-      'İşinde başarılı olsan bile mutlu olamayacağını biliyor olabilir misin? Başarı ne demek sana — başkaları için mi, kendin için mi?',
-      'Çocukluğunda "ne olmak istiyorsun?" sorusuna verdiğin cevap neydi? Bugün ondan ne kadar uzaksın? Yakınlaşmanı engelleyen sen misin?',
-      'İşine kim olarak gidiyorsun — aç bir insan mı, tok bir insan mı? Aç gidiyorsan neyin eksik? Ton gidiyorsan ne sayesinde?',
-      'Yarın işini bıraksan, 1 yıl sonra hayatın nasıl olurdu? En kötü ihtimal ne? Orada olsan gerçekten biterdin miydi, yoksa kendini yeniden mi kurardın?'
+      'Şu an yaptığın iş, beş yıl sonraki seni gururlandıracak mı? Yoksa sadece maaş için katlandığın bir vakit geçirme aracı mı? İçin bu işten sızlıyor mu, gerçekten huzurlu musun?',
+      'İşteyken olduğun "kişi" ile özel hayatındaki "sen" aynı insan mı? Eğer farklılarsa, hangisi gerçek? Maskeyi ne zaman taktığını, ne zaman çıkardığını fark edebiliyor musun?',
+      'Para senin için ne anlama geliyor — özgürlük mü, korku mu, statü mü, yoksa sadece hayatta kalma aracı mı? Para hakkındaki düşüncelerin annenle veya babanla aynı mı? Bu miras, sana bir yük olabilir mi?',
+      'Bugün işe gitmesen, kimse seni aramasa, hiçbir şey olmasa ne hissederdin? Rahatlama mı, boşluk mu, yoksa suçluluk mu daha ağır basardı?',
+      'Hayalindeki işi yapmana engel olan gerçek şey ne? Para mı, korku mu, yetenek eksikliği mi, yoksa "ya başaramazsam?" düşüncesi mi? Kendine bu konuda dürüst olabilir misin?',
+      'Bugüne kadar iş hayatında verdiğin en büyük taviz neydi? Buna değdi mi gerçekten? Bugün aynı durumla karşılaşsan yine aynı tavizi verir miydin?',
+      'İşinde başarılı olsan bile mutlu olamayacağını belki de farkında olmadan biliyor musun? Senin için "başarı" tam olarak ne demek — başkalarının onayı mı, yoksa kendi içinden gelen bir tatmin mi?',
+      'Çocukken "büyüyünce ne olacaksın?" sorusuna ne cevap verirdin? Bugün o cevaba ne kadar yakınsın? Ondan uzaklaşmana sebep olan kim — başkaları mı, yoksa zamanla sen mi vazgeçtin?',
+      'Sabah işe nasıl bir insan olarak gidiyorsun — aç mı, doymuş mu? Eğer açsan ne eksik sende? Doymuşsan, bu doygunluğu sana ne veriyor?',
+      'Yarın bu işi bıraksan, bir yıl sonra hayatın nasıl olurdu? En kötü ihtimal gerçekten nedir? Orada olsan bile gerçekten biter miydin, yoksa kendini başka bir yerde yeniden mi kurardın?'
     ]
   },
   {
@@ -625,16 +625,16 @@ const VENT_CATEGORIES = [
     sub: 'Gerçek dostlar, sahte yakınlıklar, yalnızlık, sosyal çevre.',
     color: 'violet',
     questions: [
-      'Gerçekten seni tanıyan kaç kişi var hayatında? Bu sayı seni üzüyor mu, rahatlatıyor mu? Daha fazla olsun ister miydin, ama uğraşmak istemiyor musun?',
-      'Kaç kişiye, kalbini açtığında reddedilmeyeceğini bilerek açabilirsin? Bu güveni nasıl kurdun? Kuramadığın birine neden kuramadın?',
-      'Sosyal medya dışında son ne zaman bir arkadaşınla uzun bir sohbet ettin — gerçekten? Bu iletişimsizlik senin mi seçimin, hayatın mı götürdüğü?',
-      'Seni incitmiş ama hâlâ hayatında olan bir arkadaş var mı? Neden gitmesine izin vermiyorsun? Alışkanlık mı, bağlılık mı, yoksa "başkasını bulamam" korkusu mu?',
-      'Sen hangi arkadaşının hayatında bir yer kaplıyorsun? Onun için neyi temsil ediyorsun sence? Bu rol sana uyuyor mu?',
-      'Yalnız kalmaktan korkuyor musun? Yalnızlık mı, yalnızlığın anlamı mı, yoksa "kimse beni sevmez" düşüncesi mi daha çok ağır geliyor?',
-      'Arkadaşlarının arasında "gerçek sen" olduğunu hissediyor musun, yoksa gruba uymak için bir rol mü oynuyorsun? Bu maskeyi çıkarmak sana neye mal olur?',
-      'Çocukluk arkadaşlarından biriyle tekrar karşılaşsan, o sana "çok değiştin" dese — değişimini savunur muydun, utanır mıydın?',
-      'Biriyle küsüp konuşmuyorsan, gerçekten kızgınlık mı, yoksa "pes etmek" gururuna mı ağır geliyor? İlk adımı sen atsan ne olurdu?',
-      'Kendini "iyi bir arkadaş" olarak tanımlıyor musun? Senin için en son birisi ne yaptı — gerçekten yaptı mı, yoksa beklenti miydi?'
+      'Hayatında seni gerçekten tanıyan kaç kişi var? Bu sayı seni üzüyor mu, yoksa rahatlatıyor mu? Daha fazla olsun ister miydin ama uğraşmaktan mı kaçınıyorsun?',
+      'Kalbini açtığında yargılanmayacağını bilerek konuşabileceğin kaç kişi var? Onlarla bu güveni nasıl kurdun? Kuramadığın insanlarla neden kuramadın — onlardan mıydı, senden miydi?',
+      'Sosyal medyadan değil, gerçekten en son ne zaman bir arkadaşınla uzun uzun konuştun? Bu sessizlik senin tercihin mi, yoksa hayatın akışında kayboldu mu?',
+      'Seni incitmiş ama hâlâ hayatında olan bir arkadaşın var mı? Onu neden bırakmıyorsun? Alışkanlık mı, geçmiş güzel günlerin hatırına mı, yoksa "yenisini bulamam" korkusu mu?',
+      'Sen bir arkadaşının hayatında neyin yerini tutuyorsun? Onun için neyi temsil ediyorsun? Bu rol gerçekten sana uyuyor mu?',
+      'Yalnız kalmaktan korkuyor musun? Asıl korktuğun yalnızlığın kendisi mi, yoksa "beni kimse sevmez" düşüncesinin doğrulanması mı?',
+      'Arkadaşlarının yanında "gerçek sen" olarak mı bulunuyorsun, yoksa gruba uymak için bir rol mü oynuyorsun? O maskeyi çıkarmak sana neye mal olur sence?',
+      'Çocukluk arkadaşlarından biriyle bugün karşılaşsan ve sana "çok değişmişsin" dese — bu değişimi onun karşısında savunur muydun, yoksa için için utanır mıydın?',
+      'Şu an küs olduğun ya da konuşmadığın biri var mı? Aslında geri dönmeni engelleyen gerçek şey kızgınlık mı, yoksa "ilk adımı atmak" gururuna ağır mı geliyor?',
+      'Kendini iyi bir arkadaş olarak görüyor musun? Bir arkadaşın senin için en son gerçekten ne yaptı — bunu beklemiş miydin, yoksa kendiliğinden mi geldi?'
     ]
   },
   {
@@ -643,16 +643,16 @@ const VENT_CATEGORIES = [
     sub: 'Öz değer, korku, beden, öz eleştiri. En çok kimi eleştiriyorsun — sen kendini.',
     color: 'crimson',
     questions: [
-      'Kendin hakkında başkalarına hiç söylemediğin bir gerçek var mı? Niye sakladın? Bilse kimse daha az mı severdi seni?',
-      'Aynaya baktığında ne görüyorsun — seveni mi, yabancıyı mı? Ne zaman "bu ben değilim" hissine kapılıyorsun?',
-      'Kendinle nasıl konuşuyorsun — bir dost gibi mi, bir düşman gibi mi? İç sesini tanısan, onu sevebilir misin?',
-      'En çok neden korkuyorsun — gerçekten? Başarısız olmaktan mı, sevilmemekten mi, yanlış yaşamaktan mı, ölmekten mi? Bu korku nereden geldi?',
-      'Eğer yarın uyansan ve kimse seni tanımasa, hiçbir geçmişin olmasa — kim olmak isterdin? Şu anki senden ne kadar farklı?',
-      'Bedeninle ilişkin nasıl? Onu kullanıyor musun, taşıyor musun, cezalandırıyor musun, görmezden mi geliyorsun? Bu ilişki ne zaman kuruldu?',
-      'Kendine yeterli olduğunu hissettiğin bir alanın var mı? Yoksa her şeyde "yetmiyorum" mu diyorsun? Bu "yetmeme" hissinin sesi, çocukluğundaki kimin sesi?',
-      'Sevdiğin bir yönün ile utandığın bir yönün yan yana dursa, ikisi birlikte "sen"i oluşturuyor mu? Yoksa birini gizleyip diğerini mi sergiliyorsun?',
-      'Bir hata yaptığında kendini ne kadar affediyorsun? Ya da günlerce, haftalarca üzerine düşünüyor musun? Başkası aynı hatayı yapsa, ona da aynı sertlikle bakar mıydın?',
-      'Şu an bu satırları okuyan "sen"e 5 yaşındaki sen mektup yazsa, ne derdi? Ondan kim olmaya söz vermiştin, onu tuttun mu?'
+      'Kendin hakkında kimseye söylemediğin bir gerçek var mı? Onu neden saklıyorsun? Sence biri bilseydi gerçekten daha az mı severdi seni?',
+      'Aynaya baktığında ne görüyorsun — sevdiğin birini mi, yoksa bir yabancıyı mı? "Bu ben değilim" hissine kapıldığın anlar oluyor mu?',
+      'Kendinle nasıl konuşuyorsun — bir dost gibi mi, yoksa bir düşman gibi mi? Eğer iç sesini duyduğun gibi başkasından duysaydın, ona katlanır mıydın?',
+      'En çok neyden korkuyorsun — gerçekten? Başarısızlıktan mı, sevilmemekten mi, yanlış yaşamaktan mı, ölümden mi? Bu korku ilk ne zaman içinde oluştu sence?',
+      'Yarın uyandığında kimse seni tanımasa, hiçbir geçmişin olmasa — kim olmak isterdin? Bugünkü senden ne kadar farklı olurdu o insan?',
+      'Bedeninle nasıl bir ilişkin var? Onu kullanıyor musun, taşıyor musun, cezalandırıyor musun, yoksa görmezden mi geliyorsun? Bu ilişki sende ne zaman, nasıl kuruldu?',
+      'Hayatında "yeterliyim" dediğin bir alan var mı? Yoksa her şeyde "yetmiyorum" mu hissediyorsun? Bu yetmeme hissi içinde, çocukluğundan kimin sesini taşıyor?',
+      'Sevdiğin bir yönün ile utandığın bir yönün yan yana dursa, ikisi birlikte seni mi oluşturuyor? Yoksa birini saklıyor, diğerini mi sergiliyorsun?',
+      'Bir hata yaptığında kendini ne kadar çabuk affediyorsun? Yoksa günlerce, haftalarca üstüne mi düşünüyorsun? Aynı hatayı bir başkası yapsaydı, ona da bu kadar sert olur muydun?',
+      'Şu an bu satırları okuyan sana, beş yaşındaki sen bir mektup yazsa — sana ne söylerdi? Ona kim olmaya söz vermiştin, o sözü tuttun mu?'
     ]
   },
   {
@@ -661,16 +661,16 @@ const VENT_CATEGORIES = [
     sub: 'Pişmanlıklar, affedememe, kırgınlıklar. Taşıdığın ve bırakamadığın yükler.',
     color: 'ash',
     questions: [
-      'Hayatının en çok pişman olduğun kararı ne? O anda gerçekten seçenek var mıydı, yoksa sen o sen olduğun için başka seçim yapamaz mıydın? Kendini affettin mi?',
-      'Affedemediğin biri var mı? Onu affetmediğin için kim daha çok acı çekiyor — o mu, sen mi? Onu içinde taşımanın bedeli ne?',
-      'Keşke yapmasaydım dediğin bir şey var mı? O anın sana öğrettiği bir şey oldu mu? Olmasaydı bugünkü sen olur muydun?',
-      '"Zaman iyi geldi" dediğin yaralar gerçekten iyileşti mi, yoksa kapandı mı sadece? Bazı anılar geldiğinde hâlâ eski acıyı hissediyor musun?',
-      'Geçmişindeki bir olay, bugünkü kararlarını hâlâ şekillendiriyor mu? Seni o olay mı, o olaya verdiğin anlam mı bağlıyor?',
-      'Hiç intikam almak istediğin biri oldu mu? Almasaydın, içinde ne değişirdi? Almadıysan, neden almadın — korkudan mı, değer vermemekten mi, kibarlıktan mı?',
-      'Geçmişe bir cümle söyleyebilsen, hangi ana ve ne söylerdin? O anı değiştirmek istemekten çok, kendini anlatma isteğiyle mi söylüyor olurdun?',
-      'Hiç çocukken hayal ettiğin "büyüdüğümde" resmiyle şu an arasındaki farka bakıyor musun? Bu farka üzülmek mi daha doğru, gurur duymak mı, yoksa her ikisi de mi?',
-      'Yaşamadığın bir hayat var mı içinde? "Şu yolu seçseydim" dediğin — hangisi? O hayali neden bırakmadın? O hayal seni şu an tutan şey olabilir mi?',
-      'Ölmeden önce ne olmuş olmak istersin? Bu sorunun cevabı bugünkü seninle uyumlu mu? Yoksa bugünkü sen, o ideale giden yolda bir duraklama mı?'
+      'Hayatının en büyük pişmanlığı ne? O an gerçekten başka bir seçeneğin var mıydı, yoksa o anki sen olduğun için aslında o seçimi yapmak zorunda mıydın? Kendini bu konuda affettin mi?',
+      'Affedemediğin biri var mı? Onu affetmediğin için kim daha çok acı çekiyor — o mu, sen mi? Bu kırgınlığı içinde taşımanın bedeli nedir?',
+      'Keşke yapmasaydım dediğin bir şey var mı? O an sana ne öğretti? Eğer o şeyi yapmamış olsaydın, bugün kim olurdun?',
+      '"Zaman iyileştirir" dediğin yaralar gerçekten iyileşti mi, yoksa sadece üstü kapandı mı? Bazı anılar geldiğinde hâlâ aynı acıyı hissediyor musun?',
+      'Geçmişinde olan bir olay, bugünkü kararlarını hâlâ şekillendiriyor mu? Seni asıl bağlayan o olayın kendisi mi, yoksa o olaya verdiğin anlam mı?',
+      'Hiç birinden intikam almak istedin mi? Almamış olmana sebep ne — korkun mu, kibarlığın mı, yoksa "boş ver" demen mi? Almış olsaydın içinde bugün ne değişirdi?',
+      'Geçmişe tek bir cümle söyleyebilsen, hangi ana ve ne söylerdin? O cümleyi söylerken aslında geçmişi mi değiştirmek istiyorsun, yoksa sadece o anki kendine ulaşmak mı?',
+      'Çocukluğunda hayal ettiğin "büyüdüğümde" resmi ile bugünkü hayatın arasındaki fark ne kadar? Bu farka üzülmen mi gerek, gurur duyman mı, yoksa ikisi de aynı anda mı doğru?',
+      'İçinde yaşamadığın bir hayat var mı? "Şu yolu seçseydim" dediğin bir hayal? O hayalden neden vazgeçtin? Belki şu an seni en çok tutan şey, hâlâ vazgeçmemiş olman olabilir mi?',
+      'Ölmeden önce ne olmuş olmak istersin? Bu cevap bugünkü hayatınla uyumlu mu? Yoksa bugünkü sen, o ideale giden yolda sadece bir mola mı veriyor?'
     ]
   }
 ];
