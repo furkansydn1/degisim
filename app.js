@@ -4,7 +4,7 @@
 // Stiller styles.css'te
 // =========================================================
 
-import { SLOGANS, QUOTES, QUESTIONS, TIME_SLOTS, STOPWORDS, GUIDE_ARTICLES } from './data.js';
+import { SLOGANS, QUOTES, QUESTIONS, TIME_SLOTS, STOPWORDS, GUIDE_ARTICLES, BFI_QUESTIONS, BFI_DIMENSIONS, BFI_INTERPRETATIONS, generateProfileSummary } from './data.js';
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -57,6 +57,9 @@ let onboardIndex = 0;
 let journalCache = [];
 let journalUnlocked = false;
 let currentJournalEntry = null;
+let bfiCache = [];
+let bfiAnswers = {};
+let bfiCurrentIndex = 0;
 
 document.getElementById('loginBtn').addEventListener('click', async () => {
   try {
@@ -135,6 +138,7 @@ async function loadUserData() {
   }
   await loadHistory();
   await loadJournal();
+  await loadBfiResults();
   await updateStreak();
 }
 
@@ -223,6 +227,70 @@ async function updateJournalEntry(id, title, content) {
 async function deleteJournalEntry(id) {
   const ref = doc(db, 'users', currentUser.uid, 'journal', id);
   await deleteDoc(ref);
+}
+
+async function loadBfiResults() {
+  try {
+    const ref = collection(db, 'users', currentUser.uid, 'personalityTests');
+    const q = query(ref, orderBy('timestamp', 'desc'));
+    const snap = await getDocs(q);
+    bfiCache = [];
+    snap.forEach(d => {
+      bfiCache.push({ id: d.id, ...d.data() });
+    });
+  } catch (e) {
+    console.warn('BFI sonuçları yüklenemedi:', e);
+    bfiCache = [];
+  }
+}
+
+async function saveBfiResult(scores, answers) {
+  const ref = collection(db, 'users', currentUser.uid, 'personalityTests');
+  const docRef = await addDoc(ref, {
+    scores: scores,
+    answers: answers,
+    date: todayStr(),
+    timestamp: Timestamp.now()
+  });
+  return docRef.id;
+}
+
+function getLastBfiDate() {
+  if (!bfiCache.length) return null;
+  return bfiCache[0].date;
+}
+
+function daysSinceLastBfi() {
+  const last = getLastBfiDate();
+  if (!last) return null;
+  const d = new Date(last + 'T00:00:00');
+  return Math.floor((Date.now() - d.getTime()) / 86400000);
+}
+
+function canTakeBfi() {
+  const days = daysSinceLastBfi();
+  if (days === null) return { can: true, daysLeft: 0 };
+  const daysLeft = 30 - days;
+  return { can: daysLeft <= 0, daysLeft: Math.max(0, daysLeft) };
+}
+
+function calcBfiScores(answers) {
+  const totals = { E: 0, A: 0, C: 0, N: 0, O: 0 };
+  const counts = { E: 0, A: 0, C: 0, N: 0, O: 0 };
+
+  BFI_QUESTIONS.forEach(q => {
+    const raw = answers[q.n];
+    if (raw === undefined || raw === null) return;
+    const value = q.r ? (6 - raw) : raw;
+    totals[q.d] += value;
+    counts[q.d] += 1;
+  });
+
+  const scores = {};
+  ['E', 'A', 'C', 'N', 'O'].forEach(d => {
+    scores[d] = counts[d] ? parseFloat((totals[d] / counts[d]).toFixed(2)) : 0;
+  });
+  return scores;
 }
 
 async function hashPin(pin) {
@@ -366,6 +434,7 @@ window.showScreen = function(name) {
   if (name === 'capsule') renderCapsule();
   if (name === 'guide') renderGuide();
   if (name === 'journal') renderJournal();
+  if (name === 'profile') renderProfile();
   if (name === 'settings') renderSettings();
   window.scrollTo(0, 0);
 };
@@ -403,6 +472,52 @@ function initApp() {
   setupNotifs();
 }
 
+function renderSetupBanner() {
+  const box = document.getElementById('setupBanner');
+  if (!box) return;
+
+  const missing = [];
+  if (!userData.vision) missing.push({ label: 'Vizyon', screen: 'vision' });
+  if (!userData.antiVision) missing.push({ label: 'Kaçtığın Hayat', screen: 'vision' });
+  if (!userData.identity) missing.push({ label: 'Kimlik', screen: 'vision' });
+  if (!userData.yearGoal?.title) missing.push({ label: '1 Yıllık Hedef', screen: 'goals' });
+  if (!userData.monthGoal?.title) missing.push({ label: 'Bu Ayki Boss', screen: 'goals' });
+
+  if (missing.length === 0) {
+    box.innerHTML = '';
+    box.style.display = 'none';
+    return;
+  }
+
+  box.style.display = 'block';
+  const totalChecks = 5;
+  const doneCount = totalChecks - missing.length;
+
+  box.innerHTML = `
+    <div class="setup-banner">
+      <div class="setup-banner-head">
+        <div>
+          <div class="setup-banner-label">İLK KURULUM</div>
+          <div class="setup-banner-title">Önce kendini <em>kur.</em></div>
+        </div>
+        <div class="setup-banner-progress">${doneCount}/${totalChecks}</div>
+      </div>
+      <div class="setup-banner-desc">
+        Kaizen'in tüm sihri şu alanları doldurduktan sonra başlıyor. Hepsi 5-10 dakikanı alır.
+      </div>
+      <div class="setup-banner-list">
+        ${missing.map(m => `
+          <button class="setup-banner-item" onclick="showScreen('${m.screen}')">
+            <div class="setup-banner-bullet">○</div>
+            <div class="setup-banner-item-label">${escapeHtml(m.label)} yaz</div>
+            <div class="setup-banner-arrow">→</div>
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
 function renderHome() {
   const today = new Date();
   document.getElementById('todayDate').textContent = today.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -433,6 +548,9 @@ function renderHome() {
   document.getElementById('consistencyNum').textContent = Math.round(consistency * 100);
   document.getElementById('writtenCount').textContent = historyCache.length;
 
+  // Setup banner — vizyon/kimlik/hedef yoksa belirgin çağrı
+  renderSetupBanner();
+
   const identity = userData.identity;
   const stmtEl = document.getElementById('identityStmt');
   if (identity) {
@@ -440,12 +558,14 @@ function renderHome() {
     stmtEl.innerHTML = escapeHtml(identity);
   } else {
     stmtEl.classList.add('empty');
-    stmtEl.textContent = 'Ben henüz kim olduğumu tanımlamadım.';
+    stmtEl.innerHTML = 'Kimlik ifadeni henüz yazmadın. <span class="tap-hint">Tıkla, başla →</span>';
   }
 
   const yg = userData.yearGoal || {};
   const mqPct = calcMainProgress();
-  document.getElementById('mainQuestTitle').textContent = yg.title || '1 yıllık vizyonunu tanımla.';
+  document.getElementById('mainQuestTitle').innerHTML = yg.title
+    ? escapeHtml(yg.title)
+    : '1 yıllık vizyonunu tanımla. <span class="tap-hint">Tıkla →</span>';
   document.getElementById('mainQuestPct').textContent = mqPct.toFixed(1);
   document.getElementById('mainQuestBar').style.width = Math.min(100, mqPct) + '%';
   if (yg.start && yg.deadline) {
@@ -455,12 +575,14 @@ function renderHome() {
     document.getElementById('mainQuestDays').textContent = `${Math.floor(passed)} / ${Math.floor(total)} gün`;
     document.getElementById('mainQuestRemain').textContent = `${remain} gün kaldı`;
   } else {
-    document.getElementById('mainQuestDays').textContent = 'Hedef tanımla';
+    document.getElementById('mainQuestDays').textContent = 'Hedef belirlenmedi';
     document.getElementById('mainQuestRemain').textContent = '';
   }
 
   const mg = userData.monthGoal || {};
-  document.getElementById('bossTitle').textContent = mg.title || 'Bu ayki proje?';
+  document.getElementById('bossTitle').innerHTML = mg.title
+    ? escapeHtml(mg.title)
+    : 'Bu ayki projen? <span class="tap-hint">Tıkla →</span>';
   const mp = calcBossProgress();
   document.getElementById('bossBar').style.width = mp + '%';
   const tasks = mg.tasks || [];
@@ -489,7 +611,7 @@ function renderHome() {
     shadowEl.textContent = '"' + (av.length > 110 ? av.slice(0, 110) + '...' : av) + '"';
   } else {
     shadowEl.classList.add('empty');
-    shadowEl.textContent = 'Kaçtığın hayatı tanımla.';
+    shadowEl.innerHTML = 'Kaçtığın hayatı henüz yazmadın. <span class="tap-hint">Tıkla →</span>';
   }
 
   renderTimeSlots();
@@ -2127,6 +2249,303 @@ window.deleteCurrentJournal = async function() {
   showToast('Sayfa silindi.');
   closeJournalEntry();
 };
+
+// =========================================================
+// BFI-44 KİŞİLİK TESTİ
+// =========================================================
+
+function renderProfile() {
+  const box = document.getElementById('profileContent');
+  if (!box) return;
+
+  const status = canTakeBfi();
+  const hasResults = bfiCache.length > 0;
+
+  if (!hasResults) {
+    renderBfiIntro(box, status);
+  } else {
+    renderBfiResults(box, status);
+  }
+}
+
+function renderBfiIntro(box, status) {
+  box.innerHTML = `
+    <div class="bfi-intro">
+      <div class="bfi-intro-badge">PSİKOLOJİK TEST</div>
+      <h2 class="bfi-intro-title">Kendini <em>tanı.</em></h2>
+      <p class="bfi-intro-lead">Büyük Beşli Kişilik Envanteri — bilimsel geçerliliği yüksek 44 soru, senin 5 boyutunu çıkarır.</p>
+
+      <div class="bfi-info-block">
+        <div class="bfi-info-row">
+          <div class="bfi-info-num">5</div>
+          <div class="bfi-info-body">
+            <div class="bfi-info-title">5 Kişilik Boyutu</div>
+            <div class="bfi-info-desc">Dışa dönüklük · Uyumluluk · Sorumluluk · Duygusal denge · Yeniliğe açıklık</div>
+          </div>
+        </div>
+        <div class="bfi-info-row">
+          <div class="bfi-info-num sage">10</div>
+          <div class="bfi-info-body">
+            <div class="bfi-info-title">10-15 dakika</div>
+            <div class="bfi-info-desc">Acele etme. İlk aklına gelen cevabı seç — en dürüst olandır.</div>
+          </div>
+        </div>
+        <div class="bfi-info-row">
+          <div class="bfi-info-num ash">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          </div>
+          <div class="bfi-info-body">
+            <div class="bfi-info-title">Ayda Bir Kez</div>
+            <div class="bfi-info-desc">Bir testi tamamladıktan sonra 30 gün kilit. Sonra tekrar edip değişimini görürsün.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bfi-quote">
+        "Kendini tanımak tüm bilgeliğin başlangıcıdır." — Aristoteles
+      </div>
+
+      <button class="btn-save bfi-start-btn" onclick="startBfiTest()">Testi Başlat →</button>
+    </div>
+  `;
+}
+
+function renderBfiResults(box, status) {
+  const latest = bfiCache[0];
+  const scores = latest.scores;
+  const testDate = latest.timestamp?.toDate ? latest.timestamp.toDate() : new Date(latest.date);
+  const dateStr = testDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  const previous = bfiCache.length > 1 ? bfiCache[1] : null;
+  const prevScores = previous ? previous.scores : null;
+
+  let retakeBlock = '';
+  if (status.can) {
+    retakeBlock = `
+      <div class="bfi-retake-block can">
+        <div class="bfi-retake-icon">✓</div>
+        <div class="bfi-retake-text">
+          <div class="bfi-retake-title">Yeniden test yapabilirsin</div>
+          <div class="bfi-retake-desc">30 gün geçti. Karakterinin evrimini görmek ister misin?</div>
+        </div>
+        <button class="btn-primary bfi-retake-btn" onclick="startBfiTest()">Tekrar yap</button>
+      </div>
+    `;
+  } else {
+    retakeBlock = `
+      <div class="bfi-retake-block wait">
+        <div class="bfi-retake-icon wait">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        </div>
+        <div class="bfi-retake-text">
+          <div class="bfi-retake-title">${status.daysLeft} gün sonra tekrar yapabilirsin</div>
+          <div class="bfi-retake-desc">Kişilik bir anda değişmez — en az 30 gün bekleyip değişimi ölçmek daha sağlıklı.</div>
+        </div>
+      </div>
+    `;
+  }
+
+  let dimCards = '';
+  ['E', 'A', 'C', 'N', 'O'].forEach(key => {
+    const dim = BFI_DIMENSIONS[key];
+    const score = scores[key] || 0;
+    const lvl = score < 2.5 ? 'low' : score > 3.5 ? 'high' : 'mid';
+    const interp = BFI_INTERPRETATIONS[key][lvl];
+    const pct = Math.round((score / 5) * 100);
+
+    let diffBadge = '';
+    if (prevScores && prevScores[key] !== undefined) {
+      const diff = (score - prevScores[key]);
+      if (Math.abs(diff) >= 0.2) {
+        const sign = diff > 0 ? '+' : '';
+        const arrow = diff > 0 ? '↑' : '↓';
+        const cls = diff > 0 ? 'up' : 'down';
+        diffBadge = `<span class="bfi-diff ${cls}">${arrow} ${sign}${diff.toFixed(1)}</span>`;
+      }
+    }
+
+    dimCards += `
+      <div class="bfi-dim-card c-${dim.color}">
+        <div class="bfi-dim-head">
+          <div>
+            <div class="bfi-dim-label">${escapeHtml(dim.name.toUpperCase())}</div>
+            <div class="bfi-dim-lvl">${escapeHtml(interp.label)} ${diffBadge}</div>
+          </div>
+          <div class="bfi-dim-score">${score.toFixed(1)}<span class="slash">/5</span></div>
+        </div>
+        <div class="bfi-dim-bar">
+          <div class="bfi-dim-fill" style="width: ${pct}%"></div>
+        </div>
+        <div class="bfi-dim-text">${escapeHtml(interp.text)}</div>
+        <div class="bfi-dim-kaizen">
+          <span class="bfi-kaizen-lbl">KAİZEN İPUCU</span>
+          <div>${escapeHtml(interp.kaizen)}</div>
+        </div>
+      </div>
+    `;
+  });
+
+  const summary = generateProfileSummary(scores);
+
+  box.innerHTML = `
+    <div class="bfi-results">
+      <div class="bfi-results-header">
+        <div class="bfi-results-badge">TEST TAMAMLANDI</div>
+        <h2 class="bfi-results-title">İşte <em>sen.</em></h2>
+        <div class="bfi-results-date">${dateStr} · ${bfiCache.length} test kayıtlı</div>
+      </div>
+
+      ${retakeBlock}
+
+      <div class="bfi-dims">${dimCards}</div>
+
+      <div class="bfi-summary">
+        <div class="bfi-summary-label">BENİM PROFİLİM</div>
+        <div class="bfi-summary-text">${summary}</div>
+      </div>
+
+      ${bfiCache.length > 1 ? `
+      <div class="bfi-history-toggle" onclick="toggleBfiHistory()">
+        Geçmiş testlerim (${bfiCache.length}) →
+      </div>
+      <div class="bfi-history-list hidden" id="bfiHistoryList">
+        ${bfiCache.slice(1).map((t, i) => {
+          const td = t.timestamp?.toDate ? t.timestamp.toDate() : new Date(t.date);
+          return `
+          <div class="bfi-history-card">
+            <div class="bfi-history-date">${td.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+            <div class="bfi-history-scores">
+              <span>E: ${t.scores.E.toFixed(1)}</span>
+              <span>A: ${t.scores.A.toFixed(1)}</span>
+              <span>C: ${t.scores.C.toFixed(1)}</span>
+              <span>N: ${t.scores.N.toFixed(1)}</span>
+              <span>O: ${t.scores.O.toFixed(1)}</span>
+            </div>
+          </div>
+          `;
+        }).join('')}
+      </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+window.toggleBfiHistory = function() {
+  const el = document.getElementById('bfiHistoryList');
+  if (el) el.classList.toggle('hidden');
+};
+
+window.startBfiTest = function() {
+  const status = canTakeBfi();
+  if (!status.can) {
+    showToast(`${status.daysLeft} gün sonra tekrar yapabilirsin.`);
+    return;
+  }
+  bfiAnswers = {};
+  bfiCurrentIndex = 0;
+  renderBfiQuestion();
+};
+
+function renderBfiQuestion() {
+  const box = document.getElementById('profileContent');
+  const q = BFI_QUESTIONS[bfiCurrentIndex];
+  const total = BFI_QUESTIONS.length;
+  const pct = Math.round((bfiCurrentIndex / total) * 100);
+  const selected = bfiAnswers[q.n];
+
+  const options = [
+    { val: 1, label: 'Kesinlikle katılmıyorum', cls: 'opt-1' },
+    { val: 2, label: 'Biraz katılmıyorum', cls: 'opt-2' },
+    { val: 3, label: 'Ne katılıyorum, ne katılmıyorum', cls: 'opt-3' },
+    { val: 4, label: 'Biraz katılıyorum', cls: 'opt-4' },
+    { val: 5, label: 'Kesinlikle katılıyorum', cls: 'opt-5' }
+  ];
+
+  box.innerHTML = `
+    <div class="bfi-test">
+      <div class="bfi-test-top">
+        <div class="bfi-test-counter">SORU ${bfiCurrentIndex + 1} / ${total}</div>
+        <div class="bfi-test-pct">%${pct} tamam</div>
+      </div>
+
+      <div class="bfi-test-progress">
+        <div class="bfi-test-progress-fill" style="width: ${pct}%"></div>
+      </div>
+
+      <div class="bfi-test-prompt">Kendimi şöyle biri olarak görüyorum:</div>
+      <div class="bfi-test-question">${escapeHtml(q.t)}</div>
+
+      <div class="bfi-options">
+        ${options.map(opt => `
+          <button class="bfi-option ${opt.cls} ${selected === opt.val ? 'selected' : ''}" onclick="selectBfiAnswer(${opt.val})">
+            <div class="bfi-option-num">${opt.val}</div>
+            <div class="bfi-option-label">${opt.label}${selected === opt.val ? ' <span class="selected-mark">← seçili</span>' : ''}</div>
+          </button>
+        `).join('')}
+      </div>
+
+      <div class="bfi-test-footer">
+        ${bfiCurrentIndex > 0 ? `<button class="btn-ghost bfi-test-prev" onclick="prevBfiQuestion()">← Önceki</button>` : '<div></div>'}
+        <div class="bfi-test-note">Otomatik kayıt · yarıda bırakabilirsin</div>
+      </div>
+
+      <button class="bfi-test-cancel" onclick="cancelBfiTest()">Testi iptal et</button>
+    </div>
+  `;
+}
+
+window.selectBfiAnswer = async function(val) {
+  const q = BFI_QUESTIONS[bfiCurrentIndex];
+  bfiAnswers[q.n] = val;
+
+  if (bfiCurrentIndex < BFI_QUESTIONS.length - 1) {
+    setTimeout(() => {
+      bfiCurrentIndex++;
+      renderBfiQuestion();
+    }, 180);
+  } else {
+    // Son soru — testi bitir
+    await finishBfiTest();
+  }
+};
+
+window.prevBfiQuestion = function() {
+  if (bfiCurrentIndex > 0) {
+    bfiCurrentIndex--;
+    renderBfiQuestion();
+  }
+};
+
+window.cancelBfiTest = function() {
+  if (!confirm('Testi iptal etmek istediğine emin misin? İlerlemen kaybolur.')) return;
+  bfiAnswers = {};
+  bfiCurrentIndex = 0;
+  renderProfile();
+};
+
+async function finishBfiTest() {
+  const box = document.getElementById('profileContent');
+  box.innerHTML = `
+    <div class="bfi-finishing">
+      <div class="bfi-finishing-spinner"></div>
+      <div class="bfi-finishing-text">Profilin oluşturuluyor...</div>
+    </div>
+  `;
+
+  const scores = calcBfiScores(bfiAnswers);
+  try {
+    await saveBfiResult(scores, bfiAnswers);
+    await loadBfiResults();
+    bfiAnswers = {};
+    bfiCurrentIndex = 0;
+    showToast('Test tamamlandı!');
+    renderProfile();
+  } catch (e) {
+    console.error(e);
+    showToast('Kaydetme hatası: ' + e.message);
+    renderProfile();
+  }
+}
 
 function escapeHtml(s) {
   if (!s) return '';
