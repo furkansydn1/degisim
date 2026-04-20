@@ -122,11 +122,11 @@
       <div class="step-num">04 — Oyun</div>
       <h2>Hayatını bir oyun gibi <em>kur.</em></h2>
       <div class="body">
-        Oyunlar insanı saatlerce içine çekiyor çünkü her şey net: <strong>ana hedef, boss, günlük görevler, kurallar.</strong> Aynı netliği hayatına taşıyınca odak kendiliğinden geliyor.
+        Oyunlar insanı saatlerce içine çekiyor çünkü her şey net: <strong>ana hedef, ay hedefi, günlük görevler, kurallar.</strong> Aynı netliği hayatına taşıyınca odak kendiliğinden geliyor.
       </div>
       <div class="body">
         <strong>Ana yol</strong> (1 yıllık vizyon) — Nasıl kazanırsın?<br>
-        <strong>Boss</strong> (1 aylık proje) — Bu ay neyi devirirsin?<br>
+        <strong>Aylık hedef</strong> (1 aylık proje) — Bu ay neyi bitirirsin?<br>
         <strong>Günlük görev</strong> — Her gün seni bir adım ileri taşıyanlar.<br>
         <strong>Kaçtığın Hayat</strong> — Devam etmezsen nerede olursun? (Anti-vizyon)
       </div>
@@ -178,30 +178,33 @@
 
   <div class="screen active" id="screen-home">
 
-    <div class="hero-block">
-      <div class="day-counter" id="dayCounter">1. gün</div>
-      <div class="slogan" id="slogan">Küçük değişimler, <em>büyük oluş.</em></div>
+    <div class="home-top">
+      <div class="home-date" id="homeDate">Pazartesi, 21 Nisan</div>
+      <div class="home-day-counter" id="dayCounter">1. gün</div>
     </div>
 
-    <div class="stats-row">
-      <div class="stat-col">
-        <div class="lbl">Süreklilik</div>
-        <div class="val amber"><span id="streakNum">0</span><span class="unit">gün</span></div>
-      </div>
-      <div class="stat-col">
-        <div class="lbl">Tutarlılık</div>
-        <div class="val"><span id="consistencyNum">0</span><span class="unit" style="color: var(--sage);">%</span></div>
-      </div>
-      <div class="stat-col">
-        <div class="lbl">Yazılan söz</div>
-        <div class="val"><span id="writtenCount">0</span></div>
-      </div>
-    </div>
+    <div class="slogan" id="slogan">Küçük değişimler, <em>büyük oluş.</em></div>
 
     <div id="setupBanner"></div>
 
+    <div id="activeQuestBlock"></div>
+
+    <div class="daily-quote-inline" id="dailyQuoteInline">
+      <div class="text" id="dailyQuote">"Sadece küçük adımlar. Ama her gün."</div>
+      <div class="author" id="dailyQuoteAuthor"></div>
+    </div>
+
+    <div class="today-header">
+      <div class="lbl">BUGÜN</div>
+      <div class="count" id="todayCount">0 / 7 tamam</div>
+    </div>
+
+    <div class="time-slots" id="timeSlots"></div>
+
+    <div class="home-section-divider"></div>
+
     <div class="identity-block">
-      <div class="lbl">Kimlik</div>
+      <div class="lbl">KİM OLDUĞUM</div>
       <div class="stmt empty" id="identityStmt" onclick="showScreen('vision')">
         Henüz kim olduğumu yazmadım.
       </div>
@@ -209,7 +212,7 @@
 
     <div class="main-quest" onclick="showScreen('goals')">
       <div class="top">
-        <div class="lbl">Ana yol · 1 yıl</div>
+        <div class="lbl">1 YILLIK HEDEF</div>
         <div class="pct"><span id="mainQuestPct">0</span><span class="unit">%</span></div>
       </div>
       <div class="ttl" id="mainQuestTitle">1 yıllık vizyonunu yaz.</div>
@@ -224,8 +227,8 @@
       <div class="boss-card" onclick="toggleBossExpand()">
         <div class="boss-card-head">
           <div>
-            <div class="lbl">Boss · bu ay</div>
-            <div class="ttl" id="bossTitle">Bu ayki projen?</div>
+            <div class="lbl">AYLIK HEDEF</div>
+            <div class="ttl" id="bossTitle">Bu ayki hedefin?</div>
           </div>
           <div class="boss-expand-icon" id="bossExpandIcon">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
@@ -236,31 +239,30 @@
       </div>
       <div class="boss-tasks-panel" id="bossTasksPanel">
         <div class="boss-tasks-header">
-          <div class="boss-tasks-title">Görevler</div>
+          <div class="boss-tasks-title">GÖREVLER · GÜNLÜK · HAFTALIK · TEK SEFERLİK</div>
           <button class="boss-tasks-edit" onclick="showScreen('goals')">Düzenle →</button>
         </div>
         <div id="bossTasksBox"></div>
       </div>
     </div>
 
-    <div class="shadow-card" onclick="showScreen('vision')">
-      <div class="lbl">Kaçtığın Hayat</div>
-      <div class="txt empty" id="shadowText">Kaçtığın hayatı yaz.</div>
+    <div class="home-section-divider"></div>
+
+    <div class="stats-row">
+      <div class="stat-col">
+        <div class="lbl">SÜREKLİLİK</div>
+        <div class="val amber"><span id="streakNum">0</span><span class="unit">gün</span></div>
+      </div>
+      <div class="stat-col">
+        <div class="lbl">TUTARLILIK</div>
+        <div class="val"><span id="consistencyNum">0</span><span class="unit" style="color: var(--sage);">%</span></div>
+      </div>
+      <div class="stat-col">
+        <div class="lbl">YAZILAN SÖZ</div>
+        <div class="val"><span id="writtenCount">0</span></div>
+      </div>
     </div>
 
-    <div id="insightsSection"></div>
-
-    <div class="today-header">
-      <div class="lbl">Bugün</div>
-      <div class="count" id="todayCount">0 / 7 tamam</div>
-    </div>
-
-    <div class="time-slots" id="timeSlots"></div>
-
-    <div class="daily-quote">
-      <div class="text" id="dailyQuote">"Sadece küçük adımlar. Ama her gün."</div>
-      <div class="author" id="dailyQuoteAuthor"></div>
-    </div>
   </div>
 
   <div class="screen" id="screen-quest">
@@ -334,7 +336,7 @@
   <div class="screen" id="screen-goals">
     <div class="screen-header">
       <h2>Hedefler</h2>
-      <div class="sub">Ana yol, boss, günlük kaldıraçlar, kurallar. Oyun tahtanı sen kur.</div>
+      <div class="sub">Ana yol, aylık hedef, günlük kaldıraçlar, kurallar. Oyun tahtanı sen kur.</div>
     </div>
 
     <div class="form-card">
@@ -350,7 +352,7 @@
     </div>
 
     <div class="form-card">
-      <h3>Boss · 1 Aylık Proje</h3>
+      <h3>Aylık Hedef · 1 Aylık Proje</h3>
       <p class="sub">1 yıllık hedefinin hâlâ mümkün kalması için bu ay sonu ne doğru olmalı? Sonra bu boss'u yenmek için yapman gereken görevleri ekle — her gün işaretlersin, yüzden otomatik ilerler.</p>
       <label>Başlık</label>
       <input type="text" class="form-input" id="monthGoal" placeholder="Örn: İlk 10 bin kelimeyi yazdım">
@@ -415,12 +417,12 @@
     <div id="patternsList"></div>
   </div>
 
-  <div class="screen" id="screen-capsule">
+  <div class="screen" id="screen-vent">
     <div class="screen-header">
-      <h2>Zaman kapsülü</h2>
-      <div class="sub">Geçmişteki sen, şimdiki sana hesap soruyor. 30, 60, 90 gün önceki sesin burada açılır.</div>
+      <h2>Dertleşme</h2>
+      <div class="sub">Bir konu seç. Sana ait 10 vurucu soru gelecek. İstediğin soruya istediğin kadar yaz. Kafanda ne varsa dök — Kaizen dinliyor.</div>
     </div>
-    <div id="capsuleList"></div>
+    <div id="ventContent"></div>
   </div>
 
   <div class="screen" id="screen-guide">
@@ -478,6 +480,12 @@
     </div>
 
     <div class="form-card">
+      <h3>Bakım</h3>
+      <p class="sub">Eski veri hatalarından dolayı aynı cevap birden fazla kaydedilmişse, buradan temizleyebilirsin. Sadece bire bir aynı olanları siler, benzerleri korur.</p>
+      <button class="btn btn-ghost" style="width: 100%;" onclick="cleanupDuplicates()">Aynı cevapları temizle</button>
+    </div>
+
+    <div class="form-card">
       <h3>Veri</h3>
       <p class="sub">Cevaplarını JSON olarak indir ya da tamamen sil.</p>
       <button class="btn btn-ghost" style="width: 100%; margin-bottom: 8px;" onclick="exportData()">Verilerimi indir</button>
@@ -523,10 +531,9 @@
     <span>Örüntü</span>
     <span class="badge hidden" id="patternsBadge">1</span>
   </a>
-  <a class="nav-item" data-screen="capsule">
-    <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 7h16v13H4zM8 7V4h8v3"/></svg>
-    <span>Kapsül</span>
-    <span class="badge hidden" id="capsuleBadge">1</span>
+  <a class="nav-item" data-screen="vent">
+    <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    <span>Dertleşme</span>
   </a>
   <a class="nav-item" data-screen="guide">
     <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 4h12a3 3 0 013 3v13H7a3 3 0 01-3-3V4z"/><path d="M4 4v13a3 3 0 003 3"/></svg>
@@ -569,7 +576,7 @@
     <div class="celebration-glow"></div>
     <div class="celebration-content">
       <div class="celebration-badge">BOSS · AY BİTTİ</div>
-      <h2 class="celebration-title" id="celebrationTitle">Boss yenildi!</h2>
+      <h2 class="celebration-title" id="celebrationTitle">Hedef bitti!</h2>
       <p class="celebration-sub" id="celebrationSub">Hakettin.</p>
 
       <div class="celebration-score-block">
@@ -587,12 +594,12 @@
       </div>
 
       <div class="celebration-message">
-        <em>"Her tamamlanan boss, bir sonraki için daha az tereddüt."</em>
+        <em>"Her tamamlanan hedef, bir sonraki için daha az tereddüt."</em>
       </div>
 
       <div class="celebration-actions">
         <button class="btn-ghost" onclick="closeCelebration()">Sonra bakarım</button>
-        <button class="btn-primary celebration-primary" onclick="startNewBoss()">Yeni Boss kur →</button>
+        <button class="btn-primary celebration-primary" onclick="startNewBoss()">Yeni hedef kur →</button>
       </div>
     </div>
   </div>
