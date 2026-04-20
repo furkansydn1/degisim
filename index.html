@@ -7,7 +7,7 @@
 <title>Kaizen — 改善</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Caveat:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -100,6 +100,9 @@
       </div>
       <div class="body">
         İlerleme otomatik: Cevap verdikçe yol ilerliyor, verdiğin cevap azaldıkça yavaşlıyor. <strong>Kanıtın, eylemin.</strong>
+      </div>
+      <div class="body" style="background: rgba(232, 227, 216, 0.04); border-left: 2px solid var(--copper); padding: 12px 14px; border-radius: 0 8px 8px 0; margin-top: 16px;">
+        <strong>Bir de serbest bir "Günlük" var.</strong> Soru yok, kural yok. İçinden ne geçiyorsa dökeceğin boş bir defter. PIN ile korunur — sadece sen açarsın.
       </div>
     </div>
 
@@ -372,6 +375,14 @@
     <div id="guideContent"></div>
   </div>
 
+  <div class="screen" id="screen-journal">
+    <div class="screen-header" id="journalHeader">
+      <h2>Günlük</h2>
+      <div class="sub">Soru yok. Kural yok. İçinden ne geçiyorsa yaz — saçma gelsin, dağınık gelsin, fark etmez. Burası senin defterin.</div>
+    </div>
+    <div id="journalContent"></div>
+  </div>
+
   <div class="screen" id="screen-settings">
     <div class="screen-header">
       <h2>Ayarlar</h2>
@@ -393,6 +404,13 @@
       <h3>Onboarding</h3>
       <p class="sub">Giriş rehberini baştan görmek istersen.</p>
       <button class="btn btn-ghost" style="width: 100%;" onclick="replayOnboard()">Yeniden göster</button>
+    </div>
+
+    <div class="form-card">
+      <h3>Günlük PIN'i</h3>
+      <p class="sub">Günlük sekmesi için belirlediğin PIN'i değiştir ya da sıfırla.</p>
+      <button class="btn btn-ghost" style="width: 100%; margin-bottom: 8px;" onclick="changeJournalPin()">PIN'i değiştir</button>
+      <button class="btn btn-ghost" style="width: 100%; color: #b06b6b; border-color: rgba(139, 58, 58, 0.3);" onclick="forgotPin()">PIN'i sıfırla (günlük silinir)</button>
     </div>
 
     <div class="form-card">
@@ -449,6 +467,10 @@
   <a class="nav-item" data-screen="guide">
     <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 4h12a3 3 0 013 3v13H7a3 3 0 01-3-3V4z"/><path d="M4 4v13a3 3 0 003 3"/></svg>
     <span>Rehber</span>
+  </a>
+  <a class="nav-item" data-screen="journal">
+    <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+    <span>Günlük</span>
   </a>
   <a class="nav-item" data-screen="settings">
     <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.2 4.2l2.9 2.9M16.9 16.9l2.9 2.9M1 12h4M19 12h4M4.2 19.8l2.9-2.9M16.9 7.1l2.9-2.9"/></svg>
