@@ -1,565 +1,2599 @@
 // =========================================================
-// KAIZEN — VERİ DOSYASI
-// Buradaki içerikleri düzenlemek için kod bilgisine gerek yok.
-// Soruları, alıntıları, sloganları, rehber yazılarını direkt değiştirebilirsin.
+// KAIZEN — ANA UYGULAMA MANTIĞI
+// Sabitler data.js'te (QUESTIONS, QUOTES, SLOGANS, TIME_SLOTS, GUIDE_ARTICLES, STOPWORDS)
+// Stiller styles.css'te
 // =========================================================
 
-// ---------- SLOGANLAR (Anasayfa hero) ----------
-const SLOGANS = [
-  { a: 'Küçük değişimler,', b: 'büyük oluş.' },
-  { a: 'Bugün değişmezsen,', b: 'yarın hep aynısın.' },
-  { a: 'Disiplin değil,', b: 'kimlik.' },
-  { a: 'Hareket,', b: 'kelimeden ağırdır.' },
-  { a: 'Hazır olmayı bekleme.', b: 'Başla.' },
-  { a: 'Eski sen,', b: 'bir seçimdir.' },
-  { a: 'Bir gün değil,', b: 'bugün.' },
-  { a: 'Yap.', b: 'Konuşma.' },
-  { a: 'Sessizce,', b: 'sürekli.' },
-  { a: 'Hep aynı yerdeysen,', b: 'yanlış sorular soruyorsun.' },
-  { a: 'Kimlik önce,', b: 'davranış sonra.' },
-  { a: 'Ben olmak bir an değil,', b: 'bir alışkanlıktır.' },
-  { a: 'Bir cümle yaz,', b: 'bir adım at.' },
-  { a: 'Kaçtığını tanı,', b: 'kaç.' },
-  { a: 'Sözün değil,', b: 'tekrarların seni yapar.' },
-  { a: 'Zincir kırılır,', b: 'her gün biraz.' },
-  { a: 'Korkunu yaz,', b: 'büyüsü kaçsın.' },
-  { a: 'Henüz değil,', b: 'ama yolda.' },
-  { a: 'Sadece bugün.', b: 'Yarın yarın gelir.' },
-  { a: 'Kaçış da bir cevaptır,', b: 'görmek yeter.' },
-  { a: 'Küçük söz,', b: 'büyük eylem.' },
-  { a: 'Değişim sessizdir,', b: 'dinlemeyi bil.' },
-  { a: 'Hep aynı yöne,', b: 'her gün biraz.' },
-  { a: 'Dürüstlük,', b: 'en kısa yoldur.' },
-  { a: 'Sert gerçek,', b: 'tatlı yalandan iyidir.' },
-  { a: 'Her gün,', b: 'yeniden seç.' },
-  { a: 'Eski kalıp,', b: 'yeni kişi değildir.' },
-  { a: 'Bekleme yok,', b: 'oluşma var.' },
-  { a: 'Bir satır,', b: 'bir niyet.' },
-  { a: 'Mükemmel değil,', b: 'düzenli.' }
-];
+console.log('[Kaizen] app.js yükleniyor...');
 
-// ---------- ALINTILAR (Anasayfa altı, rastgele) ----------
-const QUOTES = [
-  { t: "Suya geç girmek suyu ısıtmaz. Sadece üşütür.", a: "" },
-  { t: "Başarı büyük sıçramaların toplamı değil, küçük adımların çarpımıdır.", a: "" },
-  { t: "Eğer bir şey seni yoruyorsa, o seni büyütüyor olabilir.", a: "" },
-  { t: "En iyi zaman yirmi yıl önceydi. İkinci en iyi zaman bugün.", a: "Çin Atasözü" },
-  { t: "Kendini bulmak istiyorsan, kendini unut. Bir işe, bir disipline, bir sevgiye ver.", a: "" },
-  { t: "Küçük şeylerde sadakatsizsen, büyük şeylerde de sadakatsizsindir.", a: "" },
-  { t: "Sadece harekete güven. Hayat kelimelerde değil, olaylarda geçer.", a: "Alfred Adler" },
-  { t: "İnsan ne kadar az isterse, o kadar çoğa sahiptir.", a: "Sokrates" },
-  { t: "Geçmişe saplanmak, geleceğe körleşmektir.", a: "" },
-  { t: "Zincirleri görmeyen kişi, özgürlüğü arayamaz.", a: "" },
-  { t: "Cesaret, korkunun yokluğu değil; korkunun üstüne yürümektir.", a: "" },
-  { t: "Her gün azıcık. Azıcık her gün. Fark, yolda ortaya çıkar.", a: "" },
-  { t: "Bilmediğini bilmek, bildiğini sorgulamakla başlar.", a: "" },
-  { t: "Sabır acıdır ama meyvesi tatlıdır.", a: "Aristoteles" },
-  { t: "En büyük zafer hiç düşmemek değil, her düştüğünde kalkmaktır.", a: "Konfüçyüs" },
-  { t: "Kendini savunmak için harcadığın enerji, değişmek için kullansan zaten savunmaya gerek kalmazdı.", a: "" },
-  { t: "Yapmak istemediğin şeyi yap. Orada bir şey öğreneceksin.", a: "" },
-  { t: "Hayat seni test etmez. Senin içinden çıkarılanı gösterir.", a: "" },
-  { t: "Bir ağaca bakanın en çok ihtiyacı olan şey, sabırdır.", a: "" },
-  { t: "Başarısızlık, denemenin zıddı değildir. Başarısızlık denemenin kendisidir.", a: "" },
-  { t: "Kendi yolundan başkasını takip eden, ömür boyu kaybolur.", a: "" },
-  { t: "Zor olan yapılması doğru olandır. Kolay olan ise alıştığındır.", a: "" },
-  { t: "Önce yap. Anlamayı yaparken öğrenirsin.", a: "" },
-  { t: "Kimse seni kurtarmaya gelmiyor. Bu iyi haber.", a: "" },
-  { t: "Nehir dağı aşamadı çünkü akmayı bırakıp kararlı olmayı denedi.", a: "" },
-  { t: "Acı geçicidir. Pes etmek kalıcıdır.", a: "Lance Armstrong" },
-  { t: "Yolun bittiğini sandığın an, başka bir yol açılır. Yeter ki yürümeyi bırakma.", a: "" },
-  { t: "Kendine verdiğin her sözü tut. Tutmadığın her söz benlik saygını yer.", a: "" },
-  { t: "Değişim rahat değildir. Rahatlık da değişim değildir.", a: "" },
-  { t: "Bir şey seni rahatsız ediyorsa, ona daha yakından bakmanın zamanı gelmiştir.", a: "" },
-  { t: "Umutsuzluk, yeterince denemediğinin kanıtıdır.", a: "" },
-  { t: "Başkasının hayatını yaşamak, en incelikli intihar biçimidir.", a: "" },
-  { t: "Sen aynı nehre iki kez giremezsin, çünkü o başka sular; sen başka bir sensin.", a: "Heraklitos" },
-  { t: "Düşündüğün gibi yaşamazsan, yaşadığın gibi düşünmeye başlarsın.", a: "Paul Bourget" },
-  { t: "Sessizlikten korkan, kendiyle tanışmamıştır.", a: "" },
-  { t: "İçinde bir şey yanmıyorsa, kimseyi ısıtamazsın.", a: "" },
-  { t: "İyi tohum kötü toprakta büyümez. Önce toprağı değiştir.", a: "" },
-  { t: "Kendini küçük görme. Ama abartma da. Sadece gör.", a: "" },
-  { t: "Bir işi ertelemek, onu iki katına çıkarmaktan farksızdır.", a: "" },
-  { t: "Mükemmel olmayı bekleme. Yeterli olmak yeterli.", a: "" },
-  { t: "Güçlü olmak, kırılmamak değil; kırıldığında yeniden birleşmektir.", a: "" },
-  { t: "Her büyük yolculuk, tek bir adımla başlar.", a: "Lao Tzu" },
-  { t: "Sabah yatağını topla. Küçük bir zafer, büyük bir gün açar.", a: "" },
-  { t: "Her 'hayır' bir 'evet'in alanını açar. Seçmekten korkma.", a: "" },
-  { t: "Konfor sana ne verdiyse geri almaya hazırdır. Zorluk ise yeni bir şey verir.", a: "" },
-  { t: "Bir çocuk gibi merak et. Bir yaşlı gibi sabret.", a: "" },
-  { t: "Çaba, yeteneksizliğin telafisi değildir. Yeteneğin tek görünür hâlidir.", a: "" },
-  { t: "Ne ekersen onu biçersin. Bu, doğanın adaleti değil, kuralıdır.", a: "" }
-];
+import { SLOGANS, QUOTES, QUESTIONS, TIME_SLOTS, STOPWORDS, GUIDE_ARTICLES, BFI_QUESTIONS, BFI_DIMENSIONS, BFI_INTERPRETATIONS, generateProfileSummary } from './data.js';
 
-// =========================================================
-// SORULAR — Dan Koe'nin "How to Change Your Life in 1 Day"
-// makalesindeki 3 katmanlı yapıya birebir uyarlandı:
-//   KURULUŞ  → Tek seferlik, 14 soru (Morning - Psychological Excavation)
-//   SABAH    → Her gün, 3 soru (Vision sabitleme + günlük niyet)
-//   GÜN İÇİ  → Her saate sabit tek soru (Interrupting Autopilot)
-//   AKŞAM    → Her gün, 3 soru (Synthesizing Insight)
-//   HAFTALIK → Pazar, 4 soru (senin eklemen)
-//   AYLIK    → Ay sonu, 4 soru (senin eklemen)
-// =========================================================
+console.log('[Kaizen] data.js içe aktarıldı');
 
-const QUESTIONS = {
-  // ---------- KURULUŞ — Tek seferlik, 14 soru ----------
-  kurulus: [
-    { id: 'k1', q: 'Yaşamayı öğrendiğin, sıradanlaşmış ama hâlâ içini kemiren memnuniyetsizlik ne?', hint: 'Ağlatacak kadar büyük bir acı değil. Alıştığın, "işte hayat bu" dediğin ama içten içe kabullenmediğin şey. Pazartesi sabahı gözünü açarken midende beliren şey nedir?' },
-    { id: 'k2', q: 'Geçen yıl en çok tekrarladığın 3 şikayet neydi?', hint: 'Arkadaşlarınla kahvede, eşinle akşam yemeğinde, kendine duşta ne söylüyorsun? Hep aynı 3 şeyden şikayet ediyorsan ve hâlâ o durumdaysan, kendine şunu sor: gerçekten değişmesini istiyor muyum?' },
-    { id: 'k3', q: 'Bu şikayetlere bakarak, davranışını izleyen biri gerçekten ne istediğini söylerdi?', hint: 'Sözlerin bir şey, hareketlerin başka bir şey söylüyor. "İşimi sevmiyorum" diyorsun ama iş aramıyorsun — o zaman gerçek isteğin ne? Güvenlik mi? Mazeret mi? Dürüst ol.' },
-    { id: 'k4', q: 'Saygı duyduğun birine itiraf etmen zor olacak, hayatına dair bir gerçek ne?', hint: 'Babana, eski bir öğretmenine ya da seni gerçekten tanıyan birine anlatsan utanacağın şey. Yüzü düştüğünde hissedeceğin şey — genelde asıl gerçek oradadır.' },
-    { id: 'k5', q: 'Hiçbir şey değişmezse 5 yıl sonra ortalama bir Salı günün nasıl geçer?', hint: 'Romantikleştirme. Saat kaçta uyanıyorsun, yatak nasıl kokuyor, telefona ilk ne için bakıyorsun, öğle yemeğinde kimin yanında oturuyorsun, 22:00\'de yüzün nasıl? Bir kısa film gibi yaz.' },
-    { id: 'k6', q: '10 yıl sonra neyi kaçırmış olurdun? Hangi fırsatlar kapanmış olur?', hint: 'Hangi ilişkiler artık kurulamaz? Hangi bedenler bir daha gelmez? Annenle yapmadığın o yolculuk? 30\'una yetişemediğin o beceri? Somut say.' },
-    { id: 'k7', q: 'Hayatının sonundasın. Güvenli versiyonu yaşadın. Bedeli ne?', hint: 'Başlamadığın işler. İtiraf edemediğin sevgiler. Denemediğin için "nasılmış" merak ettiğin şeyler. Yatakta, gözlerini kapatmadan önce içinde kalan o ukde — adı ne?' },
-    { id: 'k8', q: 'Hayatında zaten senin korktuğun geleceği yaşayan biri var mı?', hint: 'Amcan, eski bir meslektaş, mahalleden bir komşu. Yıllar önce seninkine benzer durumdaydı, şimdi orada. Onun yüzüne baktığında ne hissediyorsun? İşte o his, seni uyarıyor.' },
-    { id: 'k9', q: 'Gerçekten değişmek için hangi kimliği bırakman gerek?', hint: 'Kendini hangi sıfatlarla tanıttığını düşün: "ben tembel biriyim", "ben sosyal değilim", "ben sporcu tipi değilim". Bu etiketleri çıkarırsan kim kalır? Ve o boşluk seni neden korkutuyor?' },
-    { id: 'k10', q: 'Değişmemenin en utanç verici sebebi ne?', hint: '"Zamanım yok" değil. O ezbere. Bir katman derine in: başkalarının ne diyeceğinden mi korkuyorsun? Başarısız olmaktan mı? Başarılı olmaktan mı? Çocuk gibi hissediyorsun belki — o utancı yaz.' },
-    { id: 'k11', q: 'Davranışın bir koruma biçimiyse, tam olarak neyi koruyorsun?', hint: 'Ertelemek seni neden koruyor? Belki denemezsen başarısız olamazsın. Belki önemsemezsen kırılamazsın. Korunan şey genelde kırılgan bir yer — o yer neresi?' },
-    { id: 'k12', q: 'Pratikliği unut: 3 yıl sonra yaşamak istediğin hayatta ortalama bir Salı nasıl geçer?', hint: '"Gerçekçi ol" deme şimdi. Aynı detayla yaz: saat, mekan, yanındaki insan, yaptığın iş, akşam ne yiyorsun. Hayal bile kuramıyorsan, zaten sorun orada.' },
-    { id: 'k13', q: 'O hayatın zorlama değil doğal hissetmesi için kendin hakkında neye inanman gerek?', hint: 'O Salı\'daki kişi kendini nasıl biri olarak görüyor? "Ben ... türü biriyim." Cümleyi tamamla. Şimdiki kimliğinle bu cümle çelişiyor mu? İşte değişmesi gereken yer.' },
-    { id: 'k14', q: 'Zaten o kişi olsan, bu hafta tek başına yapacağın şey ne?', hint: 'Büyük şey değil — o kişi gayet doğal yapardı. Bir e-posta atmak. Bir randevu almak. 20 dakika yazmak. Senin zor bulduğun, onun için sıradan olan o küçük eylem ne?' }
-  ],
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, Timestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  // ---------- SABAH — Her gün, 3 soru ----------
-  // Dan Koe: "Vision sabitleme + günlük niyet"
-  sabah: [
-    { id: 's1', q: 'Bugün en çok neyle yüzleşmekten kaçıyorum?', hint: 'Gözünü açtığında aklına "ah, bir de o mesele var" diye gelen şey. Yapılacaklar listenden sürekli ertelediğin o iş. İçten içe biliyorsun neyse — adını koy, büyüklüğü azalsın.' },
-    { id: 's2', q: 'Bugün, olmak istediğim kişinin en küçük versiyonu ne yapardı?', hint: 'Kahraman olmana gerek yok. O kişi bu sabah doğal olarak ne yapardı? 10 dakika yazardı belki. Asansörü değil merdiveni kullanırdı. Bir mesaj atardı. Tek, somut, bugün.' },
-    { id: 's3', q: 'Bugün gelecekteki ben, şimdiki bana ne söylerdi?', hint: '5 yıl sonra, olmak istediğin yerdeki sen, bu sabaha bakıp ne derdi? "Şu adımı at" mı? "Bu telefonu bırak" mı? "O mesajı yaz artık" mı? Onun sesini duy.' }
-  ],
+console.log('[Kaizen] Firebase modülleri içe aktarıldı');
 
-  // ---------- GÜN İÇİ — Sabit saatler, her saate tek soru ----------
-  // Dan Koe'nin makalesindeki 5 saat + 19:30 eklemesi
-  // Bu diziden DEĞİL, TIME_SLOTS'taki `fixedQuestionId`'ye göre çekilir
-  gunici: [
-    { id: 'g1', q: 'Şu an yaptığım şeyle neyi erteliyorum?', hint: 'Bu sekme, bu video, bu "bir bakayım"lar hangi işin üzerini örtüyor? Genelde bildiğin ama yapmaktan çekindiğin şeyin üstüne kapatılan bir bardır bu.' },
-    { id: 'g2', q: 'Son 2 saatimi izleyen biri, ne istediğimi söylerdi?', hint: 'Sessiz bir kamera seni izliyor. Ne yaptığını görünce ne söylerdi? "Bu kişi odaklanmak istiyor" mu? "Bu kişi kaçmak istiyor" mu? Davranış niyetten daha dürüsttür.' },
-    { id: 'g3', q: 'Nefret ettiğim hayata mı, istediğim hayata mı doğru hareket ediyorum?', hint: 'Bu an bir oya dönüşüyor. Son 30 dakikan, 5 yıl sonraki hangi Salı\'ya çıkıyor? Kaçtığın hayata mı, vizyonuna mı? Şu anki yön gerçek yöndür.' },
-    { id: 'g4', q: 'Önemsiz numarası yaptığım en önemli şey ne?', hint: '"Yarın halledilir" dediğin. "Zaten çok büyük mesele değil" diye geçiştirdiğin. İçindeki ses ise "aslında çok önemli" diyor. Adını koymaktan kaçtığın şey ne?' },
-    { id: 'g5', q: 'Şu an gerçek bir istekten mi, kimlik korumasından mı hareket ediyorum?', hint: 'Bu işi gerçekten istediğin için mi yapıyorsun, yoksa "ben böyle biriyim" dediğin kişiyi kaybetmemek için mi? Çalıştığını göstermek çalışmaktan yorucudur.' },
-    { id: 'g6', q: 'Şu an beni en çok tüketen düşünce ne?', hint: 'Arka planda sessizce çalışan, enerjini emen o düşünce. Bir konuşma. Bir karar. Bir suçluluk. Adını yazmak bile onu yarı yarıya küçültür — dene.' }
-  ],
-
-  // ---------- AKŞAM — Her gün, 3 soru ----------
-  aksam: [
-    { id: 'a1', q: 'Bugün en canlı ne zaman hissettim? En ölü ne zaman?', hint: 'Hangi an gözün parladı, hangi an omuzların çöktü? İkisini de yaz. Canlılık verenler senin yönün, ölü hissettirenler uzaklaşman gereken yer — ikisi birlikte haritayı çizer.' },
-    { id: 'a2', q: 'Bugün hangi eylemim, olmak istediğim kişinin eylemiydi?', hint: 'Küçük de olsa. Bir tek şey. Masaya oturduğun 30 dakika. Atlamadığın spor. Söylediğin o zor söz. Kanıt birikmiyor değil — sadece görmeyi unutuyorsun.' },
-    { id: 'a3', q: 'Yarın sabah, bugünden farklı yapmak istediğim tek şey ne?', hint: 'Listeler dağıtır, tek şey odaklar. Yarın uyanınca hangi tek değişiklik günü baştan aşağı farklı yapar? Abartma — sıradan, mümkün, somut.' }
-  ],
-
-  // ---------- HAFTALIK — Pazar, 4 soru ----------
-  haftalik: [
-    { id: 'h1', q: 'Bu hafta kaç kez sözümle eylemim uyuştu? Kaç kez uyuşmadı?', hint: 'Dedik ama yapmadık: kaç kez? Yapacağız dediğimizi yaptık: kaç kez? Yuvarlama, dürüst say. Fark senin gerçek karakterinle söylediğin karakter arasındaki mesafedir.' },
-    { id: 'h2', q: 'Geçen pazar ile bu pazar arasında ben olarak ne değişti?', hint: '"Hiçbir şey" bir cevaptır ve önemli bir cevaptır. Değişmediysen, neden? Değiştiysen, hangi an kırıldı bir şey? Somut ve küçük olabilir — örneğin "artık şu mesele beni o kadar rahatsız etmiyor".' },
-    { id: 'h3', q: 'Bu hafta en çok hangi duygudan kaçtım?', hint: 'Tekrar eden bir his vardı bu hafta — sıkıldın mı, yalnız mı hissettin, kıskandın mı, korktun mu? Kaçış genelde meşguliyet, ekran veya yeme olarak kendini gösterir. Hangi duyguyu susturmak için?' },
-    { id: 'h4', q: 'Gelecek hafta için tek bir küçük niyetim olsa ne olur?', hint: 'Devrim değil. Küçük bir niyet. "Her sabah 10 dakika yürüyeceğim." "Salı akşamı şu kişiyi arayacağım." Küçüklüğüne aldanma — yapacağın tek şey, yapmayacağın on şeyden değerli.' }
-  ],
-
-  // ---------- AYLIK — Ay sonu, 4 soru ----------
-  aylik: [
-    { id: 'ay1', q: 'Bu ay kaçtığım hayata ne kadar yaklaştım?', hint: '1-10 arası. Korktuğun o hayata benzeyen davranışların hangileriydi bu ay? Sert ol — kaçtığını bilirsen, yönünü düzeltmek kolay.' },
-    { id: 'ay2', q: 'Bu ay kimlik ifademe en çok hangi eylem kanıt oldu?', hint: '"Ben ... biriyim" dediğin cümlenin altını dolduran tek bir eylem. Büyük olmak zorunda değil — sadece gerçek olmalı. Kanıt birikir, kimlik kendi kendini inşa eder.' },
-    { id: 'ay3', q: 'Vizyonum evrilmeli mi? Öyleyse nasıl?', hint: 'Bir ay önceki vizyonun hâlâ seni çekiyor mu? Artık küçük mü geliyor, yoksa yön mü değişti? Vizyon sabit değil, canlıdır — değiştirmek kararsızlık değil, olgunluktur.' },
-    { id: 'ay4', q: 'Bu ay kendime söylediğim en büyük yalan neydi?', hint: 'Tek bir günün değil, 30 günün yalanı. Belki "çok yoğunum"du. Belki "sonra başlarım"dı. Belki "bu sefer cidden" idi. Farkındasın ama söylemek istemiyorsun — burada söyle.' }
-  ]
+const firebaseConfig = {
+  apiKey: "AIzaSyBl4EyTFAPiKMgbgmRztm5MmToAdHKFTPQ",
+  authDomain: "zinciri-kirma-486a3.firebaseapp.com",
+  projectId: "zinciri-kirma-486a3",
+  storageBucket: "zinciri-kirma-486a3.firebasestorage.app",
+  messagingSenderId: "189866155572",
+  appId: "1:189866155572:web:31fdf2fc9b0e502c74f461",
+  measurementId: "G-880SWBJ3MC"
 };
 
-// =========================================================
-// ZAMAN SLOTLARI — Dan Koe'nin sabit saatleri
-// Her gün içi saatinin SABİT bir sorusu var (fixedQuestionId)
-// Pencere açılır → bir sonraki pencere açılana kadar "aktif"
-// Sonraki açılınca önceki "geç" olur ama yine cevaplanabilir
-// =========================================================
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+const provider = new GoogleAuthProvider();
 
-const TIME_SLOTS = [
-  { key: 'sabah-block', time: '07:30', label: 'Sabah · 3 soru', type: 'sabah', count: 3, start: 0, end: 11 },
-  { key: 'g-1100',      time: '11:00', label: 'Öğle öncesi',    type: 'gunici', count: 1, start: 11,   end: 13.5, fixedQuestionId: 'g1' },
-  { key: 'g-1330',      time: '13:30', label: 'Öğle sonrası',   type: 'gunici', count: 1, start: 13.5, end: 15.25, fixedQuestionId: 'g2' },
-  { key: 'g-1515',      time: '15:15', label: 'İkindi',         type: 'gunici', count: 1, start: 15.25, end: 17,   fixedQuestionId: 'g3' },
-  { key: 'g-1700',      time: '17:00', label: 'Akşamüstü',      type: 'gunici', count: 1, start: 17,   end: 19.5, fixedQuestionId: 'g4' },
-  { key: 'g-1930',      time: '19:30', label: 'Gün sonu',       type: 'gunici', count: 1, start: 19.5, end: 21,   fixedQuestionId: 'g5' },
-  { key: 'aksam-block', time: '21:00', label: 'Akşam · 3 soru', type: 'aksam', count: 3, start: 21,   end: 24 }
-];
+console.log('[Kaizen] Firebase başlatıldı');
 
-// ---------- STOPWORDS — Örüntü analizi için göz ardı edilen kelimeler ----------
-const STOPWORDS = new Set([
-  'bile','için','olan','olarak','benim','senin','sonra','önce','gibi','daha','çok','çünkü',
-  'ama','fakat','sadece','kadar','belki','şöyle','böyle','nasıl','neden','zaman','şimdi',
-  'bugün','yarın','dün','biraz','hiç','evet','hayır','aslında','yani','hep','her',
-  'ben','sen','biz','onlar','bu','şu','var','yok','ve','veya','ile','değil',
-  'olmak','etmek','yapmak','gelmek','gitmek','istemek','bilmek',
-  'kendi','kendimi','kendimden','kendine','kendime','olduğumu','yaptığım',
-  'ediyorum','yapıyorum','oluyor','olmaz','olacak','sanırım','galiba',
-  'hissediyorum','düşünüyorum','eğer','dedim','dedi','diye','şey','şeyi','şeyin'
-]);
+let currentUser = null;
+let userData = {
+  vision: '',
+  antiVision: '',
+  identity: '',
+  yearGoal: { title: '', start: '', deadline: '' },
+  monthGoal: { title: '', deadline: '', tasks: [], startDate: null, celebrated: false },
+  dailyLevers: [],
+  constraints: [],
+  streak: 0,
+  lastActiveDate: null,
+  joinedDate: null,
+  kurulusCompleted: false,
+  kurulusIndex: 0,
+  lastWeeklyRitual: null,
+  lastMonthlyRitual: null,
+  onboardingDone: false,
+  notifEnabled: false,
+  journalPinHash: null,
+  journalIncludeInPatterns: false
+};
+let currentQuestType = null;
+let currentQuestSlot = null;
+let currentQuestIndex = 0;
+let currentQuestList = [];
+let currentAnswers = [];
+let historyCache = [];
+let historyFilter = 'all';
+let onboardIndex = 0;
+let journalCache = [];
+let journalUnlocked = false;
+let currentJournalEntry = null;
+let bfiCache = [];
+let bfiAnswers = {};
+let bfiCurrentIndex = 0;
 
-// =========================================================
-// REHBER YAZILARI
-// =========================================================
-
-const GUIDE_ARTICLES = [
-  {
-    id: 'why',
-    title: 'Bu uygulama neden işe yarar?',
-    lead: 'Çünkü sana bilgi öğretmiyor — seni kendi cevaplarınla yüzleştiriyor.',
-    body: `
-      <p>İnsanların %90'ı neden değişemez? Çünkü <em>yanlış katmanda</em> değişmeye çalışırlar. "Bu hafta daha disiplinli olacağım" der, 2 hafta sonra bırakırlar. Sorun motivasyon değil, <em>kimlik</em>.</p>
-      <h4>Davranış vs. Kimlik</h4>
-      <p>Fit olan biri sağlıklı yemek yemek için kendini zorlamıyor — tersine, <em>sağlıksız yemek yemek</em> ona zor geliyor. CEO sabah kalkmak için değil, yatakta yatmak için kendini zorlar. Kimliği değişmiş, davranış kendiliğinden akıyor.</p>
-      <blockquote>"Eğer hayatımdan keyif almıyor olsaydım, bunu neden yapıyor olayım ki?"</blockquote>
-      <p>Kaizen tam da bunu yapıyor: Her gün sana birkaç soru sorar. Cevaplarını biriktirir. 30 gün sonra sana <em>kanıt</em> gösterir — ne dediğinle ne yaptığın uyuşuyor mu, uyuşmuyor mu?</p>
-      <p>İç sesinle dış kanıtın yüzleşmesi. Bir süre sonra kendini artık kandıramazsın.</p>
-    `
-  },
-  {
-    id: 'structure',
-    title: 'Sorular nasıl çalışır?',
-    lead: '3 katman var: Kuruluş bir kez, günlük ritim sürekli, haftalık/aylık tekrar eder.',
-    body: `
-      <p>Kaizen'deki sorular karışık değil, net bir hiyerarşi var.</p>
-      <h4>1. Kuruluş — Tek seferlik (14 soru)</h4>
-      <p>İlk girdiğinde karşına çıkar. Vizyonunun, kaçtığın hayatın, kimliğinin temelini atarsın. 20-30 dakika sürer. Bir oturuşta bitirmek zorunda değilsin — kaldığın yerden devam edersin.</p>
-      <h4>2. Günlük ritim — Her gün (3 + 5 + 3 soru)</h4>
-      <p><em>Sabah (3 soru)</em> — Gün başlamadan niyetini topla.<br>
-      <em>Gün içi (5 sabit saat, her saate 1 soru)</em> — Otopilotu kır. 11:00, 13:30, 15:15, 17:00, 19:30.<br>
-      <em>Akşam (3 soru)</em> — Günü kapat, yarına mesaj bırak.</p>
-      <p>Gün içi soruları <strong>sabittir</strong> — 11:00'de hep aynı soru gelir, 13:30'da hep aynı. Çünkü amaç çeşitlilik değil, aynı soruya farklı günlerde ne farklı cevap verdiğini görmek.</p>
-      <h4>3. Ritüeller — Haftada / ayda bir (4+4 soru)</h4>
-      <p><em>Haftalık</em> — Pazar günü. Geçen hafta sözünle eylemin uyuştu mu?<br>
-      <em>Aylık</em> — Ay sonunda. Vizyonun evrilmeli mi?</p>
-      <h4>Geç cevap sistemi</h4>
-      <p>Bir pencere geçtiğinde (mesela 13:30 geldiğinde 11:00 sorusu) eski soru hâlâ cevaplanabilir. Sadece "geç" olarak işaretlenir. Sistem kaç dakika geç cevapladığını kaydeder — çünkü kronik erteleme bir örüntüdür ve görünür olması lazım.</p>
-    `
-  },
-  {
-    id: 'vision',
-    title: 'Vizyon nasıl yazılır?',
-    lead: 'İki örnekle — yanlış ve doğru.',
-    body: `
-      <p>Vizyon bir <em>hedef değildir</em>. Bir <em>bakış açısıdır</em>. Dünyayı hangi gözle göreceğinin sözleşmesi.</p>
-      <h4>Eski cümle vs. Yeni cümle</h4>
-      <div class="example">
-        <div class="compare-box wrong">
-          <div class="lbl">Eski</div>
-          "Yazar olmak istiyorum." / "Daha disiplinli olacağım." / "Kilo vereceğim."
-        </div>
-        <div class="compare-box right">
-          <div class="lbl">Yeni</div>
-          "Ben her gün yazan biriyim." / "Ben sözünden çok hareketine güvenen biriyim."
-        </div>
-      </div>
-      <p>Farkı gördün mü? Eski cümleler <em>gelecek zamanda</em>. Yeni cümleler <em>şimdiki zamanda</em>. Sen zaten o kişisin — kanıtı henüz biriktirmedin, o kadar.</p>
-      <h4>İyi bir vizyonun 3 özelliği</h4>
-      <p>1. <em>Şimdiki zaman</em> — "olmak istiyorum" değil, "benim."<br>
-      2. <em>Kişisel</em> — başkasının cümleleriyle değil, kendi cümlelerinle.<br>
-      3. <em>Evrilir</em> — mükemmel yazmak zorunda değilsin. Yaz, aylarca sonra dön, güncelle.</p>
-      <blockquote>"Vizyonun bir ürün gibidir. Önce kaba bir hal, sonra sürekli iterasyon."</blockquote>
-    `
-  },
-  {
-    id: 'anti-vision',
-    title: 'Kaçtığın Hayatı (Anti-Vizyon) nasıl yazılır?',
-    lead: 'Kaçtığın hayat, gideceğin hayattan çoğu zaman daha güçlü motive eder.',
-    body: `
-      <p>İnsanlar "pozitif motivasyon"u över, ama sinir sistemi <em>kaybetmek</em> riskine çok daha güçlü tepki verir. Kaçtığın hayatı yazmak, bu yüzden vizyonun kadar önemlidir.</p>
-      <h4>Nasıl yazılır?</h4>
-      <p>Kendini 10 yıl sonra hayal et — <em>hiçbir şey değişmemiş</em>. Aynı iş, aynı şikayetler, aynı bahaneler. Bu hayatın detaylarını içini acıtacak kadar gerçekçi yaz.</p>
-      <div class="example">
-        <div class="compare-box wrong">
-          <div class="lbl">Yüzeysel</div>
-          "Başarısız olmak istemiyorum."
-        </div>
-        <div class="compare-box right">
-          <div class="lbl">Etkili</div>
-          "40 yaşında, hâlâ aynı şikayetleri eden, yazmadığı kitaptan bahseden, vaktinden önce yorulmuş biri olmak."
-        </div>
-      </div>
-      <blockquote>"Kaçtığın hayatı tanıyana kadar ondan kaçamazsın. Tanıdığında ise kaçmana gerek kalmaz."</blockquote>
-    `
-  },
-  {
-    id: 'identity',
-    title: 'Kimlik nasıl inşa edilir?',
-    lead: 'Değişim şöyle olmuyor: kendini zorla, daha çok zorla, sonunda değiş. Şöyle oluyor: önce kimliği değiştir, davranış otomatik gelsin.',
-    body: `
-      <p>Kimliğin şu an neden bu hâlde?</p>
-      <p>1. Bir hedefin oldu (genelde farkında bile değildin)<br>
-      2. O hedefe göre dünyayı algıladın<br>
-      3. Hedefe götürecek davranışları yaptın<br>
-      4. Yaptıkça alışkanlık oldu<br>
-      5. Alışkanlık "Ben şöyle biriyim"e dönüştü<br>
-      6. Artık kimliğini <em>savunuyorsun</em></p>
-      <p>Yeni bir kimlik inşa etmek için bu döngüyü <em>tersten</em> işletirsin: Önce "Ben şöyle biriyim" dersin, sonra o kişinin yapacağı küçük şeyleri yaparsın, alışkanlık olur, en sonunda gerçekten o kişi olursun.</p>
-      <h4>Önemli nokta</h4>
-      <p>"Ben henüz o değilim" diyebiliyorsan doğru yoldasın. Kimse bir anda kimliğini değiştirmez. Kaizen'in mantığı: <em>küçük kanıtlar biriktir, kimlik kendi kendini yazsın</em>.</p>
-      <blockquote>"İki yazı yazdıktan sonra yazar olmadın. Ama bir ay boyunca her gün yazdıysan, artık yazmayan biri olmak <em>sana tuhaf gelmeye başlar</em>."</blockquote>
-    `
-  },
-  {
-    id: 'progress',
-    title: 'Ana yol yüzdesi nasıl hesaplanır?',
-    lead: 'Senin müdahalene gerek kalmadan — otomatik ve adil.',
-    body: `
-      <p>Ana yol yüzden iki şeyin çarpımı:</p>
-      <p><em>Zaman oranı</em> — Başlangıç ile bitiş tarihi arasında ne kadar yol aldın. Doğal akıyor, senin müdahalen olmadan.</p>
-      <p><em>Tutarlılık çarpanı</em> — Son 30 gündeki soru tamamlama oranın. Ne kadar çok cevap verirsen, o kadar hızlı ilerliyor. Kaçırdıkça yavaşlıyor.</p>
-      <h4>Formül</h4>
-      <p><em>Yüzde = (geçen gün / toplam gün) × (0.5 + tamamlama oranı)</em></p>
-      <p>Örnek: Başlangıcın 1 Ocak, sonun 31 Aralık. Bugün 1 Nisan. Geçen gün %25. Son 30 günde %80 tutarlılık göstermişsin. Yüzde = 25 × 1.3 = <em>%32.5</em>. Beklentinin üstünde.</p>
-      <blockquote>"İlerleme otomatik değil. Ama haksız da değil. Kanıtın kadar ilerliyor."</blockquote>
-    `
-  },
-  {
-    id: 'time',
-    title: 'Neden belirli saatlerde sorular?',
-    lead: '"Bir ara yaparım" demek, "hiç yapmam" demektir.',
-    body: `
-      <p>Beynimizin en sevdiği kaçış: <em>sorumluluğu zamansızlaştırmak</em>. "Bir ara" diyorsun, o "bir ara" hiç gelmiyor. Uygulama bu yüzden seni <em>saate bağlıyor</em>.</p>
-      <h4>Saatler ve sabit sorular</h4>
-      <p><em>Sabah (07:30-11:00)</em> — 3 soru. Güne niyetle başla.<br>
-      <em>11:00</em> — "Şu an yaptığım şeyle neyi erteliyorum?"<br>
-      <em>13:30</em> — "Son 2 saatimi izleyen biri ne istediğimi söylerdi?"<br>
-      <em>15:15</em> — "Nefret ettiğim mi, istediğim hayata mı hareket ediyorum?"<br>
-      <em>17:00</em> — "Önemsiz numarası yaptığım en önemli şey ne?"<br>
-      <em>19:30</em> — "Gerçek istekten mi, kimlik korumasından mı hareket ediyorum?"<br>
-      <em>21:00 sonrası</em> — 3 soru. Akşam sentezi.</p>
-      <p>Her pencere bir sonraki saat gelene kadar "aktif". Sonraki pencere gelince önceki "geç" olur ama hâlâ cevaplayabilirsin. Sistem kaç dakika geç cevapladığını not alır — zamanla ne kadar kronik ertelediğin örüntüde görünür.</p>
-      <blockquote>"Kaçırmak da bir cevaptır. Sadece duyması daha zor bir cevap."</blockquote>
-    `
-  },
-  {
-    id: 'patterns',
-    title: 'Örüntüler ne işe yarar?',
-    lead: 'Tek bir cevap fazla şey söylemez. Otuz cevap her şeyi söyler.',
-    body: `
-      <p>"Neden kaçıyorum?" sorusunu bir kez cevaplamak faydalı ama sınırlı kalır. Aynı soruyu 30 gün cevaplayıp <em>tekrar eden kelimeleri</em> görmek, işte orada iş değişir.</p>
-      <p>Kaizen senin cevaplarını sürekli tarar. Aradığı şeyler:</p>
-      <p>1. <em>Tekrarlayan kelimeler</em> — 14 günde 12 kez "yorgunum" yazmışsın. Bu bir mesaj.<br>
-      2. <em>Tutarsızlık</em> — "Her gün yazacağım" dedin, son 7 günde 2 kez geldin.<br>
-      3. <em>Kaçışlar</em> — 3 gün üst üste gelmediysen sistem sorar: "Neden kaçıyorsun?"<br>
-      4. <em>Geç cevaplar</em> — Gün içi sorularına sürekli pencere kapandıktan sonra cevap veriyorsan, bu da bir örüntü.<br>
-      5. <em>Süreklilik</em> — 7 gün üst üste geldiysen: "Kanıt birikiyor."</p>
-      <blockquote>"Tek bir dürüst cevap az şey söyler. Bin dürüst cevap, kim olduğunu söyler."</blockquote>
-    `
-  },
-  {
-    id: 'capsule',
-    title: 'Zaman kapsülü nedir?',
-    lead: 'Eski senin, şimdiki sene hesap sorması.',
-    body: `
-      <p>Bugün yazdığın bir cevabı 30 gün sonra sana göstersek ne olur? İki ihtimal var:</p>
-      <p>1. O sen hâlâ aynı sensin → <em>yüzleşme</em>. "Ne değişti?" dediğimizde cevap veremiyorsan, değişim olmamış demektir.</p>
-      <p>2. O sen artık yok → <em>kutlama</em>. "30 gün önce 'asla olmayacak' demiştim, şimdi yaşıyorum" demek, kimlik kanıtının en güçlü hâli.</p>
-      <p>Kapsül iki senaryoda da işe yarar: <em>değiştiysen seni onaylar, değişmediysen seni uyandırır</em>.</p>
-      <blockquote>"Geçmişteki sen, şimdiki senin en dürüst tanığıdır."</blockquote>
-    `
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  try {
+    await signInWithPopup(auth, provider);
+  } catch (e) {
+    try { await signInWithRedirect(auth, provider); }
+    catch(e2) { showToast('Giriş hatası: ' + e2.message); }
   }
-];
+});
 
-// ---------- BFI-44 KİŞİLİK TESTİ ----------
-// Her maddenin "d" alanı boyut kodu, "r" alanı ters-kodlu mu
-// Boyutlar: E=Dışa dönüklük, A=Uyumluluk, C=Sorumluluk, N=Nevrotiklik, O=Yeniliğe açıklık
-const BFI_QUESTIONS = [
-  { n: 1, t: 'Konuşkan biriyim.', d: 'E' },
-  { n: 2, t: 'Başkalarında hata bulmaya eğilimliyim.', d: 'A', r: true },
-  { n: 3, t: 'İşleri tam ve eksiksiz yaparım.', d: 'C' },
-  { n: 4, t: 'Depresif hissetmeye veya moralim bozulmaya eğilimliyim.', d: 'N' },
-  { n: 5, t: 'Orijinal biriyimdir, yeni fikirlere açığım.', d: 'O' },
-  { n: 6, t: 'Ketumumdur (kendimi zor açarım).', d: 'E', r: true },
-  { n: 7, t: 'Genel olarak yardımsever ve özverili biriyim.', d: 'A' },
-  { n: 8, t: 'Biraz dikkatsiz veya umursamaz olabilirim.', d: 'C', r: true },
-  { n: 9, t: 'Rahat biriyim, stresle kolay başa çıkarım.', d: 'N', r: true },
-  { n: 10, t: 'Birçok farklı konuya ilgi duyarım.', d: 'O' },
-  { n: 11, t: 'Enerji doluyumdur.', d: 'E' },
-  { n: 12, t: 'Başkalarıyla sık sık tartışır veya ters düşerim.', d: 'A', r: true },
-  { n: 13, t: 'Güvenilir ve sadık bir çalışanım.', d: 'C' },
-  { n: 14, t: 'Sık sık gergin hissedebilirim.', d: 'N' },
-  { n: 15, t: 'Zeki ve derin düşünen biriyim.', d: 'O' },
-  { n: 16, t: 'Heyecan yaratırım (dikkat çekmeyi severim).', d: 'E' },
-  { n: 17, t: 'İnsanları kolay bağışlarım.', d: 'A' },
-  { n: 18, t: 'İşleri düzensiz veya dağınık yaparım.', d: 'C', r: true },
-  { n: 19, t: 'Sık sık endişelenirim.', d: 'N' },
-  { n: 20, t: 'Hayal gücü yüksek biriyim.', d: 'O' },
-  { n: 21, t: 'Sessiz biriyimdir.', d: 'E', r: true },
-  { n: 22, t: 'Genelde insanlara güvenirim.', d: 'A' },
-  { n: 23, t: 'Tembel olmaya eğilimliyimdir.', d: 'C', r: true },
-  { n: 24, t: 'Duygusal olarak dengeliyimdir, kolay sarsılmam.', d: 'N', r: true },
-  { n: 25, t: 'Keşfetmeyi seven, yaratıcı biriyim.', d: 'O' },
-  { n: 26, t: 'Girişken ve atılgan biriyim.', d: 'E' },
-  { n: 27, t: 'Bazen başkalarına karşı soğuk veya mesafeli olabilirim.', d: 'A', r: true },
-  { n: 28, t: 'Bir göreve başlayıp bitirene kadar devam ederim.', d: 'C' },
-  { n: 29, t: 'Karamsarlığa kapılıp huysuzlaşabilirim.', d: 'N' },
-  { n: 30, t: 'Sanata ve estetiğe değer veririm.', d: 'O' },
-  { n: 31, t: 'Utangaç veya çekingen biriyim.', d: 'E', r: true },
-  { n: 32, t: 'Hemen hemen herkese karşı nazik ve saygılıyım.', d: 'A' },
-  { n: 33, t: 'İşleri verimli ve hızlı bir şekilde yaparım.', d: 'C' },
-  { n: 34, t: 'Zor durumlarda sakin kalırım.', d: 'N', r: true },
-  { n: 35, t: 'Rutin ve alışılmış işleri tercih ederim.', d: 'O', r: true },
-  { n: 36, t: 'Sosyal ortamlarda dışa dönük biriyim.', d: 'E' },
-  { n: 37, t: 'Bazen başkalarına karşı kaba davranabilirim.', d: 'A', r: true },
-  { n: 38, t: 'Kendi planlarımı yapar ve onlara uyarım.', d: 'C' },
-  { n: 39, t: 'Kolayca sinirlenebilirim.', d: 'N' },
-  { n: 40, t: 'Düşünmeyi veya teorik fikirlerle uğraşmayı severim.', d: 'O' },
-  { n: 41, t: 'Sanata veya sanatsal etkinliklere çok ilgi duymam.', d: 'O', r: true },
-  { n: 42, t: 'Diğer insanlarla işbirliği yapmayı severim.', d: 'A' },
-  { n: 43, t: 'Dikkatim kolayca dağılır.', d: 'C', r: true },
-  { n: 44, t: 'Müzik ve sanat alanlarında sofistike zevklerim vardır.', d: 'O' }
-];
+getRedirectResult(auth).catch(e => console.warn(e));
 
-// Boyut bilgileri (ad, renk, kısa açıklama)
-const BFI_DIMENSIONS = {
-  E: {
-    name: 'Dışa Dönüklük',
-    key: 'E',
-    color: 'copper',
-    short: 'Sosyal enerjin, etrafındaki insanlara yönelişin',
-  },
-  A: {
-    name: 'Uyumluluk',
-    key: 'A',
-    color: 'sage',
-    short: 'İnsanlarla uyum kurma eğilimin, sıcaklığın',
-  },
-  C: {
-    name: 'Sorumluluk',
-    key: 'C',
-    color: 'copper',
-    short: 'Disiplin, hedef odaklılık, düzen sevgin',
-  },
-  N: {
-    name: 'Duygusal Denge',
-    key: 'N',
-    color: 'crimson',
-    short: 'Stres altında kalma, duygu yoğunluğun',
-  },
-  O: {
-    name: 'Yeniliğe Açıklık',
-    key: 'O',
-    color: 'violet',
-    short: 'Merak, yaratıcılık, yeniye açıklığın',
+onAuthStateChanged(auth, async (user) => {
+  console.log('[Kaizen] onAuthStateChanged tetiklendi, user:', user ? user.email : 'null');
+  if (user) {
+    currentUser = user;
+    document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('login').classList.add('hidden');
+    try {
+      console.log('[Kaizen] loadUserData başlıyor...');
+      await loadUserData();
+      console.log('[Kaizen] loadUserData tamam.');
+    } catch (e) {
+      console.error('[Kaizen] loadUserData hatası:', e);
+      // Hata olsa bile uygulamayı aç, kullanıcı sonsuza kadar yükleme ekranında kalmasın
+    }
+    if (!userData.onboardingDone) {
+      console.log('[Kaizen] Onboarding gösteriliyor');
+      document.getElementById('loading').classList.add('hidden');
+      showOnboard();
+    } else {
+      try {
+        console.log('[Kaizen] initApp çağrılıyor');
+        initApp();
+        console.log('[Kaizen] initApp tamam');
+      } catch (e) {
+        console.error('[Kaizen] initApp hatası:', e);
+      }
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('app').classList.add('active');
+      document.getElementById('bottomNav').classList.add('show');
+    }
+  } else {
+    console.log('[Kaizen] Kullanıcı yok, login ekranı gösteriliyor');
+    currentUser = null;
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('login').classList.remove('hidden');
+    document.getElementById('app').classList.remove('active');
+    document.getElementById('bottomNav').classList.remove('show');
   }
+});
+
+window.doLogout = async function() {
+  if (!confirm('Çıkış yapmak istediğinden emin misin?')) return;
+  await signOut(auth);
 };
 
-// Her boyut için 3 seviye yorum: düşük, orta, yüksek
-const BFI_INTERPRETATIONS = {
-  E: {
-    low: {
-      label: 'İçe dönük',
-      text: 'Sessizliği, derin düşünceyi ve yalnız kalmayı seviyorsun. Enerjini kalabalıkta değil, kendi alanında toparlıyorsun. Bu bir zayıflık değil — güçlü bir düşünür olabilirsin.',
-      kaizen: 'Gün içi kontrollerin senin için altın — içsel sesine dönmek zaten doğal yeteneğin.'
-    },
-    mid: {
-      label: 'Orta (dengeli)',
-      text: 'Hem sosyalleşmeyi hem yalnız zamanı dengeli yönetiyorsun. İhtiyacına göre iki modu da kullanabiliyorsun. Esneksin.',
-      kaizen: 'Çeşitli sosyal durumlarda kendini test etmek için iyi bir fırsat — hangi modun seni gerçekten beslediğini fark et.'
-    },
-    high: {
-      label: 'Yüksek (dışa dönük)',
-      text: 'İnsanlarla vakit geçirmek seni canlandırıyor. Girişken, enerjik ve sosyal ortamlarda parlayan birisin. Ama bazen içsel işe zaman ayırmak zor gelebilir.',
-      kaizen: 'Akşam sentezi senin için özellikle değerli — dış enerjiden kopup içine dönmen kimliğini kuran şey.'
+async function loadUserData() {
+  console.log('[Kaizen] loadUserData: user doc alınıyor');
+  const ref = doc(db, 'users', currentUser.uid);
+  const snap = await getDoc(ref);
+  console.log('[Kaizen] loadUserData: user doc alındı, exists:', snap.exists());
+  if (snap.exists()) {
+    userData = { ...userData, ...snap.data() };
+    // Mevcut ama joinedDate'i olmayan eski kullanıcılar için:
+    if (!userData.joinedDate) {
+      userData.joinedDate = todayStr();
+      await setDoc(ref, { joinedDate: userData.joinedDate }, { merge: true });
     }
-  },
-  A: {
-    low: {
-      label: 'Düşük (rekabetçi)',
-      text: 'Fikrini savunmaktan çekinmezsin. Eleştirel düşünürsün, kolay "evet" demezsin. Bu liderlik avantajı ama ilişkilerde bazen sert algılanabilirsin.',
-      kaizen: 'Uyumluluk sorularında kendini dürüstçe gözlemle — empati kasın, disiplin kasın gibi geliştirilebilir.'
-    },
-    mid: {
-      label: 'Orta (dengeli)',
-      text: 'Hem kendi çıkarını gözetiyorsun hem başkalarını önemsiyorsun. Gerektiğinde hayır diyebilen, gerektiğinde yardım eden bir denge.',
-      kaizen: 'Sınırlarını yazmak için "Kurallar" bölümü senin için önemli — kendini neyin için feda etmeyeceğini netleştir.'
-    },
-    high: {
-      label: 'Yüksek (uyumlu)',
-      text: 'Başkalarına karşı yumuşaksın, işbirlikçi ve affedicisin. Güven veriyor, etrafını yumuşatıyorsun. Ama kendi ihtiyaçlarını geri plana atma riskin var.',
-      kaizen: '"Kaçtığın hayat" bölümünü dolduruken kendi için iste — herkesi memnun eden bir hayat değil, seni besleyen bir hayat.'
+    // Migration: eski monthGoal yapısından yeni yapıya geç
+    if (userData.monthGoal) {
+      if (!Array.isArray(userData.monthGoal.tasks)) {
+        userData.monthGoal.tasks = [];
+      }
+      if (userData.monthGoal.celebrated === undefined) {
+        userData.monthGoal.celebrated = false;
+      }
+      if (!userData.monthGoal.startDate && userData.monthGoal.title) {
+        userData.monthGoal.startDate = userData.joinedDate || todayStr();
+      }
     }
-  },
-  C: {
-    low: {
-      label: 'Düşük (esnek, spontane)',
-      text: 'Yapıya değil akışa göre yaşıyorsun. Yaratıcı olabilirsin ama hedeflere ulaşmak zorlaşabilir. Planlı değilsin — iyi ve kötü yönüyle.',
-      kaizen: 'Günlük kaldıraçları ÇOK KÜÇÜK başlat — "her gün 5 dakika yaz" gibi. Büyük planlar seni ezer. Kaizen\'in mantığı tam senin için.'
-    },
-    mid: {
-      label: 'Orta',
-      text: 'Planlı olabiliyorsun ama zorlandığında vazgeçebiliyorsun. Hedeflere sadakatin durumsal — motivasyon varsa çok iyi, yoksa zor.',
-      kaizen: 'Streak\'e bağlan. Ardışık gün sayısı sende motivasyon yaratır — tutarlılık bir kez oluşunca kendini besler.'
-    },
-    high: {
-      label: 'Yüksek (disiplinli)',
-      text: 'Planlı, güvenilir, hedef odaklısın. Söz verdiğinde tutan biri. Kaizen\'in ritmi sana doğal gelir. Dikkat: mükemmellikçilik tuzağına düşme.',
-      kaizen: '"Sessizliğe Hakkım Var" anlayışını benimse — bir gün kaçırmak dünyanın sonu değil. Esneklik, disiplinden kolay gelmez sana.'
-    }
-  },
-  N: {
-    low: {
-      label: 'Düşük (sakin, dengeli)',
-      text: 'Duygusal olarak dengeli, sakin, stres altında bile stabil kalıyorsun. Yıkılmaz bir karakter. Ama bazen duygularından uzak kalma riski olabilir.',
-      kaizen: 'Duygusal farkındalık için "bugün neye canlı hissettim?" sorusu önemli — denge bazen hissizliğe dönüşebilir.'
-    },
-    mid: {
-      label: 'Orta (normal dalgalanmalar)',
-      text: 'Bazı günler iyi, bazıları zor — insan olmanın normal seyrinde bir yerdesin. Yoğun stresle yüzleşince zorlanabilirsin ama genelde tutunursun.',
-      kaizen: 'Örüntü algılayıcı senin için değerli — hangi dönemlerde düşüşe girdiğini fark edersen önlem alabilirsin.'
-    },
-    high: {
-      label: 'Yüksek (duygusal yoğunluk)',
-      text: 'Duyguların yoğun — bu bir güç (empati, sezgi, yaratıcılık) ama stres dönemlerinde seni zorlayabilir. Kolay etkilenirsin. Duygularınla yaşamayı öğrenmek senin yolun.',
-      kaizen: 'Gün içi kontrolleri kaçırma — duyguların patlamadan önce fark etmek, patladıktan sonra temizlemekten kolay. Günlük sekmesi senin için can simidi.'
-    }
-  },
-  O: {
-    low: {
-      label: 'Düşük (somut, pratik)',
-      text: 'Alışılmış, denenmiş, pratik olanı seviyorsun. Soyut fikirlere değil, somut sonuçlara yönelirsin. Güvenilir, yere basan birisin.',
-      kaizen: 'Vizyonunu soyut tutma — "mutlu olmak" değil, "her Cumartesi dağa çıkmak". Somut olduğunda sende çalışır.'
-    },
-    mid: {
-      label: 'Orta',
-      text: 'Hem yeni fikirlere açıksın hem pratikliği seversin. Bir ayağın yerde, bir ayağın hayalde. Dengeli bir keşifçi.',
-      kaizen: 'Vizyonunu 3 ayda bir gözden geçir — evrilsin ama savrulmasın. "Kaizen" felsefesi sana çok uygun.'
-    },
-    high: {
-      label: 'Yüksek (meraklı, yaratıcı)',
-      text: 'Meraklı, yaratıcı, derin düşünensin. Yeni fikirleri kovalıyor, sanat ve felsefeyi seviyorsun. Ama bazen "başlamadan düşünme" tuzağına düşebilirsin.',
-      kaizen: 'Vizyonunu çok karmaşıklaştırma. Dan Koe\'nun felsefesi tam senin için: "hazır hissetmeyi bekleme, başla". Hareket, düşünceden ağırdır sende.'
-    }
+  } else {
+    userData.joinedDate = todayStr();
+    await setDoc(ref, userData);
   }
-};
-
-// Genel profil sentezi — skorlara göre tek paragraf
-function generateProfileSummary(scores) {
-  const getLvl = (s) => s < 2.5 ? 'low' : s > 3.5 ? 'high' : 'mid';
-  const parts = [];
-
-  const E = getLvl(scores.E);
-  const A = getLvl(scores.A);
-  const C = getLvl(scores.C);
-  const N = getLvl(scores.N);
-  const O = getLvl(scores.O);
-
-  if (C === 'high') parts.push('Hedeflerini takip eden <em>disiplinli</em> biriyim');
-  else if (C === 'low') parts.push('<em>Esnek ve spontane</em> biriyim');
-  else parts.push('Planlılıkla esneklik arasında <em>dengeli</em> biriyim');
-
-  if (O === 'high') parts.push('yeni fikirlere <em>çok açığım</em>');
-  else if (O === 'low') parts.push('<em>somut ve pratik</em> düşünürüm');
-
-  if (A === 'high') parts.push('insanlarla <em>uyumluyum</em>');
-  else if (A === 'low') parts.push('fikrimi <em>açıkça söylerim</em>');
-
-  if (E === 'high') parts.push('sosyal ortamlarda <em>canlanırım</em>');
-  else if (E === 'low') parts.push('<em>kendi alanıma</em> çekilirim');
-
-  if (N === 'high') parts.push('ama stres anlarında <em>kırılganlaşabiliyorum</em>');
-  else if (N === 'low') parts.push('ve <em>sakin</em> kalmayı başarırım');
-
-  return parts.join(', ') + '.';
+  console.log('[Kaizen] loadUserData: loadHistory çağrılıyor');
+  await loadHistory();
+  console.log('[Kaizen] loadUserData: loadJournal çağrılıyor');
+  await loadJournal();
+  console.log('[Kaizen] loadUserData: loadBfiResults çağrılıyor');
+  await loadBfiResults();
+  console.log('[Kaizen] loadUserData: updateStreak çağrılıyor');
+  await updateStreak();
+  console.log('[Kaizen] loadUserData: TAMAM');
 }
 
+async function saveUserData() {
+  if (!currentUser) return;
+  const ref = doc(db, 'users', currentUser.uid);
+  await setDoc(ref, userData, { merge: true });
+}
 
+async function updateStreak() {
+  const today = todayStr();
+  if (userData.lastActiveDate === today) return;
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  if (userData.lastActiveDate === yesterday) {
+    userData.streak = (userData.streak || 0) + 1;
+  } else if (userData.lastActiveDate) {
+    userData.streak = 1;
+  } else {
+    userData.streak = 1;
+  }
+  userData.lastActiveDate = today;
+  await saveUserData();
+}
 
-// ES modül olarak dışa aç — app.js import eder
-export { SLOGANS, QUOTES, QUESTIONS, TIME_SLOTS, STOPWORDS, GUIDE_ARTICLES, BFI_QUESTIONS, BFI_DIMENSIONS, BFI_INTERPRETATIONS, generateProfileSummary };
+async function addAnswer(type, questionId, questionText, answerText, slotKey, lateMinutes) {
+  if (!answerText.trim()) return;
+  const ref = collection(db, 'users', currentUser.uid, 'answers');
+  await addDoc(ref, {
+    type: type,
+    questionId: questionId,
+    question: questionText,
+    answer: answerText.trim(),
+    slotKey: slotKey || null,
+    lateMinutes: lateMinutes || 0,
+    date: todayStr(),
+    timestamp: Timestamp.now()
+  });
+}
+
+async function loadHistory() {
+  try {
+    const ref = collection(db, 'users', currentUser.uid, 'answers');
+    const q = query(ref, orderBy('timestamp', 'desc'));
+    const snap = await getDocs(q);
+    historyCache = [];
+    snap.forEach(d => {
+      historyCache.push({ id: d.id, ...d.data() });
+    });
+    console.log('[Kaizen] loadHistory: ' + historyCache.length + ' cevap yüklendi');
+  } catch (e) {
+    console.error('[Kaizen] loadHistory HATASI:', e);
+    historyCache = [];
+  }
+}
+
+async function loadJournal() {
+  try {
+    const ref = collection(db, 'users', currentUser.uid, 'journal');
+    const q = query(ref, orderBy('timestamp', 'desc'));
+    const snap = await getDocs(q);
+    journalCache = [];
+    snap.forEach(d => {
+      journalCache.push({ id: d.id, ...d.data() });
+    });
+  } catch (e) {
+    console.warn('Journal yüklenemedi:', e);
+    journalCache = [];
+  }
+}
+
+async function addJournalEntry(title, content) {
+  const ref = collection(db, 'users', currentUser.uid, 'journal');
+  const docRef = await addDoc(ref, {
+    title: title.trim(),
+    content: content.trim(),
+    date: todayStr(),
+    timestamp: Timestamp.now()
+  });
+  return docRef.id;
+}
+
+async function updateJournalEntry(id, title, content) {
+  const ref = doc(db, 'users', currentUser.uid, 'journal', id);
+  await setDoc(ref, {
+    title: title.trim(),
+    content: content.trim(),
+    date: todayStr(),
+    timestamp: Timestamp.now()
+  }, { merge: true });
+}
+
+async function deleteJournalEntry(id) {
+  const ref = doc(db, 'users', currentUser.uid, 'journal', id);
+  await deleteDoc(ref);
+}
+
+async function loadBfiResults() {
+  try {
+    const ref = collection(db, 'users', currentUser.uid, 'personalityTests');
+    const q = query(ref, orderBy('timestamp', 'desc'));
+    const snap = await getDocs(q);
+    bfiCache = [];
+    snap.forEach(d => {
+      bfiCache.push({ id: d.id, ...d.data() });
+    });
+  } catch (e) {
+    console.warn('BFI sonuçları yüklenemedi:', e);
+    bfiCache = [];
+  }
+}
+
+async function saveBfiResult(scores, answers) {
+  const ref = collection(db, 'users', currentUser.uid, 'personalityTests');
+  const docRef = await addDoc(ref, {
+    scores: scores,
+    answers: answers,
+    date: todayStr(),
+    timestamp: Timestamp.now()
+  });
+  return docRef.id;
+}
+
+function getLastBfiDate() {
+  if (!bfiCache.length) return null;
+  return bfiCache[0].date;
+}
+
+function daysSinceLastBfi() {
+  const last = getLastBfiDate();
+  if (!last) return null;
+  const d = new Date(last + 'T00:00:00');
+  return Math.floor((Date.now() - d.getTime()) / 86400000);
+}
+
+function canTakeBfi() {
+  const days = daysSinceLastBfi();
+  if (days === null) return { can: true, daysLeft: 0 };
+  const daysLeft = 30 - days;
+  return { can: daysLeft <= 0, daysLeft: Math.max(0, daysLeft) };
+}
+
+function calcBfiScores(answers) {
+  const totals = { E: 0, A: 0, C: 0, N: 0, O: 0 };
+  const counts = { E: 0, A: 0, C: 0, N: 0, O: 0 };
+
+  BFI_QUESTIONS.forEach(q => {
+    const raw = answers[q.n];
+    if (raw === undefined || raw === null) return;
+    const value = q.r ? (6 - raw) : raw;
+    totals[q.d] += value;
+    counts[q.d] += 1;
+  });
+
+  const scores = {};
+  ['E', 'A', 'C', 'N', 'O'].forEach(d => {
+    scores[d] = counts[d] ? parseFloat((totals[d] / counts[d]).toFixed(2)) : 0;
+  });
+  return scores;
+}
+
+async function hashPin(pin) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(pin + '::kaizen::' + currentUser.uid);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// =========================================================
+// BOSS GÖREV YARDIMCI FONKSİYONLARI
+// =========================================================
+
+function getWeekKey(date) {
+  const d = date ? new Date(date) : new Date();
+  const onejan = new Date(d.getFullYear(), 0, 1);
+  const week = Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+  return `${d.getFullYear()}-W${String(week).padStart(2, '0')}`;
+}
+
+function isTaskDoneToday(task) {
+  if (!task) return false;
+  if (task.type === 'milestone') {
+    return !!task.completedAt;
+  }
+  if (task.type === 'daily') {
+    return (task.completions || []).includes(todayStr());
+  }
+  if (task.type === 'weekly') {
+    const weekKey = getWeekKey();
+    const weekCompletions = (task.completions || []).filter(d => getWeekKey(d) === weekKey);
+    return weekCompletions.length >= (task.targetPerWeek || 1);
+  }
+  return false;
+}
+
+function getTaskWeekProgress(task) {
+  // weekly görev için bu haftaki N/hedef durumu
+  if (task.type !== 'weekly') return null;
+  const weekKey = getWeekKey();
+  const thisWeek = (task.completions || []).filter(d => getWeekKey(d) === weekKey).length;
+  return { current: thisWeek, target: task.targetPerWeek || 1 };
+}
+
+function calcBossProgress() {
+  const tasks = userData.monthGoal?.tasks || [];
+  if (!tasks.length) return 0;
+
+  const mg = userData.monthGoal;
+  const start = mg.startDate ? new Date(mg.startDate) : new Date();
+  const end = mg.deadline ? new Date(mg.deadline) : new Date(Date.now() + 30 * 86400000);
+  const now = new Date();
+  const totalDays = Math.max(1, Math.round((end - start) / 86400000));
+  const passedDays = Math.max(1, Math.round((now - start) / 86400000) + 1);
+  const totalWeeks = Math.max(1, Math.ceil(totalDays / 7));
+  const passedWeeks = Math.max(1, Math.ceil(passedDays / 7));
+
+  let totalExpected = 0;
+  let totalDone = 0;
+
+  tasks.forEach(task => {
+    if (task.type === 'milestone') {
+      totalExpected += 1;
+      if (task.completedAt) totalDone += 1;
+    } else if (task.type === 'daily') {
+      const expected = Math.min(passedDays, totalDays);
+      const done = (task.completions || []).filter(d => {
+        const dd = new Date(d);
+        return dd >= start && dd <= now;
+      }).length;
+      totalExpected += expected;
+      totalDone += Math.min(done, expected);
+    } else if (task.type === 'weekly') {
+      const target = task.targetPerWeek || 1;
+      const expected = Math.min(passedWeeks, totalWeeks) * target;
+      const done = (task.completions || []).filter(d => {
+        const dd = new Date(d);
+        return dd >= start && dd <= now;
+      }).length;
+      totalExpected += expected;
+      totalDone += Math.min(done, expected);
+    }
+  });
+
+  if (totalExpected === 0) return 0;
+  return Math.min(100, Math.round((totalDone / totalExpected) * 100));
+}
+
+async function toggleTaskCompletion(taskId) {
+  const task = (userData.monthGoal?.tasks || []).find(t => t.id === taskId);
+  if (!task) return;
+
+  const today = todayStr();
+
+  if (task.type === 'milestone') {
+    task.completedAt = task.completedAt ? null : today;
+  } else if (task.type === 'daily') {
+    task.completions = task.completions || [];
+    if (task.completions.includes(today)) {
+      task.completions = task.completions.filter(d => d !== today);
+    } else {
+      task.completions.push(today);
+    }
+  } else if (task.type === 'weekly') {
+    task.completions = task.completions || [];
+    // weekly için, bugün işaretli mi check et
+    const todayIdx = task.completions.indexOf(today);
+    if (todayIdx >= 0) {
+      task.completions.splice(todayIdx, 1);
+    } else {
+      task.completions.push(today);
+    }
+  }
+
+  await saveUserData();
+  renderHome();
+}
+
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+window.showScreen = function(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + name);
+  if (el) el.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.toggle('active', n.dataset.screen === name);
+  });
+  if (name === 'home') renderHome();
+  if (name === 'vision') renderVisionForm();
+  if (name === 'goals') renderGoalsForm();
+  if (name === 'history') renderHistory();
+  if (name === 'patterns') renderPatterns();
+  if (name === 'capsule') renderCapsule();
+  if (name === 'guide') renderGuide();
+  if (name === 'journal') renderJournal();
+  if (name === 'profile') renderProfile();
+  if (name === 'settings') renderSettings();
+  window.scrollTo(0, 0);
+};
+
+function initApp() {
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.addEventListener('click', () => showScreen(n.dataset.screen));
+  });
+  document.getElementById('historySearch').addEventListener('input', renderHistory);
+  document.querySelectorAll('.seg-group button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.seg-group button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      historyFilter = b.dataset.filter;
+      renderHistory();
+    });
+  });
+  document.querySelectorAll('.history-mode-toggle button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.history-mode-toggle button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      historyMode = b.dataset.mode;
+      renderHistory();
+    });
+  });
+  document.getElementById('questNext').addEventListener('click', onQuestNext);
+  document.getElementById('questPrev').addEventListener('click', onQuestPrev);
+
+  // Footer görünür olsun
+  const footer = document.getElementById('appFooter');
+  if (footer) footer.style.display = 'block';
+
+  renderHome();
+  setTimeout(checkRituals, 800);
+  setupNotifs();
+}
+
+function renderSetupBanner() {
+  const box = document.getElementById('setupBanner');
+  if (!box) return;
+
+  const missing = [];
+  if (!userData.vision) missing.push({ label: 'Vizyon', screen: 'vision' });
+  if (!userData.antiVision) missing.push({ label: 'Kaçtığın Hayat', screen: 'vision' });
+  if (!userData.identity) missing.push({ label: 'Kimlik', screen: 'vision' });
+  if (!userData.yearGoal?.title) missing.push({ label: '1 Yıllık Hedef', screen: 'goals' });
+  if (!userData.monthGoal?.title) missing.push({ label: 'Bu Ayki Boss', screen: 'goals' });
+
+  if (missing.length === 0) {
+    box.innerHTML = '';
+    box.style.display = 'none';
+    return;
+  }
+
+  box.style.display = 'block';
+  const totalChecks = 5;
+  const doneCount = totalChecks - missing.length;
+
+  box.innerHTML = `
+    <div class="setup-banner">
+      <div class="setup-banner-head">
+        <div>
+          <div class="setup-banner-label">İLK KURULUM</div>
+          <div class="setup-banner-title">Önce kendini <em>kur.</em></div>
+        </div>
+        <div class="setup-banner-progress">${doneCount}/${totalChecks}</div>
+      </div>
+      <div class="setup-banner-desc">
+        Kaizen'in tüm sihri şu alanları doldurduktan sonra başlıyor. Hepsi 5-10 dakikanı alır.
+      </div>
+      <div class="setup-banner-list">
+        ${missing.map(m => `
+          <button class="setup-banner-item" onclick="showScreen('${m.screen}')">
+            <div class="setup-banner-bullet">○</div>
+            <div class="setup-banner-item-label">${escapeHtml(m.label)} yaz</div>
+            <div class="setup-banner-arrow">→</div>
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderHome() {
+  const today = new Date();
+  document.getElementById('todayDate').textContent = today.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  // Kayıt gününden itibaren kaçıncı gün
+  let dayNumber = 1;
+  if (userData.joinedDate) {
+    const joined = new Date(userData.joinedDate + 'T00:00:00');
+    const now = new Date(todayStr() + 'T00:00:00');
+    dayNumber = Math.max(1, Math.floor((now - joined) / 86400000) + 1);
+  }
+  document.getElementById('dayCounter').textContent = `${dayNumber}. gün`;
+
+  // Günlük alıntı için hâlâ yılın günü (çeşitlilik olsun diye)
+  const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
+  const seed = today.getDate() + today.getMonth() * 31;
+  const slogan = SLOGANS[seed % SLOGANS.length];
+  document.getElementById('slogan').innerHTML = `${escapeHtml(slogan.a)}<br><em>${escapeHtml(slogan.b)}</em>`;
+
+  const hour = today.getHours();
+  const quoteSeed = dayOfYear * 6 + Math.floor(hour / 4);
+  const quote = QUOTES[quoteSeed % QUOTES.length];
+  document.getElementById('dailyQuote').textContent = `"${quote.t}"`;
+  document.getElementById('dailyQuoteAuthor').textContent = quote.a || '';
+
+  document.getElementById('streakNum').textContent = userData.streak || 0;
+  const consistency = calcConsistency();
+  document.getElementById('consistencyNum').textContent = Math.round(consistency * 100);
+  document.getElementById('writtenCount').textContent = historyCache.length;
+
+  // Setup banner — vizyon/kimlik/hedef yoksa belirgin çağrı
+  renderSetupBanner();
+
+  const identity = userData.identity;
+  const stmtEl = document.getElementById('identityStmt');
+  if (identity) {
+    stmtEl.classList.remove('empty');
+    stmtEl.innerHTML = escapeHtml(identity);
+  } else {
+    stmtEl.classList.add('empty');
+    stmtEl.innerHTML = 'Kimlik ifadeni henüz yazmadın. <span class="tap-hint">Tıkla, başla →</span>';
+  }
+
+  const yg = userData.yearGoal || {};
+  const mqPct = calcMainProgress();
+  document.getElementById('mainQuestTitle').innerHTML = yg.title
+    ? escapeHtml(yg.title)
+    : '1 yıllık vizyonunu tanımla. <span class="tap-hint">Tıkla →</span>';
+  document.getElementById('mainQuestPct').textContent = mqPct.toFixed(1);
+  document.getElementById('mainQuestBar').style.width = Math.min(100, mqPct) + '%';
+  if (yg.start && yg.deadline) {
+    const total = (new Date(yg.deadline) - new Date(yg.start)) / 86400000;
+    const passed = Math.max(0, (Date.now() - new Date(yg.start)) / 86400000);
+    const remain = Math.max(0, Math.ceil((new Date(yg.deadline) - Date.now()) / 86400000));
+    document.getElementById('mainQuestDays').textContent = `${Math.floor(passed)} / ${Math.floor(total)} gün`;
+    document.getElementById('mainQuestRemain').textContent = `${remain} gün kaldı`;
+  } else {
+    document.getElementById('mainQuestDays').textContent = 'Hedef belirlenmedi';
+    document.getElementById('mainQuestRemain').textContent = '';
+  }
+
+  const mg = userData.monthGoal || {};
+  document.getElementById('bossTitle').innerHTML = mg.title
+    ? escapeHtml(mg.title)
+    : 'Bu ayki projen? <span class="tap-hint">Tıkla →</span>';
+  const mp = calcBossProgress();
+  document.getElementById('bossBar').style.width = mp + '%';
+  const tasks = mg.tasks || [];
+  const todayDoneCount = tasks.filter(t => {
+    if (t.type === 'milestone') return !!t.completedAt;
+    if (t.type === 'daily') return (t.completions || []).includes(todayStr());
+    if (t.type === 'weekly') {
+      const weekKey = getWeekKey();
+      return (t.completions || []).some(d => getWeekKey(d) === weekKey && d === todayStr());
+    }
+    return false;
+  }).length;
+  const relevantTodayCount = tasks.filter(t => t.type !== 'milestone' || !t.completedAt).length;
+  document.getElementById('bossMeta').textContent = mp + '%' + (tasks.length ? ` · bugün ${todayDoneCount}/${relevantTodayCount}` : ' · görev ekle');
+
+  // Boss görevlerini render et
+  renderBossTasks();
+
+  // Ay bitti mi, kutlama var mı?
+  checkBossCelebration();
+
+  const av = userData.antiVision;
+  const shadowEl = document.getElementById('shadowText');
+  if (av) {
+    shadowEl.classList.remove('empty');
+    shadowEl.textContent = '"' + (av.length > 110 ? av.slice(0, 110) + '...' : av) + '"';
+  } else {
+    shadowEl.classList.add('empty');
+    shadowEl.innerHTML = 'Kaçtığın hayatı henüz yazmadın. <span class="tap-hint">Tıkla →</span>';
+  }
+
+  renderTimeSlots();
+  renderInsights();
+}
+
+function calcConsistency() {
+  if (historyCache.length < 2) return 0;
+  const days = new Set();
+  const cutoff = Date.now() - 30 * 86400000;
+  historyCache.forEach(a => {
+    if (a.timestamp && a.timestamp.toDate && a.timestamp.toDate().getTime() > cutoff) {
+      days.add(a.date);
+    }
+  });
+  return Math.min(1, days.size / 30);
+}
+
+function calcMainProgress() {
+  const yg = userData.yearGoal || {};
+  if (!yg.start || !yg.deadline) return 0;
+  const start = new Date(yg.start);
+  const end = new Date(yg.deadline);
+  const total = (end - start) / 86400000;
+  if (total <= 0) return 0;
+  const passed = Math.max(0, (Date.now() - start) / 86400000);
+  const timeRatio = Math.min(1, passed / total);
+  const consistency = calcConsistency();
+  const multiplier = 0.5 + consistency;
+  return Math.min(100, timeRatio * multiplier * 100);
+}
+
+function getCurrentHourDecimal() {
+  const d = new Date();
+  return d.getHours() + d.getMinutes() / 60;
+}
+
+function renderBossTasks() {
+  const box = document.getElementById('bossTasksBox');
+  if (!box) return;
+
+  const tasks = userData.monthGoal?.tasks || [];
+  if (!tasks.length) {
+    box.innerHTML = `
+      <div class="boss-empty-tasks" onclick="showScreen('goals')">
+        <span>Henüz görev yok.</span>
+        <em>Hedeflerden ekle →</em>
+      </div>
+    `;
+    return;
+  }
+
+  // Sıralama: milestone tamamlanmamışlar önce, sonra daily, sonra weekly, sonra tamamlanmış milestone'lar
+  const sorted = [...tasks].sort((a, b) => {
+    const aDone = a.type === 'milestone' && a.completedAt;
+    const bDone = b.type === 'milestone' && b.completedAt;
+    if (aDone && !bDone) return 1;
+    if (!aDone && bDone) return -1;
+    const order = { daily: 1, weekly: 2, milestone: 3 };
+    return (order[a.type] || 99) - (order[b.type] || 99);
+  });
+
+  box.innerHTML = sorted.map(task => {
+    const done = isTaskDoneToday(task);
+    const todayMark = (task.completions || []).includes(todayStr());
+
+    let typeLabel = '';
+    let metaText = '';
+
+    if (task.type === 'daily') {
+      typeLabel = 'Her gün';
+      metaText = todayMark ? 'Bugün tamamlandı' : 'Bugün henüz yapılmadı';
+    } else if (task.type === 'weekly') {
+      const wp = getTaskWeekProgress(task);
+      typeLabel = `Haftada ${wp.target}`;
+      metaText = `Bu hafta ${wp.current}/${wp.target}`;
+    } else if (task.type === 'milestone') {
+      typeLabel = 'Tek seferlik';
+      metaText = task.completedAt ? `✓ ${new Date(task.completedAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}` : 'Bitirilecek';
+    }
+
+    const isChecked = (task.type === 'milestone' && task.completedAt) || (task.type !== 'milestone' && todayMark);
+    const doneClass = done ? 'all-done' : '';
+
+    return `
+      <div class="boss-task ${doneClass}" onclick="event.stopPropagation(); toggleBossTask('${task.id}')">
+        <div class="boss-task-check ${isChecked ? 'on' : ''}">
+          ${isChecked ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+        </div>
+        <div class="boss-task-body">
+          <div class="boss-task-title ${isChecked ? 'done' : ''}">${escapeHtml(task.title)}</div>
+          <div class="boss-task-meta">
+            <span class="boss-task-type">${typeLabel}</span>
+            <span class="boss-task-dot">·</span>
+            <span class="boss-task-status">${metaText}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+window.toggleBossTask = async function(taskId) {
+  await toggleTaskCompletion(taskId);
+};
+
+window.toggleBossExpand = function() {
+  const panel = document.getElementById('bossTasksPanel');
+  const icon = document.getElementById('bossExpandIcon');
+  if (!panel) return;
+  const isOpen = panel.classList.contains('open');
+  if (isOpen) {
+    panel.classList.remove('open');
+    icon.classList.remove('open');
+  } else {
+    panel.classList.add('open');
+    icon.classList.add('open');
+    renderBossTasks();
+  }
+};
+
+function checkBossCelebration() {
+  const mg = userData.monthGoal;
+  if (!mg || !mg.tasks?.length || !mg.deadline) return;
+  if (mg.celebrated) return;
+
+  const end = new Date(mg.deadline);
+  const now = new Date();
+  if (now < end) return;
+
+  // Boss süresi bitti, kutlama göster
+  setTimeout(() => showBossCelebration(), 800);
+}
+
+function showBossCelebration() {
+  const mg = userData.monthGoal;
+  const modal = document.getElementById('celebrationModal');
+  if (!modal) return;
+
+  const pct = calcBossProgress();
+  const tasks = mg.tasks || [];
+  const doneCount = tasks.filter(t => {
+    if (t.type === 'milestone') return !!t.completedAt;
+    return (t.completions || []).length > 0;
+  }).length;
+
+  const level = pct >= 80 ? 'zafer' : pct >= 50 ? 'dengeli' : 'dersler';
+  const titles = {
+    zafer: 'Boss yenildi!',
+    dengeli: 'Boss geçildi',
+    dersler: 'Ay bitti'
+  };
+  const subs = {
+    zafer: 'Hakettin. Kanıt birikti, kimliğin büyüdü.',
+    dengeli: 'Tam değil ama anlamlı. Neyin işe yaradığını biliyorsun artık.',
+    dersler: 'Tamamlanmamış bir ay da bir cevaptır. Ne fark etti?'
+  };
+
+  document.getElementById('celebrationTitle').textContent = titles[level];
+  document.getElementById('celebrationSub').textContent = subs[level];
+  document.getElementById('celebrationPct').textContent = pct;
+  document.getElementById('celebrationBossName').textContent = mg.title || 'Boss';
+  document.getElementById('celebrationTaskCount').textContent = doneCount;
+  document.getElementById('celebrationTaskTotal').textContent = tasks.length;
+
+  modal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+window.closeCelebration = async function() {
+  userData.monthGoal.celebrated = true;
+  await saveUserData();
+  document.getElementById('celebrationModal').classList.remove('show');
+  document.body.style.overflow = '';
+};
+
+window.startNewBoss = async function() {
+  userData.monthGoal.celebrated = true;
+  await saveUserData();
+  document.getElementById('celebrationModal').classList.remove('show');
+  document.body.style.overflow = '';
+  showScreen('goals');
+  setTimeout(() => {
+    const el = document.getElementById('monthGoal');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.focus();
+    }
+  }, 300);
+};
+
+function renderTimeSlots() {
+  const now = getCurrentHourDecimal();
+  const today = todayStr();
+  const box = document.getElementById('timeSlots');
+
+  if (!userData.kurulusCompleted) {
+    box.innerHTML = `
+      <div class="time-slot active" onclick="startQuest('kurulus', null)">
+        <div class="time-stamp">kuruluş</div>
+        <div class="q-body">
+          <div class="q-title">Kuruluş · ${userData.kurulusIndex || 0} / ${QUESTIONS.kurulus.length}</div>
+          <div class="q-meta">Bu seferlik, kendinin haritasını çıkar</div>
+        </div>
+        <div class="q-arrow">→</div>
+      </div>
+    `;
+    document.getElementById('todayCount').textContent = 'Önce kuruluş';
+    return;
+  }
+
+  let html = '';
+  let doneCount = 0;
+  const totalSlots = TIME_SLOTS.length;
+
+  TIME_SLOTS.forEach(slot => {
+    const todayAnswers = historyCache.filter(a => a.date === today && a.slotKey === slot.key);
+    const isDone = todayAnswers.length >= slot.count;
+    const isActive = !isDone && now >= slot.start && now < slot.end;
+    const isUpcoming = !isDone && now < slot.start;
+    const isMissed = !isDone && now >= slot.end;
+
+    if (isDone) doneCount++;
+
+    let state = '';
+    let icon = '';
+    let meta = '';
+    let clickable = true;
+
+    if (isDone) {
+      state = 'done';
+      icon = `<div class="q-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>`;
+      const t = todayAnswers[0].timestamp?.toDate();
+      const tStr = t ? `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}` : '';
+      meta = tStr ? `✓ ${tStr}'de cevapladın` : '✓ Cevaplandı';
+    } else if (isActive) {
+      state = 'active';
+      icon = `<div class="q-arrow">→</div>`;
+      const endH = Math.floor(slot.end);
+      const endM = Math.round((slot.end - endH) * 60);
+      meta = `ŞİMDİ — ${String(endH).padStart(2,'0')}:${String(endM).padStart(2,'0')}'e kadar açık`;
+    } else if (isUpcoming) {
+      state = 'locked';
+      icon = `<div class="q-lock">🔒</div>`;
+      const untilMin = Math.round((slot.start - now) * 60);
+      meta = untilMin >= 60 ? `${Math.floor(untilMin / 60)} saat ${untilMin % 60} dk sonra açılır` : `${untilMin} dk sonra açılır`;
+      clickable = false;
+    } else {
+      state = 'missed late';
+      icon = `<div class="q-missed">geç</div>`;
+      meta = '⚠ Geç kaldın — yine de cevaplayabilirsin';
+    }
+
+    const onclickAttr = isDone
+      ? `onclick="openAnswerView('${slot.key}', '${today}')"`
+      : (clickable ? `onclick="startQuest('${slot.type}', '${slot.key}')"` : '');
+
+    html += `
+      <div class="time-slot ${state}" ${onclickAttr}>
+        <div class="time-stamp">${slot.time}</div>
+        <div class="q-body">
+          <div class="q-title">${escapeHtml(slot.label)}</div>
+          <div class="q-meta">${escapeHtml(meta)}</div>
+        </div>
+        ${icon}
+      </div>
+    `;
+  });
+
+  box.innerHTML = html;
+  document.getElementById('todayCount').textContent = `${doneCount} / ${totalSlots} tamam`;
+}
+
+function renderInsights() {
+  const box = document.getElementById('insightsSection');
+  const insights = detectPatterns();
+  let html = '';
+  insights.slice(0, 3).forEach(ins => {
+    html += `<div class="insight-card ${ins.type || ''}">
+      <div class="lbl">${escapeHtml(ins.label)}</div>
+      <div class="msg">${ins.msg}</div>
+    </div>`;
+  });
+  box.innerHTML = html;
+  updateBadges(insights);
+}
+
+function updateBadges(insights) {
+  const patternCount = insights.filter(i => i.type === 'warn' || !i.type).length;
+  const pb = document.getElementById('patternsBadge');
+  if (patternCount > 0) { pb.textContent = patternCount; pb.classList.remove('hidden'); }
+  else pb.classList.add('hidden');
+
+  const cap = getCapsuleEntries();
+  const cb = document.getElementById('capsuleBadge');
+  if (cap.length > 0) { cb.textContent = cap.length; cb.classList.remove('hidden'); }
+  else cb.classList.add('hidden');
+}
+
+function detectPatterns() {
+  const out = [];
+  if (!historyCache.length) return out;
+
+  // Kayıttan kaç gün geçti?
+  let daysSinceJoined = 0;
+  if (userData.joinedDate) {
+    const joined = new Date(userData.joinedDate + 'T00:00:00');
+    const now = new Date(todayStr() + 'T00:00:00');
+    daysSinceJoined = Math.floor((now - joined) / 86400000);
+  }
+
+  // İlk hafta — daha sıcak, suçlamasız bir ton
+  if (daysSinceJoined < 7) {
+    if (historyCache.length >= 1 && historyCache.length < 5) {
+      out.push({
+        type: 'celebrate',
+        label: 'Başladın',
+        msg: `İlk cevapların geldi. Bir hafta boyunca birikim olmadan örüntü çıkmaz — kendi sesini bul, gerisi kendiliğinden gelir.`
+      });
+    } else if (historyCache.length >= 5) {
+      out.push({
+        type: 'celebrate',
+        label: 'İyi gidiyor',
+        msg: `<em>${historyCache.length}</em> cevap birikti. Birkaç güne örüntülerin ortaya çıkmaya başlar.`
+      });
+    }
+    if ((userData.streak || 0) >= 3) {
+      out.push({
+        type: 'celebrate',
+        label: 'Süreklilik',
+        msg: `<em>${userData.streak} gün</em> üst üste geldin. Bu, düşündüğünden daha önemli — kimlik burada oluşuyor.`
+      });
+    }
+    return out;
+  }
+
+  // 7 günden sonra gerçek örüntü analizi başlasın
+  const recent = historyCache.slice(0, 100);
+  const words = {};
+  recent.forEach(a => {
+    const clean = (a.answer || '').toLowerCase().replace(/[^\wçğıöşü\s]/gi, ' ');
+    clean.split(/\s+/).forEach(w => {
+      if (w.length > 4 && !STOPWORDS.has(w)) words[w] = (words[w] || 0) + 1;
+    });
+  });
+  // Kullanıcı isterse günlük yazılarını da analize dahil et
+  if (userData.journalIncludeInPatterns && journalCache.length) {
+    journalCache.slice(0, 100).forEach(entry => {
+      const text = ((entry.title || '') + ' ' + (entry.content || '')).toLowerCase().replace(/[^\wçğıöşü\s]/gi, ' ');
+      text.split(/\s+/).forEach(w => {
+        if (w.length > 4 && !STOPWORDS.has(w)) words[w] = (words[w] || 0) + 1;
+      });
+    });
+  }
+  const top = Object.entries(words).filter(([w, c]) => c >= 4).sort((a, b) => b[1] - a[1]);
+  if (top.length) {
+    const w = top[0];
+    out.push({
+      type: '',
+      label: 'Bir şeyi tekrarlıyorsun',
+      msg: `Son cevaplarında <em>"${escapeHtml(w[0])}"</em> kelimesi <em>${w[1]}</em> kez geçti. Tesadüf değil — bir yere parmak basıyor.`
+    });
+  }
+
+  if ((userData.streak || 0) >= 7) {
+    out.push({
+      type: 'celebrate',
+      label: 'Kanıt birikiyor',
+      msg: `<em>${userData.streak} gün</em> üst üste geldin. Artık "ara sıra yapan biri" değilsin — yapan kişi sen oluyorsun.`
+    });
+  }
+
+  if (userData.yearGoal?.title && historyCache.length > 5) {
+    const last7 = new Set();
+    for (let i = 0; i < 7; i++) last7.add(new Date(Date.now() - i * 86400000).toISOString().slice(0, 10));
+    const activeDays = new Set(historyCache.filter(a => last7.has(a.date)).map(a => a.date));
+    if (activeDays.size < 3) {
+      out.push({
+        type: 'warn',
+        label: 'Söz ve eylem ayrışıyor',
+        msg: `Vizyonunda "<em>${escapeHtml(userData.yearGoal.title)}</em>" yazıyor ama son 7 günde sadece <em>${activeDays.size} gün</em> buradaydın. Hangisi gerçek sen — yazan mı, yapan mı?`
+      });
+    }
+  }
+
+  const today = todayStr();
+  const y1 = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  const y2 = new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10);
+  const missed = [y1, y2].filter(d => !historyCache.some(a => a.date === d));
+  if (missed.length === 2 && !historyCache.some(a => a.date === today)) {
+    out.push({
+      type: 'warn',
+      label: 'Üç gündür yoksun',
+      msg: `Üç gündür uğramadın. Bu da bir cevap aslında — neden kaçıyorsun?`
+    });
+  }
+
+  // Geç cevap örüntüsü — son 14 gündeki gün içi cevaplarına bak
+  const last14 = new Set();
+  for (let i = 0; i < 14; i++) last14.add(new Date(Date.now() - i * 86400000).toISOString().slice(0, 10));
+  const guniciRecent = historyCache.filter(a => a.type === 'gunici' && last14.has(a.date));
+  if (guniciRecent.length >= 5) {
+    const lateOnes = guniciRecent.filter(a => (a.lateMinutes || 0) > 30);
+    const ratio = lateOnes.length / guniciRecent.length;
+    if (ratio >= 0.5) {
+      const avgMin = Math.round(lateOnes.reduce((s, a) => s + a.lateMinutes, 0) / lateOnes.length);
+      out.push({
+        type: 'warn',
+        label: 'Kronik erteleme',
+        msg: `Son 14 günde gün içi sorularının <em>%${Math.round(ratio * 100)}</em>'sine pencere kapandıktan sonra cevap verdin — ortalama <em>${avgMin} dakika</em> geç. Bu bir örüntü. Neyi erteliyorsun?`
+      });
+    }
+  }
+
+  const capsules = getCapsuleEntries();
+  if (capsules.length) {
+    out.push({
+      type: 'celebrate',
+      label: 'Geçmişten mesaj',
+      msg: `<em>${capsules.length}</em> yeni kapsül açıldı. Eski sen, yeni seni bekliyor.`
+    });
+  }
+
+  return out;
+}
+
+window.startQuest = function(type, slotKey) {
+  currentQuestType = type;
+  currentQuestSlot = slotKey;
+  currentAnswers = [];
+
+  if (type === 'kurulus') {
+    currentQuestList = QUESTIONS.kurulus.slice(userData.kurulusIndex || 0);
+  } else if (type === 'sabah') {
+    // Sabah her gün aynı 3 soru — örüntü çıksın diye
+    currentQuestList = QUESTIONS.sabah.slice(0, 3);
+  } else if (type === 'gunici') {
+    // Gün içi: TIME_SLOTS'taki fixedQuestionId'ye göre sabit tek soru (Dan Koe yapısı)
+    const slot = TIME_SLOTS.find(s => s.key === slotKey);
+    const q = QUESTIONS.gunici.find(qq => qq.id === slot?.fixedQuestionId) || QUESTIONS.gunici[0];
+    currentQuestList = [q];
+  } else if (type === 'aksam') {
+    currentQuestList = QUESTIONS.aksam.slice(0, 3);
+  } else if (type === 'haftalik') {
+    currentQuestList = QUESTIONS.haftalik.slice();
+  } else if (type === 'aylik') {
+    currentQuestList = QUESTIONS.aylik.slice();
+  }
+
+  currentQuestIndex = 0;
+  showScreen('quest');
+  renderQuest();
+};
+
+function renderQuest() {
+  const stamps = {
+    kurulus: 'KURULUŞ · PSİKOLOJİK KAZI',
+    sabah: 'SABAH · KAZI',
+    gunici: 'GÜN İÇİ · KONTROL',
+    aksam: 'AKŞAM · SENTEZ',
+    haftalik: 'HAFTALIK RİTÜEL',
+    aylik: 'AYLIK RİTÜEL'
+  };
+  document.getElementById('questStamp').textContent = stamps[currentQuestType] || 'SORU';
+
+  const q = currentQuestList[currentQuestIndex];
+  if (!q) { finishQuest(); return; }
+
+  document.getElementById('questText').textContent = q.q;
+  const hintBox = document.getElementById('questHintBox');
+  if (q.hint) {
+    hintBox.style.display = 'block';
+    document.getElementById('questHint').textContent = q.hint;
+  } else {
+    hintBox.style.display = 'none';
+  }
+  document.getElementById('questCount').textContent = `Soru ${currentQuestIndex + 1} / ${currentQuestList.length}`;
+
+  // Bu soruya önceki cevaplar (bugün hariç)
+  renderQuestPrevAnswers(q.id);
+
+  const ta = document.getElementById('questAnswer');
+  ta.value = currentAnswers[currentQuestIndex] || '';
+  setTimeout(() => ta.focus(), 200);
+
+  document.getElementById('questPrev').style.visibility = currentQuestIndex === 0 ? 'hidden' : 'visible';
+  document.getElementById('questNext').textContent = currentQuestIndex === currentQuestList.length - 1 ? 'Bitir ✓' : 'Sonraki →';
+}
+
+function renderQuestPrevAnswers(questionId) {
+  const box = document.getElementById('questPrevBox');
+  const listEl = document.getElementById('questPrevList');
+  const summaryEl = document.getElementById('questPrevSummary');
+  const today = todayStr();
+
+  // Bu soruya verilen önceki cevaplar (bugün hariç), en yeni önce
+  const prev = historyCache
+    .filter(a => a.questionId === questionId && a.date !== today)
+    .slice(0, 5);
+
+  if (!prev.length) {
+    box.style.display = 'none';
+    return;
+  }
+
+  box.style.display = 'block';
+  box.classList.remove('expanded');
+  listEl.style.display = 'none';
+  summaryEl.textContent = ` — son ${prev.length} cevap (görmek için dokun)`;
+
+  listEl.innerHTML = prev.map(a => {
+    const d = a.timestamp?.toDate ? a.timestamp.toDate() : new Date();
+    const dateStr = d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' });
+    const lateStr = a.lateMinutes ? ` · ${Math.round(a.lateMinutes)} dk geç` : '';
+    return `<div class="entry">
+      <div class="date">${dateStr}${lateStr}</div>
+      <div class="txt">${escapeHtml(a.answer)}</div>
+    </div>`;
+  }).join('');
+}
+
+window.toggleQuestPrev = function() {
+  const box = document.getElementById('questPrevBox');
+  const listEl = document.getElementById('questPrevList');
+  const summaryEl = document.getElementById('questPrevSummary');
+  if (box.classList.contains('expanded')) {
+    box.classList.remove('expanded');
+    listEl.style.display = 'none';
+    summaryEl.style.display = 'inline';
+  } else {
+    box.classList.add('expanded');
+    listEl.style.display = 'block';
+    summaryEl.style.display = 'none';
+  }
+};
+
+// Bir slot için geç dakika hesaplar — pencere geçtiyse geçiş süresini döndürür
+function calcLateMinutes(slotKey) {
+  if (!slotKey) return 0;
+  const slot = TIME_SLOTS.find(s => s.key === slotKey);
+  if (!slot) return 0;
+  const now = getCurrentHourDecimal();
+  if (now < slot.end) return 0; // Pencere hâlâ açık
+  const lateHours = now - slot.end;
+  return Math.round(lateHours * 60);
+}
+
+async function onQuestNext() {
+  const ta = document.getElementById('questAnswer');
+  currentAnswers[currentQuestIndex] = ta.value;
+  if (!ta.value.trim()) {
+    if (!confirm('Bu soruyu boş geçmek istediğine emin misin?')) return;
+  }
+  const q = currentQuestList[currentQuestIndex];
+  if (ta.value.trim()) {
+    const late = calcLateMinutes(currentQuestSlot);
+    await addAnswer(currentQuestType, q.id, q.q, ta.value, currentQuestSlot, late);
+  }
+  currentQuestIndex++;
+  if (currentQuestIndex >= currentQuestList.length) {
+    await finishQuest();
+  } else {
+    renderQuest();
+  }
+}
+
+function onQuestPrev() {
+  const ta = document.getElementById('questAnswer');
+  currentAnswers[currentQuestIndex] = ta.value;
+  currentQuestIndex--;
+  if (currentQuestIndex < 0) currentQuestIndex = 0;
+  renderQuest();
+}
+
+async function finishQuest() {
+  const filledCount = currentAnswers.filter(a => a && a.trim()).length;
+
+  if (currentQuestType === 'kurulus') {
+    userData.kurulusIndex = (userData.kurulusIndex || 0) + filledCount;
+    if (userData.kurulusIndex >= QUESTIONS.kurulus.length) {
+      userData.kurulusCompleted = true;
+      showToast('Kuruluş tamam. Yol açıldı.');
+    } else {
+      showToast(`${filledCount} soru kaydedildi. Kaldığın yerden devam edersin.`);
+    }
+  } else {
+    const msg = filledCount > 0 ? `${filledCount} cevap kaydedildi.` : 'Kaydedildi.';
+    showToast(msg);
+  }
+
+  if (currentQuestType === 'haftalik') userData.lastWeeklyRitual = todayStr();
+  if (currentQuestType === 'aylik') userData.lastMonthlyRitual = todayStr();
+
+  await saveUserData();
+  await loadHistory();
+  await updateStreak();
+  showScreen('home');
+}
+
+function renderVisionForm() {
+  document.getElementById('antiVision').value = userData.antiVision || '';
+  document.getElementById('vision').value = userData.vision || '';
+  document.getElementById('identityInput').value = userData.identity || '';
+}
+
+window.saveVision = async function() {
+  userData.antiVision = document.getElementById('antiVision').value.trim();
+  userData.vision = document.getElementById('vision').value.trim();
+  userData.identity = document.getElementById('identityInput').value.trim();
+  await saveUserData();
+  showToast('Kaydedildi.');
+  showScreen('home');
+};
+
+function renderGoalsForm() {
+  const yg = userData.yearGoal || {};
+  document.getElementById('yearGoal').value = yg.title || '';
+  document.getElementById('yearStart').value = yg.start || todayStr();
+  document.getElementById('yearDeadline').value = yg.deadline || '';
+  const mg = userData.monthGoal || {};
+  document.getElementById('monthGoal').value = mg.title || '';
+  document.getElementById('monthDeadline').value = mg.deadline || '';
+  renderBossTasksEditor();
+  renderGoalList('daily-levers', userData.dailyLevers || []);
+  renderGoalList('constraints', userData.constraints || []);
+}
+
+function renderBossTasksEditor() {
+  const el = document.getElementById('boss-tasks-editor');
+  if (!el) return;
+  const tasks = userData.monthGoal?.tasks || [];
+
+  if (!tasks.length) {
+    el.innerHTML = `<div class="boss-editor-empty">Henüz görev eklenmemiş. Boss'unu somutlaştır — her gün/hafta ne yapacaksın?</div>`;
+    return;
+  }
+
+  el.innerHTML = tasks.map((task, i) => {
+    const typeLabels = {
+      daily: 'Her gün',
+      weekly: 'Haftada N',
+      milestone: 'Tek seferlik'
+    };
+    const weekField = task.type === 'weekly'
+      ? `<input type="number" min="1" max="7" value="${task.targetPerWeek || 1}" class="task-week-input" data-task-idx="${i}" data-field="targetPerWeek" title="Haftada kaç kez?">`
+      : '';
+    return `
+      <div class="boss-editor-row">
+        <div class="boss-editor-top">
+          <select class="task-type-select" data-task-idx="${i}" data-field="type" onchange="updateTaskField(${i}, 'type', this.value)">
+            <option value="daily" ${task.type === 'daily' ? 'selected' : ''}>Her gün</option>
+            <option value="weekly" ${task.type === 'weekly' ? 'selected' : ''}>Haftada N</option>
+            <option value="milestone" ${task.type === 'milestone' ? 'selected' : ''}>Tek seferlik</option>
+          </select>
+          ${weekField}
+          <button class="del-btn" onclick="delBossTask(${i})">×</button>
+        </div>
+        <input type="text" class="task-title-input" placeholder="Görev adı..." value="${escapeAttr(task.title || '')}" data-task-idx="${i}" data-field="title">
+      </div>
+    `;
+  }).join('');
+}
+
+window.updateTaskField = function(idx, field, value) {
+  if (!userData.monthGoal.tasks[idx]) return;
+  userData.monthGoal.tasks[idx][field] = value;
+  if (field === 'type' && value === 'weekly' && !userData.monthGoal.tasks[idx].targetPerWeek) {
+    userData.monthGoal.tasks[idx].targetPerWeek = 3;
+  }
+  renderBossTasksEditor();
+};
+
+window.addBossTask = function() {
+  if (!userData.monthGoal.tasks) userData.monthGoal.tasks = [];
+  // Önce mevcut inputları oku, kaybolmasın
+  document.querySelectorAll('[data-task-idx]').forEach(inp => {
+    const idx = parseInt(inp.dataset.taskIdx);
+    const field = inp.dataset.field;
+    if (userData.monthGoal.tasks[idx]) {
+      let val = inp.value;
+      if (field === 'targetPerWeek') val = parseInt(val) || 1;
+      userData.monthGoal.tasks[idx][field] = val;
+    }
+  });
+  userData.monthGoal.tasks.push({
+    id: 't_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+    title: '',
+    type: 'daily',
+    completions: [],
+    completedAt: null
+  });
+  renderBossTasksEditor();
+};
+
+window.delBossTask = function(idx) {
+  if (!confirm('Bu görevi silmek istediğine emin misin? Tamamlama kayıtları da silinir.')) return;
+  // Önce diğer inputları oku
+  document.querySelectorAll('[data-task-idx]').forEach(inp => {
+    const ti = parseInt(inp.dataset.taskIdx);
+    const field = inp.dataset.field;
+    if (userData.monthGoal.tasks[ti] && ti !== idx) {
+      let val = inp.value;
+      if (field === 'targetPerWeek') val = parseInt(val) || 1;
+      userData.monthGoal.tasks[ti][field] = val;
+    }
+  });
+  userData.monthGoal.tasks.splice(idx, 1);
+  renderBossTasksEditor();
+};
+
+function renderGoalList(id, list) {
+  const el = document.getElementById(id);
+  if (!list.length) list.push('');
+  el.innerHTML = list.map((item, i) => `
+    <div class="goal-row">
+      <input type="text" value="${escapeAttr(item)}" data-list="${id}" data-idx="${i}" placeholder="Yaz...">
+      <button class="del-btn" onclick="delGoal('${id}', ${i})">×</button>
+    </div>
+  `).join('');
+}
+
+window.addGoal = function(id) {
+  const list = id === 'daily-levers' ? (userData.dailyLevers || []) : (userData.constraints || []);
+  document.querySelectorAll(`input[data-list="${id}"]`).forEach((inp, i) => list[i] = inp.value);
+  list.push('');
+  if (id === 'daily-levers') userData.dailyLevers = list;
+  else userData.constraints = list;
+  renderGoalList(id, list);
+};
+
+window.delGoal = function(id, idx) {
+  const list = id === 'daily-levers' ? (userData.dailyLevers || []) : (userData.constraints || []);
+  document.querySelectorAll(`input[data-list="${id}"]`).forEach((inp, i) => list[i] = inp.value);
+  list.splice(idx, 1);
+  if (id === 'daily-levers') userData.dailyLevers = list;
+  else userData.constraints = list;
+  renderGoalList(id, list);
+};
+
+window.saveGoals = async function() {
+  userData.yearGoal = {
+    title: document.getElementById('yearGoal').value.trim(),
+    start: document.getElementById('yearStart').value,
+    deadline: document.getElementById('yearDeadline').value
+  };
+
+  // Boss inputlarını oku
+  const existingTasks = userData.monthGoal?.tasks || [];
+  document.querySelectorAll('[data-task-idx]').forEach(inp => {
+    const idx = parseInt(inp.dataset.taskIdx);
+    const field = inp.dataset.field;
+    if (existingTasks[idx]) {
+      let val = inp.value;
+      if (field === 'targetPerWeek') val = parseInt(val) || 1;
+      existingTasks[idx][field] = val;
+    }
+  });
+  // Boş başlıklı görevleri sil
+  const cleanTasks = existingTasks.filter(t => (t.title || '').trim());
+
+  const newMonthTitle = document.getElementById('monthGoal').value.trim();
+  const newDeadline = document.getElementById('monthDeadline').value;
+
+  // Eğer yeni boss ise (başlık değişti veya startDate yoksa), celebrate flag'i sıfırla
+  const isNewBoss = !userData.monthGoal?.startDate || userData.monthGoal?.title !== newMonthTitle;
+
+  userData.monthGoal = {
+    title: newMonthTitle,
+    deadline: newDeadline,
+    tasks: cleanTasks,
+    startDate: isNewBoss ? todayStr() : userData.monthGoal.startDate,
+    celebrated: isNewBoss ? false : (userData.monthGoal.celebrated || false)
+  };
+
+  userData.dailyLevers = [];
+  document.querySelectorAll('input[data-list="daily-levers"]').forEach(inp => {
+    if (inp.value.trim()) userData.dailyLevers.push(inp.value.trim());
+  });
+  userData.constraints = [];
+  document.querySelectorAll('input[data-list="constraints"]').forEach(inp => {
+    if (inp.value.trim()) userData.constraints.push(inp.value.trim());
+  });
+  await saveUserData();
+  showToast('Hedefler kaydedildi.');
+  showScreen('home');
+};
+
+let historyMode = 'timeline'; // 'timeline' | 'by-question'
+
+function renderHistory() {
+  const box = document.getElementById('historyList');
+  const search = document.getElementById('historySearch').value.toLowerCase().trim();
+  let filtered = historyCache;
+  if (historyFilter !== 'all') filtered = filtered.filter(a => a.type === historyFilter);
+  if (search) {
+    filtered = filtered.filter(a =>
+      (a.answer || '').toLowerCase().includes(search) ||
+      (a.question || '').toLowerCase().includes(search)
+    );
+  }
+  if (!filtered.length) {
+    box.innerHTML = `<div class="empty">
+      <h3>Henüz yazılı bir şey yok</h3>
+      <p>Günlük soruları cevapladıkça kelimelerin burada birikir. Geriye döndüğünde kendini okuyacaksın.</p>
+    </div>`;
+    return;
+  }
+
+  if (historyMode === 'by-question') {
+    renderHistoryByQuestion(box, filtered);
+    return;
+  }
+
+  box.innerHTML = filtered.map(a => {
+    const d = a.timestamp?.toDate ? a.timestamp.toDate() : new Date();
+    const typeLabel = { sabah: 'Sabah', gunici: 'Gün içi', aksam: 'Akşam', kurulus: 'Kuruluş', haftalik: 'Haftalık', aylik: 'Aylık' }[a.type] || a.type;
+    const lateStr = a.lateMinutes && a.lateMinutes > 0 ? ` · <em style="color: var(--crimson);">${Math.round(a.lateMinutes)} dk geç</em>` : '';
+    return `
+    <div class="history-entry ${a.type}">
+      <div class="meta">
+        <span>${d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })} · ${d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}${lateStr}</span>
+        <span>${typeLabel}</span>
+      </div>
+      <div class="q">${escapeHtml(a.question)}</div>
+      <div class="a">${escapeHtml(a.answer)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderHistoryByQuestion(box, answers) {
+  // Soru ID'sine göre grupla
+  const groups = {};
+  answers.forEach(a => {
+    const key = a.questionId || a.question;
+    if (!groups[key]) groups[key] = { question: a.question, type: a.type, entries: [] };
+    groups[key].entries.push(a);
+  });
+
+  // Cevap sayısına göre sırala
+  const groupList = Object.entries(groups)
+    .map(([k, v]) => ({ key: k, ...v }))
+    .sort((a, b) => b.entries.length - a.entries.length);
+
+  box.innerHTML = groupList.map((g, idx) => {
+    const entriesHtml = g.entries.map(a => {
+      const d = a.timestamp?.toDate ? a.timestamp.toDate() : new Date();
+      const dateStr = d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+      const lateStr = a.lateMinutes && a.lateMinutes > 0 ? `<span class="late">${Math.round(a.lateMinutes)} dk geç</span>` : '';
+      return `<div class="entry">
+        <div class="meta"><span>${dateStr}</span>${lateStr}</div>
+        <div class="txt">${escapeHtml(a.answer)}</div>
+      </div>`;
+    }).join('');
+
+    return `<div class="question-group" data-group-idx="${idx}">
+      <div class="head" onclick="this.parentElement.classList.toggle('open')">
+        <div class="q">${escapeHtml(g.question)}</div>
+        <div class="count">${g.entries.length}</div>
+      </div>
+      <div class="answers">${entriesHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderPatterns() {
+  const box = document.getElementById('patternsList');
+  const insights = detectPatterns();
+
+  // Kayıttan kaç gün geçti?
+  let daysSinceJoined = 0;
+  if (userData.joinedDate) {
+    const joined = new Date(userData.joinedDate + 'T00:00:00');
+    const now = new Date(todayStr() + 'T00:00:00');
+    daysSinceJoined = Math.floor((now - joined) / 86400000);
+  }
+
+  if (!insights.length) {
+    if (daysSinceJoined < 7) {
+      const kaldi = 7 - daysSinceJoined;
+      box.innerHTML = `<div class="empty">
+        <h3>Henüz erken</h3>
+        <p>Bir hafta dolmadan anlamlı bir örüntü çıkmaz. <em>${kaldi} gün</em> daha cevap biriktir, sonra kendi sesin karşına çıkmaya başlar.</p>
+      </div>`;
+    } else {
+      box.innerHTML = `<div class="empty">
+        <h3>Ortada bir şey yok</h3>
+        <p>Birkaç gün daha cevap verince tekrarlayan temaların ve tutarsızlıkların burada görünür. Sistem seni izliyor — sen yazdıkça o da konuşacak.</p>
+      </div>`;
+    }
+    return;
+  }
+  box.innerHTML = insights.map(ins => `
+    <div class="insight-card ${ins.type || ''}">
+      <div class="lbl">${escapeHtml(ins.label)}</div>
+      <div class="msg">${ins.msg}</div>
+    </div>
+  `).join('');
+}
+
+function getCapsuleEntries() {
+  const out = [];
+  const targets = [30, 60, 90];
+  for (const days of targets) {
+    const target = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+    const candidates = historyCache.filter(a => a.date === target && (a.type === 'kurulus' || a.type === 'aksam' || a.type === 'sabah'));
+    if (candidates.length) out.push({ daysAgo: days, entry: candidates[0] });
+  }
+  return out;
+}
+
+function renderCapsule() {
+  const box = document.getElementById('capsuleList');
+  const capsules = getCapsuleEntries();
+  if (!capsules.length) {
+    box.innerHTML = `<div class="empty">
+      <h3>Kapsüller henüz boş</h3>
+      <p>30, 60, 90 gün önceki cevapların zamanı geldiğinde burada açılır. Geçmişteki sen, şimdiki seni bekler.</p>
+    </div>`;
+    return;
+  }
+  box.innerHTML = capsules.map(c => {
+    const d = c.entry.timestamp?.toDate ? c.entry.timestamp.toDate() : new Date();
+    const challenges = [
+      'Bu cümleyi yazan sen, bugünküne ne söylerdi?',
+      'O günden bu yana ne değişti? Dürüst ol.',
+      'Bu cevap hâlâ seni anlatıyor mu?',
+      'Elinde kanıt var mı, yoksa aynı yalanı mı söylüyorsun?'
+    ];
+    return `
+    <div class="capsule-card">
+      <div class="header">
+        <div class="title">${c.daysAgo} gün önce</div>
+        <div class="date">${d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+      </div>
+      <div class="old-q">${escapeHtml(c.entry.question)}</div>
+      <div class="old-a">${escapeHtml(c.entry.answer)}</div>
+      <div class="challenge">→ ${challenges[c.daysAgo % challenges.length]}</div>
+    </div>`;
+  }).join('');
+}
+
+let currentGuideArticle = null;
+
+function renderGuide() {
+  const box = document.getElementById('guideContent');
+  if (!currentGuideArticle) {
+    let html = '<div class="guide-toc">';
+    GUIDE_ARTICLES.forEach(a => {
+      html += `<div class="toc-item" onclick="openGuideArticle('${a.id}')">
+        <div class="ttl">${escapeHtml(a.title)}</div>
+        <div class="arrow">→</div>
+      </div>`;
+    });
+    html += '</div>';
+    box.innerHTML = html;
+  } else {
+    const art = GUIDE_ARTICLES.find(a => a.id === currentGuideArticle);
+    if (!art) { currentGuideArticle = null; renderGuide(); return; }
+    box.innerHTML = `
+      <div class="guide-article">
+        <div class="back" onclick="closeGuideArticle()">← Tüm bölümler</div>
+        <h3>${escapeHtml(art.title)}</h3>
+        <div class="lead">${escapeHtml(art.lead)}</div>
+        ${art.body}
+      </div>
+    `;
+  }
+}
+
+window.openGuideArticle = function(id) {
+  currentGuideArticle = id;
+  renderGuide();
+  window.scrollTo(0, 0);
+};
+
+window.closeGuideArticle = function() {
+  currentGuideArticle = null;
+  renderGuide();
+};
+
+window.goToGuide = function(id) {
+  currentGuideArticle = id;
+  showScreen('guide');
+};
+
+function checkRituals() {
+  const today = new Date();
+  const dow = today.getDay();
+  const dom = today.getDate();
+  const lastW = userData.lastWeeklyRitual ? new Date(userData.lastWeeklyRitual) : null;
+  const daysSinceLastW = lastW ? Math.floor((today - lastW) / 86400000) : 999;
+
+  if (dow === 0 && daysSinceLastW >= 6) {
+    setTimeout(() => {
+      if (confirm('Pazar geldi. Haftalık ritüele ne dersin? (4 kısa soru)')) {
+        startQuest('haftalik', null);
+      }
+    }, 1200);
+  }
+
+  const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  const lastM = userData.lastMonthlyRitual ? new Date(userData.lastMonthlyRitual) : null;
+  const sameMonth = lastM && lastM.getMonth() === today.getMonth() && lastM.getFullYear() === today.getFullYear();
+
+  if (dom >= lastDayOfMonth - 2 && !sameMonth) {
+    setTimeout(() => {
+      if (confirm('Ay kapanıyor. Aylık ritüel vakti (4 soru). Hemen yapalım mı?')) {
+        startQuest('aylik', null);
+      }
+    }, 3000);
+  }
+}
+
+function renderSettings() {
+  const sw = document.getElementById('notifSwitch');
+  sw.classList.toggle('on', !!userData.notifEnabled);
+}
+
+window.toggleNotif = async function() {
+  if (!userData.notifEnabled) {
+    if (!('Notification' in window)) {
+      showToast('Tarayıcın bildirimleri desteklemiyor.');
+      return;
+    }
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+      userData.notifEnabled = true;
+      await saveUserData();
+      document.getElementById('notifSwitch').classList.add('on');
+      showToast('Bildirimler açık. Saati geldiğinde haber veririm.');
+      new Notification('Kaizen', { body: 'Bildirimler aktif. Her soru saatinde seni dürteceğim.', icon: '' });
+      scheduleNotifs();
+    } else {
+      showToast('Bildirim izni verilmedi.');
+    }
+  } else {
+    userData.notifEnabled = false;
+    await saveUserData();
+    document.getElementById('notifSwitch').classList.remove('on');
+    showToast('Bildirimler kapandı.');
+  }
+};
+
+let notifTimers = [];
+function setupNotifs() {
+  notifTimers.forEach(t => clearTimeout(t));
+  notifTimers = [];
+  if (!userData.notifEnabled) return;
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  scheduleNotifs();
+}
+
+function scheduleNotifs() {
+  const now = new Date();
+  TIME_SLOTS.forEach(slot => {
+    const [h, m] = slot.time.split(':').map(Number);
+    const target = new Date(now);
+    target.setHours(h, m, 0, 0);
+    if (target <= now) target.setDate(target.getDate() + 1);
+    const ms = target - now;
+    if (ms > 0 && ms < 24 * 3600 * 1000) {
+      const timer = setTimeout(() => {
+        const today = todayStr();
+        const done = historyCache.filter(a => a.date === today && a.slotKey === slot.key).length;
+        if (done < slot.count) {
+          new Notification('Kaizen — ' + slot.time, {
+            body: slot.label + ' vakti. Bir dakika ayır, kendine sor, yaz.',
+            tag: slot.key
+          });
+        }
+      }, ms);
+      notifTimers.push(timer);
+    }
+  });
+}
+
+window.exportData = async function() {
+  const data = { profile: userData, answers: historyCache, exportDate: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `kaizen-${todayStr()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+window.resetData = async function() {
+  if (!confirm('TÜM verilerin silinecek. Devam edelim mi?')) return;
+  if (!confirm('Gerçekten emin misin? Bu geri alınamaz.')) return;
+  const answersRef = collection(db, 'users', currentUser.uid, 'answers');
+  const snap = await getDocs(answersRef);
+  for (const d of snap.docs) await deleteDoc(d.ref);
+  await deleteDoc(doc(db, 'users', currentUser.uid));
+  showToast('Her şey silindi.');
+  setTimeout(() => signOut(auth), 1500);
+};
+
+window.replayOnboard = function() {
+  showOnboard();
+};
+
+function showOnboard() {
+  document.getElementById('app').classList.remove('active');
+  document.getElementById('bottomNav').classList.remove('show');
+  document.getElementById('onboard').classList.add('show');
+  onboardIndex = 0;
+  renderOnboardDots();
+  document.getElementById('onboardSlides').scrollTo({ left: 0, behavior: 'instant' });
+}
+
+function renderOnboardDots() {
+  const slides = document.querySelectorAll('.onboard .slide');
+  const dots = document.getElementById('onboardDots');
+  dots.innerHTML = '';
+  for (let i = 0; i < slides.length; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === onboardIndex ? ' active' : '');
+    dots.appendChild(d);
+  }
+  const nextBtn = document.getElementById('onboardNext');
+  if (onboardIndex === slides.length - 1) nextBtn.textContent = 'Başla →';
+  else nextBtn.textContent = 'İleri →';
+}
+
+document.getElementById('onboardNext').addEventListener('click', async () => {
+  const slides = document.querySelectorAll('.onboard .slide');
+  if (onboardIndex < slides.length - 1) {
+    onboardIndex++;
+    const slideW = document.getElementById('onboardSlides').clientWidth;
+    document.getElementById('onboardSlides').scrollTo({ left: slideW * onboardIndex, behavior: 'smooth' });
+    renderOnboardDots();
+  } else {
+    userData.onboardingDone = true;
+    await saveUserData();
+    document.getElementById('onboard').classList.remove('show');
+    initApp();
+    document.getElementById('app').classList.add('active');
+    document.getElementById('bottomNav').classList.add('show');
+  }
+});
+
+document.getElementById('onboardSkip').addEventListener('click', async () => {
+  userData.onboardingDone = true;
+  await saveUserData();
+  document.getElementById('onboard').classList.remove('show');
+  initApp();
+  document.getElementById('app').classList.add('active');
+  document.getElementById('bottomNav').classList.add('show');
+});
+
+document.getElementById('onboardSlides').addEventListener('scroll', () => {
+  const slideW = document.getElementById('onboardSlides').clientWidth;
+  const newIdx = Math.round(document.getElementById('onboardSlides').scrollLeft / slideW);
+  if (newIdx !== onboardIndex) {
+    onboardIndex = newIdx;
+    renderOnboardDots();
+  }
+});
+
+setInterval(() => {
+  if (document.getElementById('screen-home').classList.contains('active')) {
+    renderTimeSlots();
+  }
+}, 60000);
+
+window.openAnswerView = function(slotKey, date) {
+  const answers = historyCache.filter(a => a.slotKey === slotKey && a.date === date);
+  if (!answers.length) return;
+  const slot = TIME_SLOTS.find(s => s.key === slotKey);
+  const slotLabel = slot ? slot.label : 'Cevaplar';
+  const slotTime = slot ? slot.time : '';
+
+  const modal = document.getElementById('answerModal');
+  const title = document.getElementById('answerModalTitle');
+  const sub = document.getElementById('answerModalSub');
+  const list = document.getElementById('answerModalList');
+
+  title.textContent = slotLabel;
+  sub.textContent = slotTime ? `${slotTime} · ${new Date(date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}` : '';
+
+  list.innerHTML = answers.map(a => {
+    const t = a.timestamp?.toDate ? a.timestamp.toDate() : null;
+    const timeStr = t ? `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}` : '';
+    return `
+      <div class="answer-view-card">
+        <div class="answer-view-time">${timeStr ? `✓ ${timeStr}'de yazıldı` : '✓ Kayıtlı'}</div>
+        <div class="answer-view-q">${escapeHtml(a.question)}</div>
+        <div class="answer-view-a">${escapeHtml(a.answer)}</div>
+      </div>
+    `;
+  }).join('');
+
+  modal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeAnswerView = function() {
+  document.getElementById('answerModal').classList.remove('show');
+  document.body.style.overflow = '';
+};
+
+// =========================================================
+// GÜNLÜK (JOURNAL) — Serbest Yazma
+// =========================================================
+
+function renderJournal() {
+  if (userData.journalPinHash && !journalUnlocked) {
+    renderJournalLock();
+    return;
+  }
+  if (!userData.journalPinHash) {
+    renderJournalPinSetup();
+    return;
+  }
+  renderJournalList();
+}
+
+function renderJournalPinSetup() {
+  const box = document.getElementById('journalContent');
+  box.innerHTML = `
+    <div class="journal-setup">
+      <div class="journal-setup-icon">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="5" y="11" width="14" height="10" rx="2"/>
+          <path d="M8 11V7a4 4 0 018 0v4"/>
+        </svg>
+      </div>
+      <h3>Günlüğünü şifrele</h3>
+      <p class="journal-setup-lead">Burada yazdıkların sadece sana ait. Telefonun başka birinin eline geçse bile erişemez.</p>
+      <div class="journal-pin-info">
+        <div class="pin-info-item">
+          <span class="pin-info-dot"></span>
+          <span>4-6 haneli sayısal PIN belirle</span>
+        </div>
+        <div class="pin-info-item">
+          <span class="pin-info-dot"></span>
+          <span>Google şifrenden ayrıdır — sadece günlük için</span>
+        </div>
+        <div class="pin-info-item warn">
+          <span class="pin-info-dot"></span>
+          <span>PIN'i unutursan, kurtarılamaz — eski yazıları silmeden göremezsin</span>
+        </div>
+      </div>
+      <div class="pin-input-block">
+        <label>Yeni PIN</label>
+        <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" class="pin-input" id="newPin1" placeholder="••••">
+        <label style="margin-top: 14px;">PIN'i tekrar gir</label>
+        <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" class="pin-input" id="newPin2" placeholder="••••">
+        <div class="pin-error hidden" id="pinError"></div>
+      </div>
+      <button class="btn-save" onclick="saveNewPin()">PIN'i kaydet ve günlüğe gir</button>
+    </div>
+  `;
+}
+
+window.saveNewPin = async function() {
+  const p1 = document.getElementById('newPin1').value.trim();
+  const p2 = document.getElementById('newPin2').value.trim();
+  const err = document.getElementById('pinError');
+  err.classList.add('hidden');
+
+  if (!/^\d{4,6}$/.test(p1)) {
+    err.textContent = 'PIN 4 ile 6 arası rakamdan oluşmalı';
+    err.classList.remove('hidden');
+    return;
+  }
+  if (p1 !== p2) {
+    err.textContent = 'İki PIN eşleşmiyor';
+    err.classList.remove('hidden');
+    return;
+  }
+
+  userData.journalPinHash = await hashPin(p1);
+  await saveUserData();
+  journalUnlocked = true;
+  showToast('PIN ayarlandı. Günlüğün güvende.');
+  renderJournal();
+};
+
+let pinAttempts = 0;
+let pinLockUntil = 0;
+
+function renderJournalLock() {
+  const box = document.getElementById('journalContent');
+  const now = Date.now();
+  const locked = now < pinLockUntil;
+  const remainSec = Math.ceil((pinLockUntil - now) / 1000);
+
+  box.innerHTML = `
+    <div class="journal-lock">
+      <div class="lock-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+          <rect x="5" y="11" width="14" height="10" rx="2"/>
+          <path d="M8 11V7a4 4 0 018 0v4"/>
+        </svg>
+      </div>
+      <h3>Günlüğüne PIN gir</h3>
+      <p class="lock-lead">Yazdıkların sadece sana ait.</p>
+      ${locked ? `
+        <div class="lock-countdown">
+          ${remainSec} saniye bekle...
+        </div>
+      ` : `
+        <div class="pin-input-block">
+          <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" class="pin-input pin-input-center" id="unlockPin" placeholder="••••" autofocus>
+          <div class="pin-error hidden" id="lockPinError"></div>
+        </div>
+        <button class="btn-save" onclick="tryUnlock()">Kilidi aç</button>
+        <div class="lock-footer" onclick="forgotPin()">PIN'imi unuttum</div>
+      `}
+    </div>
+  `;
+
+  if (locked) {
+    setTimeout(() => renderJournalLock(), 1000);
+  } else {
+    setTimeout(() => {
+      const inp = document.getElementById('unlockPin');
+      if (inp) {
+        inp.focus();
+        inp.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') window.tryUnlock();
+        });
+      }
+    }, 100);
+  }
+}
+
+window.tryUnlock = async function() {
+  const pin = document.getElementById('unlockPin').value.trim();
+  const err = document.getElementById('lockPinError');
+  err.classList.add('hidden');
+
+  if (!/^\d{4,6}$/.test(pin)) {
+    err.textContent = 'PIN 4-6 rakam olmalı';
+    err.classList.remove('hidden');
+    return;
+  }
+
+  const hash = await hashPin(pin);
+  if (hash === userData.journalPinHash) {
+    journalUnlocked = true;
+    pinAttempts = 0;
+    showToast('Hoş geldin.');
+    renderJournal();
+  } else {
+    pinAttempts++;
+    if (pinAttempts >= 3) {
+      pinLockUntil = Date.now() + 60000;
+      pinAttempts = 0;
+      err.textContent = '3 yanlış deneme. 60 saniye bekle.';
+    } else {
+      err.textContent = `Yanlış PIN. ${3 - pinAttempts} hakkın kaldı.`;
+    }
+    err.classList.remove('hidden');
+    document.getElementById('unlockPin').value = '';
+    if (pinLockUntil > Date.now()) renderJournalLock();
+  }
+};
+
+window.forgotPin = async function() {
+  const confirmed = confirm('PIN\'i sıfırlamak için tüm günlük yazılarını silmek gerekiyor. Devam etmek istiyor musun?');
+  if (!confirmed) return;
+  const confirmed2 = confirm('Emin misin? Bu işlem GERİ ALINAMAZ. Tüm günlük yazıların silinecek.');
+  if (!confirmed2) return;
+
+  const jRef = collection(db, 'users', currentUser.uid, 'journal');
+  const snap = await getDocs(jRef);
+  for (const d of snap.docs) await deleteDoc(d.ref);
+
+  userData.journalPinHash = null;
+  await saveUserData();
+  journalCache = [];
+  pinAttempts = 0;
+  pinLockUntil = 0;
+  journalUnlocked = false;
+  showToast('Günlük sıfırlandı. Yeni PIN belirle.');
+  if (document.getElementById('screen-journal').classList.contains('active')) {
+    renderJournal();
+  }
+};
+
+window.changeJournalPin = async function() {
+  if (!userData.journalPinHash) {
+    showToast('Henüz PIN belirlememişsin. Günlük sekmesinden belirle.');
+    showScreen('journal');
+    return;
+  }
+
+  const oldPin = prompt('Mevcut PIN\'ini gir:');
+  if (!oldPin) return;
+  const oldHash = await hashPin(oldPin.trim());
+  if (oldHash !== userData.journalPinHash) {
+    showToast('Mevcut PIN yanlış.');
+    return;
+  }
+
+  const newPin = prompt('Yeni PIN (4-6 rakam):');
+  if (!newPin || !/^\d{4,6}$/.test(newPin.trim())) {
+    showToast('Geçersiz PIN formatı.');
+    return;
+  }
+  const confirmPin = prompt('Yeni PIN\'i tekrar gir:');
+  if (confirmPin?.trim() !== newPin.trim()) {
+    showToast('PIN\'ler eşleşmiyor.');
+    return;
+  }
+
+  userData.journalPinHash = await hashPin(newPin.trim());
+  await saveUserData();
+  showToast('PIN güncellendi.');
+};
+
+function renderJournalList() {
+  const box = document.getElementById('journalContent');
+  if (currentJournalEntry !== null) {
+    renderJournalEditor();
+    return;
+  }
+
+  const patternStatus = userData.journalIncludeInPatterns
+    ? { txt: 'Örüntülere dahil', cls: 'on' }
+    : { txt: 'Örüntülerden ayrı', cls: 'off' };
+
+  let listHtml = '';
+  if (!journalCache.length) {
+    listHtml = `
+      <div class="journal-empty">
+        <p>Henüz yazılmış bir sayfa yok.</p>
+        <p class="small">Sağ üstteki "Yeni sayfa" ile başla.</p>
+      </div>
+    `;
+  } else {
+    listHtml = journalCache.map(entry => {
+      const d = entry.timestamp?.toDate ? entry.timestamp.toDate() : new Date();
+      const preview = entry.content.replace(/\s+/g, ' ').slice(0, 140);
+      const title = entry.title || 'Başlıksız';
+      return `
+        <div class="journal-card" onclick="openJournalEntry('${entry.id}')">
+          <div class="journal-card-date">
+            ${d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
+            · ${d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+          </div>
+          <div class="journal-card-title">${escapeHtml(title)}</div>
+          <div class="journal-card-preview">${escapeHtml(preview)}${entry.content.length > 140 ? '...' : ''}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  box.innerHTML = `
+    <div class="journal-top-bar">
+      <div class="journal-count">
+        <span class="count-num">${journalCache.length}</span>
+        <span class="count-lbl">${journalCache.length === 1 ? 'sayfa' : 'sayfa'}</span>
+      </div>
+      <div class="journal-actions">
+        <button class="journal-pattern-toggle ${patternStatus.cls}" onclick="toggleJournalPatterns()" title="${patternStatus.txt}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>
+          <span>${patternStatus.txt}</span>
+        </button>
+        <button class="journal-new-btn" onclick="openJournalEntry('new')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          <span>Yeni sayfa</span>
+        </button>
+      </div>
+    </div>
+    <div class="journal-list">${listHtml}</div>
+  `;
+}
+
+window.toggleJournalPatterns = function() {
+  const modal = document.getElementById('answerModal');
+  const title = document.getElementById('answerModalTitle');
+  const sub = document.getElementById('answerModalSub');
+  const list = document.getElementById('answerModalList');
+  const footer = document.querySelector('.answer-modal-footer');
+
+  const isOn = userData.journalIncludeInPatterns;
+  title.textContent = 'Örüntü Algılayıcı Nedir?';
+  sub.textContent = 'Günlük yazılarını dahil etmeli miyim?';
+
+  list.innerHTML = `
+    <div class="pattern-explain">
+      <p>Örüntü algılayıcı, cevaplarındaki <em>tekrarlayan kelimeleri</em> ve <em>kendi tutarsızlıklarını</em> sadece <strong>SANA</strong> gösterir.</p>
+      <p><strong>Kimse başka göremez.</strong> Ben de, arkadaşların da, kimse. Veriler Firebase'de şifreli duruyor — sadece senin Google hesabınla açılıyor.</p>
+      <p>Örnek: 14 günde 11 kez "yorgunum" yazmışsan, sistem sana "<em>bir mesaj mı taşıyor?</em>" diye sorar.</p>
+      <div class="pattern-explain-options">
+        <div class="pattern-option ${isOn ? '' : 'selected'}" onclick="setJournalPatterns(false)">
+          <div class="pattern-option-head">
+            <div class="pattern-option-radio ${isOn ? '' : 'on'}"></div>
+            <div class="pattern-option-title">Sadece soru cevapları</div>
+          </div>
+          <div class="pattern-option-desc">Günlüğün tamamen özel kalır. Sistem günlük yazılarından örüntü çıkarmaz.</div>
+        </div>
+        <div class="pattern-option ${isOn ? 'selected' : ''}" onclick="setJournalPatterns(true)">
+          <div class="pattern-option-head">
+            <div class="pattern-option-radio ${isOn ? 'on' : ''}"></div>
+            <div class="pattern-option-title">Soru cevapları + Günlük</div>
+          </div>
+          <div class="pattern-option-desc">Günlük yazıların da analiz edilir. Daha derin örüntüler görürsün ama yine kimse okumaz.</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  footer.innerHTML = 'İstediğin an buradan değiştirebilirsin.';
+  modal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+};
+
+window.setJournalPatterns = async function(val) {
+  userData.journalIncludeInPatterns = val;
+  await saveUserData();
+  window.closeAnswerView();
+  showToast(val ? 'Günlük örüntülere dahil edildi.' : 'Günlük örüntülerden ayrıldı.');
+  renderJournal();
+};
+
+window.openJournalEntry = function(idOrNew) {
+  if (idOrNew === 'new') {
+    currentJournalEntry = { id: null, title: '', content: '', new: true };
+  } else {
+    const entry = journalCache.find(e => e.id === idOrNew);
+    if (!entry) return;
+    currentJournalEntry = { ...entry, new: false };
+  }
+  renderJournalEditor();
+};
+
+window.closeJournalEntry = function() {
+  currentJournalEntry = null;
+  renderJournalList();
+};
+
+function renderJournalEditor() {
+  const box = document.getElementById('journalContent');
+  const today = new Date();
+  const dateStr = currentJournalEntry.new
+    ? today.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
+    : (() => {
+        const d = currentJournalEntry.timestamp?.toDate ? currentJournalEntry.timestamp.toDate() : new Date();
+        return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+      })();
+
+  box.innerHTML = `
+    <div class="journal-editor">
+      <div class="journal-page">
+        <div class="journal-page-header">
+          <button class="journal-back" onclick="closeJournalEntry()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            <span>Kapat</span>
+          </button>
+          <div class="journal-page-date">${dateStr}</div>
+          ${!currentJournalEntry.new ? `<button class="journal-delete" onclick="deleteCurrentJournal()" title="Sil"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>` : `<div style="width: 30px;"></div>`}
+        </div>
+        <input
+          type="text"
+          class="journal-title-input"
+          id="journalTitle"
+          placeholder="Başlık (istersen)..."
+          value="${escapeAttr(currentJournalEntry.title || '')}"
+        >
+        <textarea
+          class="journal-content"
+          id="journalContent_ta"
+          placeholder="İçinden ne geçiyorsa yaz. Saçma gelsin, mantıklı gelsin, dağınık olsun — fark etmez. Burası senin defterin."
+        >${escapeHtml(currentJournalEntry.content || '')}</textarea>
+      </div>
+      <div class="journal-editor-footer">
+        <div class="journal-save-status" id="journalSaveStatus">Otomatik kaydediliyor</div>
+        <button class="btn-primary journal-save-btn" onclick="saveJournalManual()">Kaydet & Kapat</button>
+      </div>
+    </div>
+  `;
+
+  setTimeout(() => {
+    const ta = document.getElementById('journalContent_ta');
+    if (ta && currentJournalEntry.new) ta.focus();
+
+    let saveTimer = null;
+    const doAutoSave = async () => {
+      const title = document.getElementById('journalTitle').value;
+      const content = document.getElementById('journalContent_ta').value;
+      if (!content.trim() && !title.trim()) return;
+
+      const status = document.getElementById('journalSaveStatus');
+      status.textContent = 'Kaydediliyor...';
+
+      if (currentJournalEntry.new && !currentJournalEntry.id) {
+        const id = await addJournalEntry(title, content);
+        currentJournalEntry.id = id;
+        currentJournalEntry.new = false;
+      } else if (currentJournalEntry.id) {
+        await updateJournalEntry(currentJournalEntry.id, title, content);
+      }
+      await loadJournal();
+      status.textContent = 'Kaydedildi ✓';
+      setTimeout(() => { if (status) status.textContent = 'Otomatik kaydediliyor'; }, 1500);
+    };
+
+    const scheduleAutoSave = () => {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(doAutoSave, 1200);
+    };
+
+    document.getElementById('journalTitle').addEventListener('input', scheduleAutoSave);
+    if (ta) ta.addEventListener('input', scheduleAutoSave);
+  }, 100);
+}
+
+window.saveJournalManual = async function() {
+  const title = document.getElementById('journalTitle').value;
+  const content = document.getElementById('journalContent_ta').value;
+  if (!content.trim() && !title.trim()) {
+    closeJournalEntry();
+    return;
+  }
+  if (currentJournalEntry.new && !currentJournalEntry.id) {
+    await addJournalEntry(title, content);
+  } else if (currentJournalEntry.id) {
+    await updateJournalEntry(currentJournalEntry.id, title, content);
+  }
+  await loadJournal();
+  showToast('Kaydedildi.');
+  closeJournalEntry();
+};
+
+window.deleteCurrentJournal = async function() {
+  if (!currentJournalEntry?.id) return;
+  if (!confirm('Bu sayfayı silmek istediğine emin misin?')) return;
+  await deleteJournalEntry(currentJournalEntry.id);
+  await loadJournal();
+  showToast('Sayfa silindi.');
+  closeJournalEntry();
+};
+
+// =========================================================
+// BFI-44 KİŞİLİK TESTİ
+// =========================================================
+
+function renderProfile() {
+  const box = document.getElementById('profileContent');
+  if (!box) return;
+
+  const status = canTakeBfi();
+  const hasResults = bfiCache.length > 0;
+
+  if (!hasResults) {
+    renderBfiIntro(box, status);
+  } else {
+    renderBfiResults(box, status);
+  }
+}
+
+function renderBfiIntro(box, status) {
+  box.innerHTML = `
+    <div class="bfi-intro">
+      <div class="bfi-intro-badge">PSİKOLOJİK TEST</div>
+      <h2 class="bfi-intro-title">Kendini <em>tanı.</em></h2>
+      <p class="bfi-intro-lead">Büyük Beşli Kişilik Envanteri — bilimsel geçerliliği yüksek 44 soru, senin 5 boyutunu çıkarır.</p>
+
+      <div class="bfi-info-block">
+        <div class="bfi-info-row">
+          <div class="bfi-info-num">5</div>
+          <div class="bfi-info-body">
+            <div class="bfi-info-title">5 Kişilik Boyutu</div>
+            <div class="bfi-info-desc">Dışa dönüklük · Uyumluluk · Sorumluluk · Duygusal denge · Yeniliğe açıklık</div>
+          </div>
+        </div>
+        <div class="bfi-info-row">
+          <div class="bfi-info-num sage">10</div>
+          <div class="bfi-info-body">
+            <div class="bfi-info-title">10-15 dakika</div>
+            <div class="bfi-info-desc">Acele etme. İlk aklına gelen cevabı seç — en dürüst olandır.</div>
+          </div>
+        </div>
+        <div class="bfi-info-row">
+          <div class="bfi-info-num ash">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          </div>
+          <div class="bfi-info-body">
+            <div class="bfi-info-title">Ayda Bir Kez</div>
+            <div class="bfi-info-desc">Bir testi tamamladıktan sonra 30 gün kilit. Sonra tekrar edip değişimini görürsün.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bfi-quote">
+        "Kendini tanımak tüm bilgeliğin başlangıcıdır." — Aristoteles
+      </div>
+
+      <button class="btn-save bfi-start-btn" onclick="startBfiTest()">Testi Başlat →</button>
+    </div>
+  `;
+}
+
+function renderBfiResults(box, status) {
+  const latest = bfiCache[0];
+  const scores = latest.scores;
+  const testDate = latest.timestamp?.toDate ? latest.timestamp.toDate() : new Date(latest.date);
+  const dateStr = testDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  const previous = bfiCache.length > 1 ? bfiCache[1] : null;
+  const prevScores = previous ? previous.scores : null;
+
+  let retakeBlock = '';
+  if (status.can) {
+    retakeBlock = `
+      <div class="bfi-retake-block can">
+        <div class="bfi-retake-icon">✓</div>
+        <div class="bfi-retake-text">
+          <div class="bfi-retake-title">Yeniden test yapabilirsin</div>
+          <div class="bfi-retake-desc">30 gün geçti. Karakterinin evrimini görmek ister misin?</div>
+        </div>
+        <button class="btn-primary bfi-retake-btn" onclick="startBfiTest()">Tekrar yap</button>
+      </div>
+    `;
+  } else {
+    retakeBlock = `
+      <div class="bfi-retake-block wait">
+        <div class="bfi-retake-icon wait">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        </div>
+        <div class="bfi-retake-text">
+          <div class="bfi-retake-title">${status.daysLeft} gün sonra tekrar yapabilirsin</div>
+          <div class="bfi-retake-desc">Kişilik bir anda değişmez — en az 30 gün bekleyip değişimi ölçmek daha sağlıklı.</div>
+        </div>
+      </div>
+    `;
+  }
+
+  let dimCards = '';
+  ['E', 'A', 'C', 'N', 'O'].forEach(key => {
+    const dim = BFI_DIMENSIONS[key];
+    const score = scores[key] || 0;
+    const lvl = score < 2.5 ? 'low' : score > 3.5 ? 'high' : 'mid';
+    const interp = BFI_INTERPRETATIONS[key][lvl];
+    const pct = Math.round((score / 5) * 100);
+
+    let diffBadge = '';
+    if (prevScores && prevScores[key] !== undefined) {
+      const diff = (score - prevScores[key]);
+      if (Math.abs(diff) >= 0.2) {
+        const sign = diff > 0 ? '+' : '';
+        const arrow = diff > 0 ? '↑' : '↓';
+        const cls = diff > 0 ? 'up' : 'down';
+        diffBadge = `<span class="bfi-diff ${cls}">${arrow} ${sign}${diff.toFixed(1)}</span>`;
+      }
+    }
+
+    dimCards += `
+      <div class="bfi-dim-card c-${dim.color}">
+        <div class="bfi-dim-head">
+          <div>
+            <div class="bfi-dim-label">${escapeHtml(dim.name.toUpperCase())}</div>
+            <div class="bfi-dim-lvl">${escapeHtml(interp.label)} ${diffBadge}</div>
+          </div>
+          <div class="bfi-dim-score">${score.toFixed(1)}<span class="slash">/5</span></div>
+        </div>
+        <div class="bfi-dim-bar">
+          <div class="bfi-dim-fill" style="width: ${pct}%"></div>
+        </div>
+        <div class="bfi-dim-text">${escapeHtml(interp.text)}</div>
+        <div class="bfi-dim-kaizen">
+          <span class="bfi-kaizen-lbl">KAİZEN İPUCU</span>
+          <div>${escapeHtml(interp.kaizen)}</div>
+        </div>
+      </div>
+    `;
+  });
+
+  const summary = generateProfileSummary(scores);
+
+  box.innerHTML = `
+    <div class="bfi-results">
+      <div class="bfi-results-header">
+        <div class="bfi-results-badge">TEST TAMAMLANDI</div>
+        <h2 class="bfi-results-title">İşte <em>sen.</em></h2>
+        <div class="bfi-results-date">${dateStr} · ${bfiCache.length} test kayıtlı</div>
+      </div>
+
+      ${retakeBlock}
+
+      <div class="bfi-dims">${dimCards}</div>
+
+      <div class="bfi-summary">
+        <div class="bfi-summary-label">BENİM PROFİLİM</div>
+        <div class="bfi-summary-text">${summary}</div>
+      </div>
+
+      ${bfiCache.length > 1 ? `
+      <div class="bfi-history-toggle" onclick="toggleBfiHistory()">
+        Geçmiş testlerim (${bfiCache.length}) →
+      </div>
+      <div class="bfi-history-list hidden" id="bfiHistoryList">
+        ${bfiCache.slice(1).map((t, i) => {
+          const td = t.timestamp?.toDate ? t.timestamp.toDate() : new Date(t.date);
+          return `
+          <div class="bfi-history-card">
+            <div class="bfi-history-date">${td.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+            <div class="bfi-history-scores">
+              <span>E: ${t.scores.E.toFixed(1)}</span>
+              <span>A: ${t.scores.A.toFixed(1)}</span>
+              <span>C: ${t.scores.C.toFixed(1)}</span>
+              <span>N: ${t.scores.N.toFixed(1)}</span>
+              <span>O: ${t.scores.O.toFixed(1)}</span>
+            </div>
+          </div>
+          `;
+        }).join('')}
+      </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+window.toggleBfiHistory = function() {
+  const el = document.getElementById('bfiHistoryList');
+  if (el) el.classList.toggle('hidden');
+};
+
+window.startBfiTest = function() {
+  const status = canTakeBfi();
+  if (!status.can) {
+    showToast(`${status.daysLeft} gün sonra tekrar yapabilirsin.`);
+    return;
+  }
+  bfiAnswers = {};
+  bfiCurrentIndex = 0;
+  renderBfiQuestion();
+};
+
+function renderBfiQuestion() {
+  const box = document.getElementById('profileContent');
+  const q = BFI_QUESTIONS[bfiCurrentIndex];
+  const total = BFI_QUESTIONS.length;
+  const pct = Math.round((bfiCurrentIndex / total) * 100);
+  const selected = bfiAnswers[q.n];
+
+  const options = [
+    { val: 1, label: 'Kesinlikle katılmıyorum', cls: 'opt-1' },
+    { val: 2, label: 'Biraz katılmıyorum', cls: 'opt-2' },
+    { val: 3, label: 'Ne katılıyorum, ne katılmıyorum', cls: 'opt-3' },
+    { val: 4, label: 'Biraz katılıyorum', cls: 'opt-4' },
+    { val: 5, label: 'Kesinlikle katılıyorum', cls: 'opt-5' }
+  ];
+
+  box.innerHTML = `
+    <div class="bfi-test">
+      <div class="bfi-test-top">
+        <div class="bfi-test-counter">SORU ${bfiCurrentIndex + 1} / ${total}</div>
+        <div class="bfi-test-pct">%${pct} tamam</div>
+      </div>
+
+      <div class="bfi-test-progress">
+        <div class="bfi-test-progress-fill" style="width: ${pct}%"></div>
+      </div>
+
+      <div class="bfi-test-prompt">Kendimi şöyle biri olarak görüyorum:</div>
+      <div class="bfi-test-question">${escapeHtml(q.t)}</div>
+
+      <div class="bfi-options">
+        ${options.map(opt => `
+          <button class="bfi-option ${opt.cls} ${selected === opt.val ? 'selected' : ''}" onclick="selectBfiAnswer(${opt.val})">
+            <div class="bfi-option-num">${opt.val}</div>
+            <div class="bfi-option-label">${opt.label}${selected === opt.val ? ' <span class="selected-mark">← seçili</span>' : ''}</div>
+          </button>
+        `).join('')}
+      </div>
+
+      <div class="bfi-test-footer">
+        ${bfiCurrentIndex > 0 ? `<button class="btn-ghost bfi-test-prev" onclick="prevBfiQuestion()">← Önceki</button>` : '<div></div>'}
+        <div class="bfi-test-note">Otomatik kayıt · yarıda bırakabilirsin</div>
+      </div>
+
+      <button class="bfi-test-cancel" onclick="cancelBfiTest()">Testi iptal et</button>
+    </div>
+  `;
+}
+
+window.selectBfiAnswer = async function(val) {
+  const q = BFI_QUESTIONS[bfiCurrentIndex];
+  bfiAnswers[q.n] = val;
+
+  if (bfiCurrentIndex < BFI_QUESTIONS.length - 1) {
+    setTimeout(() => {
+      bfiCurrentIndex++;
+      renderBfiQuestion();
+    }, 180);
+  } else {
+    // Son soru — testi bitir
+    await finishBfiTest();
+  }
+};
+
+window.prevBfiQuestion = function() {
+  if (bfiCurrentIndex > 0) {
+    bfiCurrentIndex--;
+    renderBfiQuestion();
+  }
+};
+
+window.cancelBfiTest = function() {
+  if (!confirm('Testi iptal etmek istediğine emin misin? İlerlemen kaybolur.')) return;
+  bfiAnswers = {};
+  bfiCurrentIndex = 0;
+  renderProfile();
+};
+
+async function finishBfiTest() {
+  const box = document.getElementById('profileContent');
+  box.innerHTML = `
+    <div class="bfi-finishing">
+      <div class="bfi-finishing-spinner"></div>
+      <div class="bfi-finishing-text">Profilin oluşturuluyor...</div>
+    </div>
+  `;
+
+  const scores = calcBfiScores(bfiAnswers);
+  try {
+    await saveBfiResult(scores, bfiAnswers);
+    await loadBfiResults();
+    bfiAnswers = {};
+    bfiCurrentIndex = 0;
+    showToast('Test tamamlandı!');
+    renderProfile();
+  } catch (e) {
+    console.error(e);
+    showToast('Kaydetme hatası: ' + e.message);
+    renderProfile();
+  }
+}
+
+function escapeHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function escapeAttr(s) {
+  if (!s) return '';
+  return String(s).replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Acil durum: 15 saniye içinde hâlâ loading varsa otomatik kapat ve login göster
+setTimeout(() => {
+  const loading = document.getElementById('loading');
+  if (loading && !loading.classList.contains('hidden')) {
+    console.warn('Yükleme 15 saniyede bitmedi, acil durum kurtarması');
+    loading.classList.add('hidden');
+    const login = document.getElementById('login');
+    const app = document.getElementById('app');
+    if (login && (!app || !app.classList.contains('active'))) {
+      login.classList.remove('hidden');
+    }
+  }
+}, 15000);
