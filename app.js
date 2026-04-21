@@ -2496,7 +2496,7 @@ function renderJournalEditor() {
       </div>
       <div class="journal-editor-footer">
         <div class="journal-save-status" id="journalSaveStatus">Otomatik kaydediliyor</div>
-        <button class="btn-primary journal-save-btn" onclick="saveJournalManual()">Kaydet & Kapat</button>
+        <button class="btn btn-primary journal-save-btn" onclick="saveJournalManual()">Kaydet & Kapat</button>
       </div>
     </div>
   `;
@@ -2806,8 +2806,8 @@ function renderVentEditor() {
       <div class="vent-editor-footer">
         <div class="vent-editor-status" id="ventEditorStatus">Otomatik kaydediliyor</div>
         <div class="vent-editor-actions">
-          ${!currentVentEntry.new && currentVentEntry.id ? `<button class="btn-ghost vent-delete-btn" onclick="deleteCurrentVent()">Sil</button>` : ''}
-          <button class="btn-primary" onclick="saveVentManual()">Kaydet & Kapat</button>
+          ${!currentVentEntry.new && currentVentEntry.id ? `<button class="btn btn-ghost vent-delete-btn" onclick="deleteCurrentVent()">Sil</button>` : ''}
+          <button class="btn btn-primary" onclick="saveVentManual()">Kaydet & Kapat</button>
         </div>
       </div>
 
@@ -3036,7 +3036,7 @@ function renderBfiResults(box, status) {
           <div class="bfi-retake-title">Yeniden test yapabilirsin</div>
           <div class="bfi-retake-desc">30 gün geçti. Karakterinin evrimini görmek ister misin?</div>
         </div>
-        <button class="btn-primary bfi-retake-btn" onclick="startBfiTest()">Tekrar yap</button>
+        <button class="btn btn-primary bfi-retake-btn" onclick="startBfiTest()">Tekrar yap</button>
       </div>
     `;
   } else {
@@ -3194,7 +3194,7 @@ function renderBfiQuestion() {
       </div>
 
       <div class="bfi-test-footer">
-        ${bfiCurrentIndex > 0 ? `<button class="btn-ghost bfi-test-prev" onclick="prevBfiQuestion()">← Önceki</button>` : '<div></div>'}
+        ${bfiCurrentIndex > 0 ? `<button class="btn btn-ghost bfi-test-prev" onclick="prevBfiQuestion()">← Önceki</button>` : '<div></div>'}
         <div class="bfi-test-note">Otomatik kayıt · yarıda bırakabilirsin</div>
       </div>
 
