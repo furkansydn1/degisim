@@ -3914,6 +3914,69 @@ input, textarea, select { font-family: inherit; color: inherit; }
   background: rgba(192, 133, 82, 0.06);
   border: 0.5px solid rgba(192, 133, 82, 0.25);
 }
+.vent-editor-hint {
+  position: relative;
+  background: linear-gradient(135deg, rgba(192, 133, 82, 0.08), rgba(192, 133, 82, 0.03));
+  border: 0.5px solid rgba(192, 133, 82, 0.25);
+  border-radius: 10px;
+  padding: 16px 18px 16px 52px;
+  margin-bottom: 20px;
+  max-width: 720px;
+}
+.vent-editor-hint::before {
+  content: '';
+  position: absolute;
+  left: 18px;
+  top: 18px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(192, 133, 82, 0.15);
+  border: 0.5px solid rgba(192, 133, 82, 0.35);
+}
+.vent-editor-hint::after {
+  content: '';
+  position: absolute;
+  left: 27.5px;
+  top: 22px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--copper);
+  box-shadow: 0 6px 0 0 var(--copper), 0 -4px 0 -1px var(--copper);
+}
+.vent-editor-hint-lbl {
+  font-family: var(--fs-sans);
+  font-size: 10px;
+  color: var(--copper);
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+.vent-editor-hint-txt {
+  font-family: var(--fs-serif);
+  font-size: 14px;
+  color: var(--paper-dim);
+  font-style: italic;
+  line-height: 1.6;
+}
+@media (max-width: 480px) {
+  .vent-editor-hint {
+    padding: 14px 16px 14px 46px;
+  }
+  .vent-editor-hint::before {
+    left: 14px;
+    top: 16px;
+    width: 20px;
+    height: 20px;
+  }
+  .vent-editor-hint::after {
+    left: 22.5px;
+    top: 19.5px;
+  }
+  .vent-editor-hint-txt { font-size: 13px; }
+}
 .vent-editor-area {
   width: 100%;
   min-height: 280px;
