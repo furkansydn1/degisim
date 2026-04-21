@@ -6,7 +6,7 @@
 
 console.log('[Kaizen] app.js yükleniyor...');
 
-import { SLOGANS, QUOTES, QUESTIONS, TIME_SLOTS, STOPWORDS, GUIDE_ARTICLES, BFI_QUESTIONS, BFI_DIMENSIONS, BFI_INTERPRETATIONS, generateProfileSummary, VENT_CATEGORIES } from './data.js';
+import { SLOGANS, QUOTES, QUESTIONS, TIME_SLOTS, STOPWORDS, GUIDE_ARTICLES, BFI_QUESTIONS, BFI_DIMENSIONS, BFI_INTERPRETATIONS, generateProfileSummary, VENT_CATEGORIES } from './data.js?v=11';
 
 console.log('[Kaizen] data.js içe aktarıldı');
 
@@ -2640,7 +2640,8 @@ window.renderVentAllList = function() {
   const items = sorted.map(v => {
     const cat = VENT_CATEGORIES.find(c => c.key === v.category);
     if (!cat) return '';
-    const qText = cat.questions[v.questionIndex] || '';
+    const rawQ = cat.questions[v.questionIndex];
+    const qText = (typeof rawQ === 'string' ? rawQ : rawQ?.q) || '';
     const d = v.timestamp?.toDate ? v.timestamp.toDate() : new Date();
     const dateStr = d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
     const excerpt = (v.content || '').slice(0, 220);
@@ -2697,6 +2698,8 @@ function renderVentCategoryQuestions() {
   const questionCards = cat.questions.map((q, i) => {
     const answers = answeredMap[i] || [];
     const hasAnswers = answers.length > 0;
+    // Geriye uyumluluk: eski kategorilerde q string, yenilerde {q, hint} objesi
+    const qText = typeof q === 'string' ? q : q.q;
 
     return `
       <div class="vent-q-card ${hasAnswers ? 'answered' : ''}" onclick="openVentQuestion(${i})">
@@ -2704,7 +2707,7 @@ function renderVentCategoryQuestions() {
           <div class="vent-q-num">${String(i + 1).padStart(2, '0')}</div>
           ${hasAnswers ? `<div class="vent-q-badge">${answers.length} yazı</div>` : ''}
         </div>
-        <div class="vent-q-text">${escapeHtml(q)}</div>
+        <div class="vent-q-text">${escapeHtml(qText)}</div>
         <div class="vent-q-action">${hasAnswers ? 'Yazdıkların →' : 'Dert dök →'}</div>
       </div>
     `;
@@ -2739,7 +2742,10 @@ function renderVentEditor() {
   const box = document.getElementById('ventContent');
   const cat = currentVentCategory;
   const qIndex = currentVentEntry.questionIndex;
-  const qText = cat.questions[qIndex];
+  const rawQ = cat.questions[qIndex];
+  // Geriye uyumluluk: eski kategorilerde string, yenilerde {q, hint} objesi
+  const qText = typeof rawQ === 'string' ? rawQ : rawQ.q;
+  const qHint = typeof rawQ === 'string' ? null : rawQ.hint;
 
   // Bu soruya olan tüm geçmiş cevaplar
   const prevEntries = ventCache.filter(v => v.category === cat.key && v.questionIndex === qIndex);
@@ -2767,6 +2773,14 @@ function renderVentEditor() {
     `;
   }
 
+  const totalQuestions = cat.questions.length;
+  const hintHtml = qHint ? `
+      <div class="vent-editor-hint">
+        <div class="vent-editor-hint-lbl">İpucu</div>
+        <div class="vent-editor-hint-txt">${escapeHtml(qHint)}</div>
+      </div>
+    ` : '';
+
   box.innerHTML = `
     <div class="vent-editor">
       <div class="vent-editor-header c-${cat.color}">
@@ -2774,12 +2788,14 @@ function renderVentEditor() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
           Geri
         </button>
-        <div class="vent-editor-cat">${escapeHtml(cat.name)} · Soru ${qIndex + 1}/10</div>
+        <div class="vent-editor-cat">${escapeHtml(cat.name)} · Soru ${qIndex + 1}/${totalQuestions}</div>
       </div>
 
       <div class="vent-editor-question">
         ${escapeHtml(qText)}
       </div>
+
+      ${hintHtml}
 
       <textarea
         class="vent-editor-area"
