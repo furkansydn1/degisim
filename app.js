@@ -52,6 +52,7 @@ let userData = {
   onboardingDone: false,
   notifEnabled: false,
   keyboardSound: true,
+  keyboardSoundProfile: 'holypanda',
   journalPinHash: null,
   journalIncludeInPatterns: false
 };
@@ -519,17 +520,16 @@ window.showScreen = function(name) {
 };
 
 // =========================================================
-// KLAVYE SES MOTORU — gerçek mekanik klavye ses dosyaları
-// Holy Panda (tactile thock — ASMR softluk) — birincil
-// Cream (linear thock) — yedek
-// Lisans: MIT (tplai/kbsim)
+// KLAVYE SES MOTORU — gerçek mekanik klavye & daktilo sesleri
+// Holy Panda / Cream: tplai/kbsim (MIT)
+// Daktilo: orhun/daktilo (MIT/Apache-2.0)
 // =========================================================
 
-// Birden fazla switch dene — ilk çalışan seti kullan
-const KEY_SOUND_PROFILES = [
-  // Holy Panda — en yumuşak, derin thock sesi (tercih edilen)
-  {
+// Mevcut ses profilleri — kullanıcı Ayarlar'dan seçebilir
+const KEY_SOUND_PROFILES = {
+  holypanda: {
     name: 'holypanda',
+    label: 'Yumuşak Klavye (Holy Panda)',
     down: [
       'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/holypanda/GENERIC_R0.mp3',
       'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/holypanda/GENERIC_R1.mp3',
@@ -539,11 +539,12 @@ const KEY_SOUND_PROFILES = [
     ],
     space: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/holypanda/SPACE.mp3',
     enter: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/holypanda/ENTER.mp3',
-    backspace: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/holypanda/BACKSPACE.mp3'
+    backspace: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/holypanda/BACKSPACE.mp3',
+    masterGain: 2.2
   },
-  // Cream — linear, yumuşak (alternatif)
-  {
+  cream: {
     name: 'cream',
+    label: 'Linear Klavye (Cream)',
     down: [
       'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cream/GENERIC_R0.mp3',
       'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cream/GENERIC_R1.mp3',
@@ -553,9 +554,40 @@ const KEY_SOUND_PROFILES = [
     ],
     space: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cream/SPACE.mp3',
     enter: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cream/ENTER.mp3',
-    backspace: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cream/BACKSPACE.mp3'
+    backspace: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cream/BACKSPACE.mp3',
+    masterGain: 2.2
+  },
+  daktilo: {
+    name: 'daktilo',
+    label: 'Daktilo (Klasik Tak-Tak)',
+    // orhun/daktilo - Rust projesi, sounds/ klasöründe MP3'ler
+    // Her tuş aynı keydown.mp3'ü çalar, pitch varyasyonu ile farklılaşır
+    down: [
+      'https://cdn.jsdelivr.net/gh/orhun/daktilo@main/sounds/keydown.mp3'
+    ],
+    space: 'https://cdn.jsdelivr.net/gh/orhun/daktilo@main/sounds/keydown.mp3',
+    enter: 'https://cdn.jsdelivr.net/gh/orhun/daktilo@main/sounds/ding.mp3', // 🔔 Daktilo zili!
+    backspace: 'https://cdn.jsdelivr.net/gh/orhun/daktilo@main/sounds/keydown.mp3',
+    masterGain: 1.8,
+    pitchRange: 0.15 // daha fazla varyasyon (tek ses dosyası olduğu için)
   }
-];
+};
+
+// Kullanıcı seçimine göre aktif profil
+function getPreferredProfile() {
+  const prefs = ['holypanda', 'cream', 'daktilo'];
+  const userChoice = userData.keyboardSoundProfile || 'holypanda';
+  if (KEY_SOUND_PROFILES[userChoice]) return userChoice;
+  return 'holypanda';
+}
+
+// Yedek sırası (fallback chain): kullanıcı seçimi → holypanda → cream → daktilo
+function getProfileLoadOrder() {
+  const preferred = getPreferredProfile();
+  const all = ['holypanda', 'cream', 'daktilo'];
+  const rest = all.filter(p => p !== preferred);
+  return [preferred, ...rest];
+}
 
 // Önceden yüklenmiş audio buffer'ları
 let keyAudioBuffers = {
@@ -614,6 +646,12 @@ async function tryLoadProfile(profile) {
     keyAudioBuffers.backspace = results[3];
     activeSoundProfile = profile.name;
     keyAudioLoaded = true;
+
+    // Profilin kendi master gain'ini uygula
+    if (keyVolumeGain && profile.masterGain) {
+      keyVolumeGain.gain.value = profile.masterGain;
+    }
+
     console.log(`[Kaizen] Klavye sesleri yüklendi: ${profile.name} (${downs.length} varyant)`);
     return true;
   } catch (e) {
@@ -623,11 +661,23 @@ async function tryLoadProfile(profile) {
 
 async function preloadKeySounds() {
   if (!audioCtx || keyAudioLoaded) return;
-  for (const profile of KEY_SOUND_PROFILES) {
+  const order = getProfileLoadOrder();
+  for (const profileKey of order) {
+    const profile = KEY_SOUND_PROFILES[profileKey];
+    if (!profile) continue;
     const ok = await tryLoadProfile(profile);
     if (ok) return;
   }
   console.warn('[Kaizen] Hiç ses profili yüklenemedi, fallback kullanılacak');
+}
+
+// Kullanıcı profil değiştirirse — cache'i temizle, yeniden yükle
+async function reloadKeySounds() {
+  keyAudioLoaded = false;
+  activeSoundProfile = null;
+  keyAudioBuffers = { down: [], space: null, enter: null, backspace: null };
+  if (!audioCtx) return;
+  await preloadKeySounds();
 }
 
 function unlockAudio() {
@@ -654,8 +704,10 @@ function playBuffer(buffer, volumeMult = 1.0) {
   try {
     const source = audioCtx.createBufferSource();
     source.buffer = buffer;
-    // Pitch'i minik varyasyonla değiştir - monoton olmasın
-    source.playbackRate.value = 0.95 + Math.random() * 0.1;
+    // Aktif profilin pitch range'ine göre varyasyon
+    const activeProfile = activeSoundProfile ? KEY_SOUND_PROFILES[activeSoundProfile] : null;
+    const pitchRange = (activeProfile && activeProfile.pitchRange) || 0.05;
+    source.playbackRate.value = (1 - pitchRange) + Math.random() * (pitchRange * 2);
     const gain = audioCtx.createGain();
     gain.gain.value = volumeMult;
     source.connect(gain);
@@ -2095,7 +2147,29 @@ function renderSettings() {
 
   const ksSw = document.getElementById('keyboardSoundSwitch');
   if (ksSw) ksSw.classList.toggle('on', !!userData.keyboardSound);
+
+  // Ses profili dropdown
+  const profSel = document.getElementById('soundProfileSelect');
+  if (profSel) profSel.value = userData.keyboardSoundProfile || 'holypanda';
+
+  // Stil satırı sadece ses açıkken görünsün
+  const styleRow = document.getElementById('soundStyleRow');
+  if (styleRow) styleRow.style.display = userData.keyboardSound ? 'flex' : 'none';
 }
+
+window.changeSoundProfile = async function(newProfile) {
+  if (!KEY_SOUND_PROFILES[newProfile]) return;
+  userData.keyboardSoundProfile = newProfile;
+  await saveUserData();
+  showToast('Ses yükleniyor...');
+  unlockAudio();
+  await reloadKeySounds();
+  // Test sesi çal
+  setTimeout(() => playKeyClick('letter'), 100);
+  setTimeout(() => playKeyClick('letter'), 250);
+  setTimeout(() => playKeyClick('enter'), 450);
+  showToast(`Ses stili: ${KEY_SOUND_PROFILES[newProfile].label}`);
+};
 
 window.toggleKeyboardSound = async function() {
   userData.keyboardSound = !userData.keyboardSound;
@@ -2103,8 +2177,11 @@ window.toggleKeyboardSound = async function() {
   const sw = document.getElementById('keyboardSoundSwitch');
   if (sw) sw.classList.toggle('on', userData.keyboardSound);
 
+  // Stil satırını göster/gizle
+  const styleRow = document.getElementById('soundStyleRow');
+  if (styleRow) styleRow.style.display = userData.keyboardSound ? 'flex' : 'none';
+
   if (userData.keyboardSound) {
-    // Açıldığında küçük bir test sesi — kullanıcıya nasıl çıkacağını duyurur
     unlockAudio();
     setTimeout(() => playKeyClick('letter'), 100);
     setTimeout(() => playKeyClick('letter'), 220);
