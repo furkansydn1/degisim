@@ -468,13 +468,21 @@
 
     <div class="form-card">
       <h3>Klavye Sesi</h3>
-      <p class="sub">Yazarken mekanik klavye tıkırtısı hissi. Ortamın sessiz olması gerekiyorsa kapatabilirsin.</p>
+      <p class="sub">Yazarken klavye/daktilo tıkırtısı hissi. Ortamın sessiz olması gerekiyorsa kapatabilirsin.</p>
       <div class="settings-toggle">
         <div>
-          <div class="lbl">Mekanik klavye sesi</div>
+          <div class="lbl">Klavye sesi</div>
           <div class="sub">Her yerde yazarken çalar</div>
         </div>
         <div class="switch" id="keyboardSoundSwitch" onclick="toggleKeyboardSound()"></div>
+      </div>
+      <div class="sound-style-row" id="soundStyleRow">
+        <label class="lbl">Ses stili</label>
+        <select id="soundProfileSelect" class="sound-profile-select" onchange="changeSoundProfile(this.value)">
+          <option value="holypanda">Yumuşak Klavye (Holy Panda)</option>
+          <option value="cream">Linear Klavye (Cream)</option>
+          <option value="daktilo">Daktilo (Klasik Tak-Tak)</option>
+        </select>
       </div>
     </div>
 
