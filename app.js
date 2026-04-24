@@ -6,7 +6,7 @@
 
 console.log('[Kaizen] app.js yükleniyor...');
 
-import { SLOGANS, QUOTES, QUESTIONS, TIME_SLOTS, STOPWORDS, GUIDE_ARTICLES, BFI_QUESTIONS, BFI_DIMENSIONS, BFI_INTERPRETATIONS, generateProfileSummary, VENT_CATEGORIES } from './data.js?v=11';
+import { SLOGANS, QUOTES, QUESTIONS, TIME_SLOTS, STOPWORDS, GUIDE_ARTICLES, BFI_QUESTIONS, BFI_DIMENSIONS, BFI_INTERPRETATIONS, generateProfileSummary, VENT_CATEGORIES } from './data.js';
 
 console.log('[Kaizen] data.js içe aktarıldı');
 
@@ -51,6 +51,7 @@ let userData = {
   lastMonthlyRitual: null,
   onboardingDone: false,
   notifEnabled: false,
+  keyboardSound: true,
   journalPinHash: null,
   journalIncludeInPatterns: false
 };
@@ -517,7 +518,154 @@ window.showScreen = function(name) {
   window.scrollTo(0, 0);
 };
 
+// =========================================================
+// KLAVYE SES MOTORU — mekanik tuş hissi
+// =========================================================
+
+let audioCtx = null;
+let audioCtxReady = false;
+let lastKeyTime = 0;
+let keystrokeCounter = 0;
+
+function initAudioContext() {
+  if (audioCtx) return;
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    audioCtx = new AC();
+  } catch (e) {
+    console.warn('AudioContext başlatılamadı:', e);
+  }
+}
+
+// Kullanıcı etkileşiminden sonra AudioContext'i hazır hale getir
+function unlockAudio() {
+  if (audioCtxReady) return;
+  initAudioContext();
+  if (!audioCtx) return;
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume().then(() => {
+      audioCtxReady = true;
+    });
+  } else {
+    audioCtxReady = true;
+  }
+}
+
+// Belgenin her yerinde ilk tıklama/tuş basımında sesi aç
+document.addEventListener('click', unlockAudio, { once: false });
+document.addEventListener('keydown', unlockAudio, { once: false });
+document.addEventListener('touchstart', unlockAudio, { once: false });
+
+function playKeyClick(isSpecialKey = false) {
+  // Ayar kapalıysa çıkma
+  if (!userData.keyboardSound) return;
+  if (!audioCtx || !audioCtxReady) return;
+
+  // Çok hızlı basmaları süz (yapışık tuş sesi olmasın)
+  const now = audioCtx.currentTime;
+  if (now - lastKeyTime < 0.02) return;
+  lastKeyTime = now;
+
+  keystrokeCounter++;
+
+  try {
+    // Her tuşun hafif farklı tonu olsun — monoton olmasın
+    const variant = keystrokeCounter % 5;
+    const baseFreq = isSpecialKey ? 180 : (540 + (variant * 30));
+    const duration = isSpecialKey ? 0.045 : 0.028;
+    const volume = (0.055 + Math.random() * 0.04) * (isSpecialKey ? 1.3 : 1.0);
+
+    // Hafif "click" için kısa gürültü burst'ü
+    const bufferSize = Math.floor(audioCtx.sampleRate * duration);
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+
+    // Decay zarfı ile beyaz gürültü - mekanik tuş hissi
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / bufferSize;
+      const envelope = Math.pow(1 - t, 3.5); // hızlı düşen zarf (tık sesi)
+      data[i] = (Math.random() * 2 - 1) * envelope;
+    }
+
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+
+    // Band-pass filter — klavye tıkırtı rengini ver
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = baseFreq;
+    filter.Q.value = isSpecialKey ? 2.5 : 4.5;
+
+    // Hafif yüksek filtre, gürültüyü temizle
+    const highpass = audioCtx.createBiquadFilter();
+    highpass.type = 'highpass';
+    highpass.frequency.value = isSpecialKey ? 100 : 300;
+
+    // Volume kontrolü
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(volume, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    // Bağla: noise -> highpass -> bandpass -> gain -> çıkış
+    noise.connect(highpass);
+    highpass.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    noise.start(now);
+    noise.stop(now + duration);
+
+    // 2. tık — mekanik klavyeye daha yakın hissettirsin (çift tık effekti)
+    if (!isSpecialKey && Math.random() < 0.35) {
+      setTimeout(() => {
+        try {
+          const noise2 = audioCtx.createBufferSource();
+          noise2.buffer = buffer;
+          const gain2 = audioCtx.createGain();
+          gain2.gain.setValueAtTime(volume * 0.4, audioCtx.currentTime);
+          gain2.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration * 0.6);
+          const filter2 = audioCtx.createBiquadFilter();
+          filter2.type = 'bandpass';
+          filter2.frequency.value = baseFreq * 1.4;
+          filter2.Q.value = 3;
+          noise2.connect(filter2);
+          filter2.connect(gain2);
+          gain2.connect(audioCtx.destination);
+          noise2.start();
+          noise2.stop(audioCtx.currentTime + duration * 0.6);
+        } catch (e) {}
+      }, 8);
+    }
+  } catch (e) {
+    // Sessiz kal — ses hatası uygulamayı bozmamalı
+  }
+}
+
+// Global event listener — tüm input/textarea'lara uygulanır
+function attachKeyboardSounds() {
+  document.addEventListener('keydown', (e) => {
+    // Sadece yazılabilir alanlarda çalsın
+    const target = e.target;
+    if (!target) return;
+    const tag = target.tagName;
+    const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || target.isContentEditable;
+    if (!isTyping) return;
+
+    // Modifier tuşlarını atla (shift, ctrl, alt, meta tek başınaysa)
+    if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab'].includes(e.key)) return;
+
+    // Escape gibi tuşları atla
+    if (e.key === 'Escape') return;
+
+    // Space ve Enter için özel ton
+    const isSpecial = e.key === ' ' || e.key === 'Enter' || e.key === 'Backspace';
+    playKeyClick(isSpecial);
+  });
+}
+
 function initApp() {
+  attachKeyboardSounds();
   document.querySelectorAll('.nav-item').forEach(n => {
     n.addEventListener('click', () => showScreen(n.dataset.screen));
   });
@@ -1847,7 +1995,28 @@ function checkRituals() {
 function renderSettings() {
   const sw = document.getElementById('notifSwitch');
   sw.classList.toggle('on', !!userData.notifEnabled);
+
+  const ksSw = document.getElementById('keyboardSoundSwitch');
+  if (ksSw) ksSw.classList.toggle('on', !!userData.keyboardSound);
 }
+
+window.toggleKeyboardSound = async function() {
+  userData.keyboardSound = !userData.keyboardSound;
+  await saveUserData();
+  const sw = document.getElementById('keyboardSoundSwitch');
+  if (sw) sw.classList.toggle('on', userData.keyboardSound);
+
+  if (userData.keyboardSound) {
+    // Açıldığında küçük bir test sesi — kullanıcıya nasıl çıkacağını duyurur
+    unlockAudio();
+    setTimeout(() => playKeyClick(false), 80);
+    setTimeout(() => playKeyClick(false), 180);
+    setTimeout(() => playKeyClick(true), 320);
+    showToast('Klavye sesi açık. Yazmaya başla, dinle.');
+  } else {
+    showToast('Klavye sesi kapalı.');
+  }
+};
 
 window.toggleNotif = async function() {
   if (!userData.notifEnabled) {
@@ -2496,7 +2665,7 @@ function renderJournalEditor() {
       </div>
       <div class="journal-editor-footer">
         <div class="journal-save-status" id="journalSaveStatus">Otomatik kaydediliyor</div>
-        <button class="btn btn-primary journal-save-btn" onclick="saveJournalManual()">Kaydet & Kapat</button>
+        <button class="btn-primary journal-save-btn" onclick="saveJournalManual()">Kaydet & Kapat</button>
       </div>
     </div>
   `;
@@ -2640,8 +2809,7 @@ window.renderVentAllList = function() {
   const items = sorted.map(v => {
     const cat = VENT_CATEGORIES.find(c => c.key === v.category);
     if (!cat) return '';
-    const rawQ = cat.questions[v.questionIndex];
-    const qText = (typeof rawQ === 'string' ? rawQ : rawQ?.q) || '';
+    const qText = cat.questions[v.questionIndex] || '';
     const d = v.timestamp?.toDate ? v.timestamp.toDate() : new Date();
     const dateStr = d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
     const excerpt = (v.content || '').slice(0, 220);
@@ -2698,8 +2866,6 @@ function renderVentCategoryQuestions() {
   const questionCards = cat.questions.map((q, i) => {
     const answers = answeredMap[i] || [];
     const hasAnswers = answers.length > 0;
-    // Geriye uyumluluk: eski kategorilerde q string, yenilerde {q, hint} objesi
-    const qText = typeof q === 'string' ? q : q.q;
 
     return `
       <div class="vent-q-card ${hasAnswers ? 'answered' : ''}" onclick="openVentQuestion(${i})">
@@ -2707,7 +2873,7 @@ function renderVentCategoryQuestions() {
           <div class="vent-q-num">${String(i + 1).padStart(2, '0')}</div>
           ${hasAnswers ? `<div class="vent-q-badge">${answers.length} yazı</div>` : ''}
         </div>
-        <div class="vent-q-text">${escapeHtml(qText)}</div>
+        <div class="vent-q-text">${escapeHtml(q)}</div>
         <div class="vent-q-action">${hasAnswers ? 'Yazdıkların →' : 'Dert dök →'}</div>
       </div>
     `;
@@ -2742,10 +2908,7 @@ function renderVentEditor() {
   const box = document.getElementById('ventContent');
   const cat = currentVentCategory;
   const qIndex = currentVentEntry.questionIndex;
-  const rawQ = cat.questions[qIndex];
-  // Geriye uyumluluk: eski kategorilerde string, yenilerde {q, hint} objesi
-  const qText = typeof rawQ === 'string' ? rawQ : rawQ.q;
-  const qHint = typeof rawQ === 'string' ? null : rawQ.hint;
+  const qText = cat.questions[qIndex];
 
   // Bu soruya olan tüm geçmiş cevaplar
   const prevEntries = ventCache.filter(v => v.category === cat.key && v.questionIndex === qIndex);
@@ -2773,14 +2936,6 @@ function renderVentEditor() {
     `;
   }
 
-  const totalQuestions = cat.questions.length;
-  const hintHtml = qHint ? `
-      <div class="vent-editor-hint">
-        <div class="vent-editor-hint-lbl">İpucu</div>
-        <div class="vent-editor-hint-txt">${escapeHtml(qHint)}</div>
-      </div>
-    ` : '';
-
   box.innerHTML = `
     <div class="vent-editor">
       <div class="vent-editor-header c-${cat.color}">
@@ -2788,14 +2943,12 @@ function renderVentEditor() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
           Geri
         </button>
-        <div class="vent-editor-cat">${escapeHtml(cat.name)} · Soru ${qIndex + 1}/${totalQuestions}</div>
+        <div class="vent-editor-cat">${escapeHtml(cat.name)} · Soru ${qIndex + 1}/10</div>
       </div>
 
       <div class="vent-editor-question">
         ${escapeHtml(qText)}
       </div>
-
-      ${hintHtml}
 
       <textarea
         class="vent-editor-area"
@@ -2806,8 +2959,8 @@ function renderVentEditor() {
       <div class="vent-editor-footer">
         <div class="vent-editor-status" id="ventEditorStatus">Otomatik kaydediliyor</div>
         <div class="vent-editor-actions">
-          ${!currentVentEntry.new && currentVentEntry.id ? `<button class="btn btn-ghost vent-delete-btn" onclick="deleteCurrentVent()">Sil</button>` : ''}
-          <button class="btn btn-primary" onclick="saveVentManual()">Kaydet & Kapat</button>
+          ${!currentVentEntry.new && currentVentEntry.id ? `<button class="btn-ghost vent-delete-btn" onclick="deleteCurrentVent()">Sil</button>` : ''}
+          <button class="btn-primary" onclick="saveVentManual()">Kaydet & Kapat</button>
         </div>
       </div>
 
@@ -3036,7 +3189,7 @@ function renderBfiResults(box, status) {
           <div class="bfi-retake-title">Yeniden test yapabilirsin</div>
           <div class="bfi-retake-desc">30 gün geçti. Karakterinin evrimini görmek ister misin?</div>
         </div>
-        <button class="btn btn-primary bfi-retake-btn" onclick="startBfiTest()">Tekrar yap</button>
+        <button class="btn-primary bfi-retake-btn" onclick="startBfiTest()">Tekrar yap</button>
       </div>
     `;
   } else {
@@ -3194,7 +3347,7 @@ function renderBfiQuestion() {
       </div>
 
       <div class="bfi-test-footer">
-        ${bfiCurrentIndex > 0 ? `<button class="btn btn-ghost bfi-test-prev" onclick="prevBfiQuestion()">← Önceki</button>` : '<div></div>'}
+        ${bfiCurrentIndex > 0 ? `<button class="btn-ghost bfi-test-prev" onclick="prevBfiQuestion()">← Önceki</button>` : '<div></div>'}
         <div class="bfi-test-note">Otomatik kayıt · yarıda bırakabilirsin</div>
       </div>
 
