@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Caveat:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=11">
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
@@ -467,6 +467,18 @@
     </div>
 
     <div class="form-card">
+      <h3>Klavye Sesi</h3>
+      <p class="sub">Yazarken mekanik klavye tıkırtısı hissi. Ortamın sessiz olması gerekiyorsa kapatabilirsin.</p>
+      <div class="settings-toggle">
+        <div>
+          <div class="lbl">Mekanik klavye sesi</div>
+          <div class="sub">Her yerde yazarken çalar</div>
+        </div>
+        <div class="switch" id="keyboardSoundSwitch" onclick="toggleKeyboardSound()"></div>
+      </div>
+    </div>
+
+    <div class="form-card">
       <h3>Onboarding</h3>
       <p class="sub">Giriş rehberini baştan görmek istersen.</p>
       <button class="btn btn-ghost" style="width: 100%;" onclick="replayOnboard()">Yeniden göster</button>
@@ -606,6 +618,6 @@
 </div>
 
 <!-- SCRIPTS -->
-<script type="module" src="app.js?v=11"></script>
+<script type="module" src="app.js"></script>
 </body>
 </html>
