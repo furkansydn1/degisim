@@ -520,22 +520,42 @@ window.showScreen = function(name) {
 
 // =========================================================
 // KLAVYE SES MOTORU — gerçek mekanik klavye ses dosyaları
+// Holy Panda (tactile thock — ASMR softluk) — birincil
+// Cream (linear thock) — yedek
+// Lisans: MIT (tplai/kbsim)
 // =========================================================
 
-// jsDelivr CDN üzerinden kbsim repo'sundan Cherry MX Blue ses dosyaları
-// Lisans: MIT (tplai/kbsim)
-const KEY_SOUND_URLS = {
-  down: [
-    'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cherrymxblue/GENERIC_R0.mp3',
-    'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cherrymxblue/GENERIC_R1.mp3',
-    'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cherrymxblue/GENERIC_R2.mp3',
-    'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cherrymxblue/GENERIC_R3.mp3',
-    'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cherrymxblue/GENERIC_R4.mp3'
-  ],
-  space: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cherrymxblue/SPACE.mp3',
-  enter: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cherrymxblue/ENTER.mp3',
-  backspace: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cherrymxblue/BACKSPACE.mp3'
-};
+// Birden fazla switch dene — ilk çalışan seti kullan
+const KEY_SOUND_PROFILES = [
+  // Holy Panda — en yumuşak, derin thock sesi (tercih edilen)
+  {
+    name: 'holypanda',
+    down: [
+      'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/holypanda/GENERIC_R0.mp3',
+      'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/holypanda/GENERIC_R1.mp3',
+      'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/holypanda/GENERIC_R2.mp3',
+      'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/holypanda/GENERIC_R3.mp3',
+      'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/holypanda/GENERIC_R4.mp3'
+    ],
+    space: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/holypanda/SPACE.mp3',
+    enter: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/holypanda/ENTER.mp3',
+    backspace: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/holypanda/BACKSPACE.mp3'
+  },
+  // Cream — linear, yumuşak (alternatif)
+  {
+    name: 'cream',
+    down: [
+      'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cream/GENERIC_R0.mp3',
+      'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cream/GENERIC_R1.mp3',
+      'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cream/GENERIC_R2.mp3',
+      'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cream/GENERIC_R3.mp3',
+      'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cream/GENERIC_R4.mp3'
+    ],
+    space: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cream/SPACE.mp3',
+    enter: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cream/ENTER.mp3',
+    backspace: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cream/BACKSPACE.mp3'
+  }
+];
 
 // Önceden yüklenmiş audio buffer'ları
 let keyAudioBuffers = {
@@ -545,6 +565,7 @@ let keyAudioBuffers = {
   backspace: null
 };
 let keyAudioLoaded = false;
+let activeSoundProfile = null;
 let audioCtx = null;
 let audioCtxReady = false;
 let lastKeyTime = 0;
@@ -557,44 +578,58 @@ function initAudioContext() {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
     audioCtx = new AC();
-    // Master volume kontrolü — yüksek ses için
+    // Master volume — Holy Panda sesleri zaten orta seviye, 2.2x gain iyi yüksek ama çığlık değil
     keyVolumeGain = audioCtx.createGain();
-    keyVolumeGain.gain.value = 1.8; // Varsayılan yüksek ses
+    keyVolumeGain.gain.value = 2.2;
     keyVolumeGain.connect(audioCtx.destination);
   } catch (e) {
     console.warn('AudioContext başlatılamadı:', e);
   }
 }
 
-// Ses dosyalarını önceden yükle (buffer olarak)
-async function preloadKeySounds() {
-  if (!audioCtx || keyAudioLoaded) return;
-
+async function tryLoadProfile(profile) {
+  if (!audioCtx) return false;
   try {
-    // Paralel yükleme
-    const downPromises = KEY_SOUND_URLS.down.map(url =>
-      fetch(url).then(r => r.arrayBuffer()).then(ab => audioCtx.decodeAudioData(ab)).catch(() => null)
+    const downPromises = profile.down.map(url =>
+      fetch(url).then(r => { if (!r.ok) throw new Error('fetch fail'); return r.arrayBuffer(); })
+                .then(ab => audioCtx.decodeAudioData(ab))
+                .catch(() => null)
     );
-    const [downs, space, enter, backspace] = await Promise.all([
+    const results = await Promise.all([
       Promise.all(downPromises),
-      fetch(KEY_SOUND_URLS.space).then(r => r.arrayBuffer()).then(ab => audioCtx.decodeAudioData(ab)).catch(() => null),
-      fetch(KEY_SOUND_URLS.enter).then(r => r.arrayBuffer()).then(ab => audioCtx.decodeAudioData(ab)).catch(() => null),
-      fetch(KEY_SOUND_URLS.backspace).then(r => r.arrayBuffer()).then(ab => audioCtx.decodeAudioData(ab)).catch(() => null)
+      fetch(profile.space).then(r => r.ok ? r.arrayBuffer() : null)
+        .then(ab => ab ? audioCtx.decodeAudioData(ab) : null).catch(() => null),
+      fetch(profile.enter).then(r => r.ok ? r.arrayBuffer() : null)
+        .then(ab => ab ? audioCtx.decodeAudioData(ab) : null).catch(() => null),
+      fetch(profile.backspace).then(r => r.ok ? r.arrayBuffer() : null)
+        .then(ab => ab ? audioCtx.decodeAudioData(ab) : null).catch(() => null)
     ]);
 
-    keyAudioBuffers.down = downs.filter(b => b !== null);
-    keyAudioBuffers.space = space;
-    keyAudioBuffers.enter = enter;
-    keyAudioBuffers.backspace = backspace;
-    keyAudioLoaded = keyAudioBuffers.down.length > 0;
+    const downs = results[0].filter(b => b !== null);
+    if (downs.length === 0) return false;
 
-    console.log('[Kaizen] Klavye sesleri yüklendi:', keyAudioBuffers.down.length, 'harf sesi');
+    keyAudioBuffers.down = downs;
+    keyAudioBuffers.space = results[1];
+    keyAudioBuffers.enter = results[2];
+    keyAudioBuffers.backspace = results[3];
+    activeSoundProfile = profile.name;
+    keyAudioLoaded = true;
+    console.log(`[Kaizen] Klavye sesleri yüklendi: ${profile.name} (${downs.length} varyant)`);
+    return true;
   } catch (e) {
-    console.warn('Klavye sesleri yüklenemedi:', e);
+    return false;
   }
 }
 
-// Kullanıcı etkileşiminden sonra AudioContext'i hazır hale getir
+async function preloadKeySounds() {
+  if (!audioCtx || keyAudioLoaded) return;
+  for (const profile of KEY_SOUND_PROFILES) {
+    const ok = await tryLoadProfile(profile);
+    if (ok) return;
+  }
+  console.warn('[Kaizen] Hiç ses profili yüklenemedi, fallback kullanılacak');
+}
+
 function unlockAudio() {
   if (audioCtxReady) return;
   initAudioContext();
@@ -610,7 +645,6 @@ function unlockAudio() {
   }
 }
 
-// Belgenin her yerinde ilk tıklama/tuş basımında sesi aç
 document.addEventListener('click', unlockAudio, { once: false });
 document.addEventListener('keydown', unlockAudio, { once: false });
 document.addEventListener('touchstart', unlockAudio, { once: false });
@@ -620,6 +654,8 @@ function playBuffer(buffer, volumeMult = 1.0) {
   try {
     const source = audioCtx.createBufferSource();
     source.buffer = buffer;
+    // Pitch'i minik varyasyonla değiştir - monoton olmasın
+    source.playbackRate.value = 0.95 + Math.random() * 0.1;
     const gain = audioCtx.createGain();
     gain.gain.value = volumeMult;
     source.connect(gain);
@@ -631,21 +667,18 @@ function playBuffer(buffer, volumeMult = 1.0) {
 }
 
 function playKeyClick(keyType = 'letter') {
-  // Ayar kapalıysa çıkma
   if (!userData.keyboardSound) return;
   if (!audioCtx || !audioCtxReady) return;
 
-  // Çok hızlı basmaları süz
   const now = audioCtx.currentTime;
   if (now - lastKeyTime < 0.025) return;
   lastKeyTime = now;
 
   keystrokeCounter++;
 
-  // Hafif ses seviyesi varyasyonu (%85-105)
-  const variation = 0.85 + Math.random() * 0.20;
+  // Ses seviyesi hafif varyasyon (%85-110)
+  const variation = 0.85 + Math.random() * 0.25;
 
-  // Gerçek ses dosyaları yüklüyse onları çal
   if (keyAudioLoaded) {
     if (keyType === 'space' && keyAudioBuffers.space) {
       playBuffer(keyAudioBuffers.space, variation);
@@ -659,7 +692,6 @@ function playKeyClick(keyType = 'letter') {
       playBuffer(keyAudioBuffers.backspace, variation);
       return;
     }
-    // Normal harf — rastgele varyantlardan birini seç
     const buffers = keyAudioBuffers.down;
     if (buffers.length > 0) {
       const idx = Math.floor(Math.random() * buffers.length);
@@ -668,34 +700,35 @@ function playKeyClick(keyType = 'letter') {
     }
   }
 
-  // Gerçek sesler yüklenememişse fallback: basit sentez
   playFallbackClick(keyType !== 'letter');
 }
 
-// Fallback — CDN erişilemezse sentezlenmiş ses
+// Fallback — thock tarzı sentez (CDN erişilemezse)
 function playFallbackClick(isSpecialKey = false) {
   if (!audioCtx) return;
   const now = audioCtx.currentTime;
 
   try {
-    const volume = isSpecialKey ? 0.65 : 0.5;
-    const duration = isSpecialKey ? 0.06 : 0.04;
+    const volume = isSpecialKey ? 0.7 : 0.55;
+    const duration = isSpecialKey ? 0.08 : 0.055;
 
     const bufferSize = Math.floor(audioCtx.sampleRate * duration);
     const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
     const data = buffer.getChannelData(0);
+    // Daha yumuşak decay - thock hissi
     for (let i = 0; i < bufferSize; i++) {
       const t = i / bufferSize;
-      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 3);
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 2.5);
     }
 
     const src = audioCtx.createBufferSource();
     src.buffer = buffer;
 
+    // Düşük bantta bırak - thock için
     const filter = audioCtx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.value = isSpecialKey ? 800 : 2000;
-    filter.Q.value = 2;
+    filter.type = 'lowpass';
+    filter.frequency.value = isSpecialKey ? 350 : 550;
+    filter.Q.value = 1.8;
 
     const gain = audioCtx.createGain();
     gain.gain.setValueAtTime(volume, now);
@@ -709,7 +742,6 @@ function playFallbackClick(isSpecialKey = false) {
   } catch (e) {}
 }
 
-// Global event listener — tüm input/textarea'lara uygulanır
 function attachKeyboardSounds() {
   document.addEventListener('keydown', (e) => {
     const target = e.target;
