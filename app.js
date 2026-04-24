@@ -564,81 +564,124 @@ function playKeyClick(isSpecialKey = false) {
 
   // Çok hızlı basmaları süz (yapışık tuş sesi olmasın)
   const now = audioCtx.currentTime;
-  if (now - lastKeyTime < 0.02) return;
+  if (now - lastKeyTime < 0.025) return;
   lastKeyTime = now;
 
   keystrokeCounter++;
 
   try {
-    // Her tuşun hafif farklı tonu olsun — monoton olmasın
-    const variant = keystrokeCounter % 5;
-    const baseFreq = isSpecialKey ? 180 : (540 + (variant * 30));
-    const duration = isSpecialKey ? 0.045 : 0.028;
-    const volume = (0.055 + Math.random() * 0.04) * (isSpecialKey ? 1.3 : 1.0);
+    const variant = keystrokeCounter % 6;
+    const baseVol = isSpecialKey ? 0.55 : 0.42;
+    const volume = baseVol * (0.85 + Math.random() * 0.25);
 
-    // Hafif "click" için kısa gürültü burst'ü
-    const bufferSize = Math.floor(audioCtx.sampleRate * duration);
-    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-    const data = buffer.getChannelData(0);
-
-    // Decay zarfı ile beyaz gürültü - mekanik tuş hissi
-    for (let i = 0; i < bufferSize; i++) {
-      const t = i / bufferSize;
-      const envelope = Math.pow(1 - t, 3.5); // hızlı düşen zarf (tık sesi)
-      data[i] = (Math.random() * 2 - 1) * envelope;
+    // ====== 1. KATMAN: CLICK TRANSIENT (mekanik tuşun "click" anı) ======
+    // Cherry MX Blue'nun meşhur clicker sesi
+    const clickDuration = 0.008;
+    const clickBufferSize = Math.floor(audioCtx.sampleRate * clickDuration);
+    const clickBuffer = audioCtx.createBuffer(1, clickBufferSize, audioCtx.sampleRate);
+    const clickData = clickBuffer.getChannelData(0);
+    for (let i = 0; i < clickBufferSize; i++) {
+      const t = i / clickBufferSize;
+      // Çok hızlı decay - keskin "click"
+      const env = Math.pow(1 - t, 2);
+      clickData[i] = (Math.random() * 2 - 1) * env;
     }
 
-    const noise = audioCtx.createBufferSource();
-    noise.buffer = buffer;
+    const clickSrc = audioCtx.createBufferSource();
+    clickSrc.buffer = clickBuffer;
 
-    // Band-pass filter — klavye tıkırtı rengini ver
-    const filter = audioCtx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.value = baseFreq;
-    filter.Q.value = isSpecialKey ? 2.5 : 4.5;
+    const clickFilter = audioCtx.createBiquadFilter();
+    clickFilter.type = 'bandpass';
+    // Farklı tuşlara farklı klik tonu
+    clickFilter.frequency.value = isSpecialKey ? 1200 : (2400 + variant * 200);
+    clickFilter.Q.value = 1.2;
 
-    // Hafif yüksek filtre, gürültüyü temizle
-    const highpass = audioCtx.createBiquadFilter();
-    highpass.type = 'highpass';
-    highpass.frequency.value = isSpecialKey ? 100 : 300;
+    const clickHP = audioCtx.createBiquadFilter();
+    clickHP.type = 'highpass';
+    clickHP.frequency.value = 800;
 
-    // Volume kontrolü
-    const gain = audioCtx.createGain();
-    gain.gain.setValueAtTime(volume, now);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    const clickGain = audioCtx.createGain();
+    clickGain.gain.setValueAtTime(volume * 0.8, now);
+    clickGain.gain.exponentialRampToValueAtTime(0.0001, now + clickDuration);
 
-    // Bağla: noise -> highpass -> bandpass -> gain -> çıkış
-    noise.connect(highpass);
-    highpass.connect(filter);
-    filter.connect(gain);
-    gain.connect(audioCtx.destination);
+    clickSrc.connect(clickHP);
+    clickHP.connect(clickFilter);
+    clickFilter.connect(clickGain);
+    clickGain.connect(audioCtx.destination);
+    clickSrc.start(now);
+    clickSrc.stop(now + clickDuration);
 
-    noise.start(now);
-    noise.stop(now + duration);
+    // ====== 2. KATMAN: BODY THUMP (tuşun gövdeye çarpma sesi) ======
+    // Tuşun mekanik taban plastiğe çarpma sesi — tok, kısa
+    const thumpDelay = 0.002; // 2ms sonra, hafif gecikme doğal hissettirir
+    const thumpDuration = isSpecialKey ? 0.05 : 0.035;
+    const thumpBufferSize = Math.floor(audioCtx.sampleRate * thumpDuration);
+    const thumpBuffer = audioCtx.createBuffer(1, thumpBufferSize, audioCtx.sampleRate);
+    const thumpData = thumpBuffer.getChannelData(0);
+    for (let i = 0; i < thumpBufferSize; i++) {
+      const t = i / thumpBufferSize;
+      // Orta hızlı decay — vuruş hissi
+      const env = Math.pow(1 - t, 3);
+      thumpData[i] = (Math.random() * 2 - 1) * env;
+    }
 
-    // 2. tık — mekanik klavyeye daha yakın hissettirsin (çift tık effekti)
-    if (!isSpecialKey && Math.random() < 0.35) {
-      setTimeout(() => {
-        try {
-          const noise2 = audioCtx.createBufferSource();
-          noise2.buffer = buffer;
-          const gain2 = audioCtx.createGain();
-          gain2.gain.setValueAtTime(volume * 0.4, audioCtx.currentTime);
-          gain2.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration * 0.6);
-          const filter2 = audioCtx.createBiquadFilter();
-          filter2.type = 'bandpass';
-          filter2.frequency.value = baseFreq * 1.4;
-          filter2.Q.value = 3;
-          noise2.connect(filter2);
-          filter2.connect(gain2);
-          gain2.connect(audioCtx.destination);
-          noise2.start();
-          noise2.stop(audioCtx.currentTime + duration * 0.6);
-        } catch (e) {}
-      }, 8);
+    const thumpSrc = audioCtx.createBufferSource();
+    thumpSrc.buffer = thumpBuffer;
+
+    const thumpFilter = audioCtx.createBiquadFilter();
+    thumpFilter.type = 'lowpass';
+    // Special tuşlar daha bas, normal tuşlar orta tonda
+    thumpFilter.frequency.value = isSpecialKey ? 450 : (700 + variant * 40);
+    thumpFilter.Q.value = 1.5;
+
+    const thumpHP = audioCtx.createBiquadFilter();
+    thumpHP.type = 'highpass';
+    thumpHP.frequency.value = isSpecialKey ? 60 : 120;
+
+    const thumpGain = audioCtx.createGain();
+    thumpGain.gain.setValueAtTime(volume * 1.1, now + thumpDelay);
+    thumpGain.gain.exponentialRampToValueAtTime(0.0001, now + thumpDelay + thumpDuration);
+
+    thumpSrc.connect(thumpHP);
+    thumpHP.connect(thumpFilter);
+    thumpFilter.connect(thumpGain);
+    thumpGain.connect(audioCtx.destination);
+    thumpSrc.start(now + thumpDelay);
+    thumpSrc.stop(now + thumpDelay + thumpDuration);
+
+    // ====== 3. KATMAN: RELEASE CLICK (tuşun bırakılma sesi) ======
+    // Tuş serbest kaldığında ikinci bir click — Cherry MX Blue bunu yapar
+    if (!isSpecialKey && Math.random() < 0.55) {
+      const releaseDelay = 0.06 + Math.random() * 0.02; // 60-80ms sonra (parmağın kalkması)
+      const releaseDuration = 0.005;
+      const releaseBufferSize = Math.floor(audioCtx.sampleRate * releaseDuration);
+      const releaseBuffer = audioCtx.createBuffer(1, releaseBufferSize, audioCtx.sampleRate);
+      const releaseData = releaseBuffer.getChannelData(0);
+      for (let i = 0; i < releaseBufferSize; i++) {
+        const t = i / releaseBufferSize;
+        releaseData[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 1.5);
+      }
+
+      const releaseSrc = audioCtx.createBufferSource();
+      releaseSrc.buffer = releaseBuffer;
+
+      const releaseFilter = audioCtx.createBiquadFilter();
+      releaseFilter.type = 'bandpass';
+      releaseFilter.frequency.value = 1800 + variant * 150;
+      releaseFilter.Q.value = 1.8;
+
+      const releaseGain = audioCtx.createGain();
+      releaseGain.gain.setValueAtTime(volume * 0.35, now + releaseDelay);
+      releaseGain.gain.exponentialRampToValueAtTime(0.0001, now + releaseDelay + releaseDuration);
+
+      releaseSrc.connect(releaseFilter);
+      releaseFilter.connect(releaseGain);
+      releaseGain.connect(audioCtx.destination);
+      releaseSrc.start(now + releaseDelay);
+      releaseSrc.stop(now + releaseDelay + releaseDuration);
     }
   } catch (e) {
-    // Sessiz kal — ses hatası uygulamayı bozmamalı
+    // Sessiz kal
   }
 }
 
