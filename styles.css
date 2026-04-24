@@ -3914,69 +3914,6 @@ input, textarea, select { font-family: inherit; color: inherit; }
   background: rgba(192, 133, 82, 0.06);
   border: 0.5px solid rgba(192, 133, 82, 0.25);
 }
-.vent-editor-hint {
-  position: relative;
-  background: linear-gradient(135deg, rgba(192, 133, 82, 0.08), rgba(192, 133, 82, 0.03));
-  border: 0.5px solid rgba(192, 133, 82, 0.25);
-  border-radius: 10px;
-  padding: 16px 18px 16px 52px;
-  margin-bottom: 20px;
-  max-width: 720px;
-}
-.vent-editor-hint::before {
-  content: '';
-  position: absolute;
-  left: 18px;
-  top: 18px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: rgba(192, 133, 82, 0.15);
-  border: 0.5px solid rgba(192, 133, 82, 0.35);
-}
-.vent-editor-hint::after {
-  content: '';
-  position: absolute;
-  left: 27.5px;
-  top: 22px;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: var(--copper);
-  box-shadow: 0 6px 0 0 var(--copper), 0 -4px 0 -1px var(--copper);
-}
-.vent-editor-hint-lbl {
-  font-family: var(--fs-sans);
-  font-size: 10px;
-  color: var(--copper);
-  letter-spacing: 2.5px;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-  font-weight: 500;
-}
-.vent-editor-hint-txt {
-  font-family: var(--fs-serif);
-  font-size: 14px;
-  color: var(--paper-dim);
-  font-style: italic;
-  line-height: 1.6;
-}
-@media (max-width: 480px) {
-  .vent-editor-hint {
-    padding: 14px 16px 14px 46px;
-  }
-  .vent-editor-hint::before {
-    left: 14px;
-    top: 16px;
-    width: 20px;
-    height: 20px;
-  }
-  .vent-editor-hint::after {
-    left: 22.5px;
-    top: 19.5px;
-  }
-  .vent-editor-hint-txt { font-size: 13px; }
-}
 .vent-editor-area {
   width: 100%;
   min-height: 280px;
@@ -4260,4 +4197,46 @@ input, textarea, select { font-family: inherit; color: inherit; }
   font-size: 13px;
   line-height: 1.55;
   color: var(--paper-dim);
+}
+
+/* === Ses stili dropdown === */
+.sound-style-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 0.5px solid var(--paper-line);
+  gap: 12px;
+}
+.sound-style-row .lbl {
+  font-size: 12px;
+  color: var(--paper-dim);
+  letter-spacing: 0.3px;
+}
+.sound-profile-select {
+  background: rgba(232, 227, 216, 0.04);
+  border: 0.5px solid var(--paper-line);
+  color: var(--paper);
+  font-family: var(--fs-serif);
+  font-style: italic;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  min-width: 210px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23c08552' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+}
+.sound-profile-select:focus {
+  outline: none;
+  border-color: var(--copper);
+}
+.sound-profile-select option {
+  background: var(--bg);
+  color: var(--paper);
 }
