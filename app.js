@@ -519,13 +519,37 @@ window.showScreen = function(name) {
 };
 
 // =========================================================
-// KLAVYE SES MOTORU — mekanik tuş hissi
+// KLAVYE SES MOTORU — gerçek mekanik klavye ses dosyaları
 // =========================================================
 
+// jsDelivr CDN üzerinden kbsim repo'sundan Cherry MX Blue ses dosyaları
+// Lisans: MIT (tplai/kbsim)
+const KEY_SOUND_URLS = {
+  down: [
+    'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cherrymxblue/GENERIC_R0.mp3',
+    'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cherrymxblue/GENERIC_R1.mp3',
+    'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cherrymxblue/GENERIC_R2.mp3',
+    'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cherrymxblue/GENERIC_R3.mp3',
+    'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cherrymxblue/GENERIC_R4.mp3'
+  ],
+  space: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cherrymxblue/SPACE.mp3',
+  enter: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cherrymxblue/ENTER.mp3',
+  backspace: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cherrymxblue/BACKSPACE.mp3'
+};
+
+// Önceden yüklenmiş audio buffer'ları
+let keyAudioBuffers = {
+  down: [],
+  space: null,
+  enter: null,
+  backspace: null
+};
+let keyAudioLoaded = false;
 let audioCtx = null;
 let audioCtxReady = false;
 let lastKeyTime = 0;
 let keystrokeCounter = 0;
+let keyVolumeGain = null;
 
 function initAudioContext() {
   if (audioCtx) return;
@@ -533,8 +557,40 @@ function initAudioContext() {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
     audioCtx = new AC();
+    // Master volume kontrolü — yüksek ses için
+    keyVolumeGain = audioCtx.createGain();
+    keyVolumeGain.gain.value = 1.8; // Varsayılan yüksek ses
+    keyVolumeGain.connect(audioCtx.destination);
   } catch (e) {
     console.warn('AudioContext başlatılamadı:', e);
+  }
+}
+
+// Ses dosyalarını önceden yükle (buffer olarak)
+async function preloadKeySounds() {
+  if (!audioCtx || keyAudioLoaded) return;
+
+  try {
+    // Paralel yükleme
+    const downPromises = KEY_SOUND_URLS.down.map(url =>
+      fetch(url).then(r => r.arrayBuffer()).then(ab => audioCtx.decodeAudioData(ab)).catch(() => null)
+    );
+    const [downs, space, enter, backspace] = await Promise.all([
+      Promise.all(downPromises),
+      fetch(KEY_SOUND_URLS.space).then(r => r.arrayBuffer()).then(ab => audioCtx.decodeAudioData(ab)).catch(() => null),
+      fetch(KEY_SOUND_URLS.enter).then(r => r.arrayBuffer()).then(ab => audioCtx.decodeAudioData(ab)).catch(() => null),
+      fetch(KEY_SOUND_URLS.backspace).then(r => r.arrayBuffer()).then(ab => audioCtx.decodeAudioData(ab)).catch(() => null)
+    ]);
+
+    keyAudioBuffers.down = downs.filter(b => b !== null);
+    keyAudioBuffers.space = space;
+    keyAudioBuffers.enter = enter;
+    keyAudioBuffers.backspace = backspace;
+    keyAudioLoaded = keyAudioBuffers.down.length > 0;
+
+    console.log('[Kaizen] Klavye sesleri yüklendi:', keyAudioBuffers.down.length, 'harf sesi');
+  } catch (e) {
+    console.warn('Klavye sesleri yüklenemedi:', e);
   }
 }
 
@@ -546,9 +602,11 @@ function unlockAudio() {
   if (audioCtx.state === 'suspended') {
     audioCtx.resume().then(() => {
       audioCtxReady = true;
+      preloadKeySounds();
     });
   } else {
     audioCtxReady = true;
+    preloadKeySounds();
   }
 }
 
@@ -557,153 +615,117 @@ document.addEventListener('click', unlockAudio, { once: false });
 document.addEventListener('keydown', unlockAudio, { once: false });
 document.addEventListener('touchstart', unlockAudio, { once: false });
 
-function playKeyClick(isSpecialKey = false) {
+function playBuffer(buffer, volumeMult = 1.0) {
+  if (!audioCtx || !buffer) return;
+  try {
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    const gain = audioCtx.createGain();
+    gain.gain.value = volumeMult;
+    source.connect(gain);
+    gain.connect(keyVolumeGain || audioCtx.destination);
+    source.start(0);
+  } catch (e) {
+    // Sessiz kal
+  }
+}
+
+function playKeyClick(keyType = 'letter') {
   // Ayar kapalıysa çıkma
   if (!userData.keyboardSound) return;
   if (!audioCtx || !audioCtxReady) return;
 
-  // Çok hızlı basmaları süz (yapışık tuş sesi olmasın)
+  // Çok hızlı basmaları süz
   const now = audioCtx.currentTime;
   if (now - lastKeyTime < 0.025) return;
   lastKeyTime = now;
 
   keystrokeCounter++;
 
-  try {
-    const variant = keystrokeCounter % 6;
-    const baseVol = isSpecialKey ? 0.55 : 0.42;
-    const volume = baseVol * (0.85 + Math.random() * 0.25);
+  // Hafif ses seviyesi varyasyonu (%85-105)
+  const variation = 0.85 + Math.random() * 0.20;
 
-    // ====== 1. KATMAN: CLICK TRANSIENT (mekanik tuşun "click" anı) ======
-    // Cherry MX Blue'nun meşhur clicker sesi
-    const clickDuration = 0.008;
-    const clickBufferSize = Math.floor(audioCtx.sampleRate * clickDuration);
-    const clickBuffer = audioCtx.createBuffer(1, clickBufferSize, audioCtx.sampleRate);
-    const clickData = clickBuffer.getChannelData(0);
-    for (let i = 0; i < clickBufferSize; i++) {
-      const t = i / clickBufferSize;
-      // Çok hızlı decay - keskin "click"
-      const env = Math.pow(1 - t, 2);
-      clickData[i] = (Math.random() * 2 - 1) * env;
+  // Gerçek ses dosyaları yüklüyse onları çal
+  if (keyAudioLoaded) {
+    if (keyType === 'space' && keyAudioBuffers.space) {
+      playBuffer(keyAudioBuffers.space, variation);
+      return;
     }
-
-    const clickSrc = audioCtx.createBufferSource();
-    clickSrc.buffer = clickBuffer;
-
-    const clickFilter = audioCtx.createBiquadFilter();
-    clickFilter.type = 'bandpass';
-    // Farklı tuşlara farklı klik tonu
-    clickFilter.frequency.value = isSpecialKey ? 1200 : (2400 + variant * 200);
-    clickFilter.Q.value = 1.2;
-
-    const clickHP = audioCtx.createBiquadFilter();
-    clickHP.type = 'highpass';
-    clickHP.frequency.value = 800;
-
-    const clickGain = audioCtx.createGain();
-    clickGain.gain.setValueAtTime(volume * 0.8, now);
-    clickGain.gain.exponentialRampToValueAtTime(0.0001, now + clickDuration);
-
-    clickSrc.connect(clickHP);
-    clickHP.connect(clickFilter);
-    clickFilter.connect(clickGain);
-    clickGain.connect(audioCtx.destination);
-    clickSrc.start(now);
-    clickSrc.stop(now + clickDuration);
-
-    // ====== 2. KATMAN: BODY THUMP (tuşun gövdeye çarpma sesi) ======
-    // Tuşun mekanik taban plastiğe çarpma sesi — tok, kısa
-    const thumpDelay = 0.002; // 2ms sonra, hafif gecikme doğal hissettirir
-    const thumpDuration = isSpecialKey ? 0.05 : 0.035;
-    const thumpBufferSize = Math.floor(audioCtx.sampleRate * thumpDuration);
-    const thumpBuffer = audioCtx.createBuffer(1, thumpBufferSize, audioCtx.sampleRate);
-    const thumpData = thumpBuffer.getChannelData(0);
-    for (let i = 0; i < thumpBufferSize; i++) {
-      const t = i / thumpBufferSize;
-      // Orta hızlı decay — vuruş hissi
-      const env = Math.pow(1 - t, 3);
-      thumpData[i] = (Math.random() * 2 - 1) * env;
+    if (keyType === 'enter' && keyAudioBuffers.enter) {
+      playBuffer(keyAudioBuffers.enter, variation);
+      return;
     }
-
-    const thumpSrc = audioCtx.createBufferSource();
-    thumpSrc.buffer = thumpBuffer;
-
-    const thumpFilter = audioCtx.createBiquadFilter();
-    thumpFilter.type = 'lowpass';
-    // Special tuşlar daha bas, normal tuşlar orta tonda
-    thumpFilter.frequency.value = isSpecialKey ? 450 : (700 + variant * 40);
-    thumpFilter.Q.value = 1.5;
-
-    const thumpHP = audioCtx.createBiquadFilter();
-    thumpHP.type = 'highpass';
-    thumpHP.frequency.value = isSpecialKey ? 60 : 120;
-
-    const thumpGain = audioCtx.createGain();
-    thumpGain.gain.setValueAtTime(volume * 1.1, now + thumpDelay);
-    thumpGain.gain.exponentialRampToValueAtTime(0.0001, now + thumpDelay + thumpDuration);
-
-    thumpSrc.connect(thumpHP);
-    thumpHP.connect(thumpFilter);
-    thumpFilter.connect(thumpGain);
-    thumpGain.connect(audioCtx.destination);
-    thumpSrc.start(now + thumpDelay);
-    thumpSrc.stop(now + thumpDelay + thumpDuration);
-
-    // ====== 3. KATMAN: RELEASE CLICK (tuşun bırakılma sesi) ======
-    // Tuş serbest kaldığında ikinci bir click — Cherry MX Blue bunu yapar
-    if (!isSpecialKey && Math.random() < 0.55) {
-      const releaseDelay = 0.06 + Math.random() * 0.02; // 60-80ms sonra (parmağın kalkması)
-      const releaseDuration = 0.005;
-      const releaseBufferSize = Math.floor(audioCtx.sampleRate * releaseDuration);
-      const releaseBuffer = audioCtx.createBuffer(1, releaseBufferSize, audioCtx.sampleRate);
-      const releaseData = releaseBuffer.getChannelData(0);
-      for (let i = 0; i < releaseBufferSize; i++) {
-        const t = i / releaseBufferSize;
-        releaseData[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 1.5);
-      }
-
-      const releaseSrc = audioCtx.createBufferSource();
-      releaseSrc.buffer = releaseBuffer;
-
-      const releaseFilter = audioCtx.createBiquadFilter();
-      releaseFilter.type = 'bandpass';
-      releaseFilter.frequency.value = 1800 + variant * 150;
-      releaseFilter.Q.value = 1.8;
-
-      const releaseGain = audioCtx.createGain();
-      releaseGain.gain.setValueAtTime(volume * 0.35, now + releaseDelay);
-      releaseGain.gain.exponentialRampToValueAtTime(0.0001, now + releaseDelay + releaseDuration);
-
-      releaseSrc.connect(releaseFilter);
-      releaseFilter.connect(releaseGain);
-      releaseGain.connect(audioCtx.destination);
-      releaseSrc.start(now + releaseDelay);
-      releaseSrc.stop(now + releaseDelay + releaseDuration);
+    if (keyType === 'backspace' && keyAudioBuffers.backspace) {
+      playBuffer(keyAudioBuffers.backspace, variation);
+      return;
     }
-  } catch (e) {
-    // Sessiz kal
+    // Normal harf — rastgele varyantlardan birini seç
+    const buffers = keyAudioBuffers.down;
+    if (buffers.length > 0) {
+      const idx = Math.floor(Math.random() * buffers.length);
+      playBuffer(buffers[idx], variation);
+      return;
+    }
   }
+
+  // Gerçek sesler yüklenememişse fallback: basit sentez
+  playFallbackClick(keyType !== 'letter');
+}
+
+// Fallback — CDN erişilemezse sentezlenmiş ses
+function playFallbackClick(isSpecialKey = false) {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+
+  try {
+    const volume = isSpecialKey ? 0.65 : 0.5;
+    const duration = isSpecialKey ? 0.06 : 0.04;
+
+    const bufferSize = Math.floor(audioCtx.sampleRate * duration);
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / bufferSize;
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 3);
+    }
+
+    const src = audioCtx.createBufferSource();
+    src.buffer = buffer;
+
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = isSpecialKey ? 800 : 2000;
+    filter.Q.value = 2;
+
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(volume, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    src.connect(filter);
+    filter.connect(gain);
+    gain.connect(keyVolumeGain || audioCtx.destination);
+    src.start(now);
+    src.stop(now + duration);
+  } catch (e) {}
 }
 
 // Global event listener — tüm input/textarea'lara uygulanır
 function attachKeyboardSounds() {
   document.addEventListener('keydown', (e) => {
-    // Sadece yazılabilir alanlarda çalsın
     const target = e.target;
     if (!target) return;
     const tag = target.tagName;
     const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || target.isContentEditable;
     if (!isTyping) return;
 
-    // Modifier tuşlarını atla (shift, ctrl, alt, meta tek başınaysa)
-    if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab'].includes(e.key)) return;
+    if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab', 'Escape'].includes(e.key)) return;
 
-    // Escape gibi tuşları atla
-    if (e.key === 'Escape') return;
+    let keyType = 'letter';
+    if (e.key === ' ') keyType = 'space';
+    else if (e.key === 'Enter') keyType = 'enter';
+    else if (e.key === 'Backspace') keyType = 'backspace';
 
-    // Space ve Enter için özel ton
-    const isSpecial = e.key === ' ' || e.key === 'Enter' || e.key === 'Backspace';
-    playKeyClick(isSpecial);
+    playKeyClick(keyType);
   });
 }
 
@@ -2052,9 +2074,9 @@ window.toggleKeyboardSound = async function() {
   if (userData.keyboardSound) {
     // Açıldığında küçük bir test sesi — kullanıcıya nasıl çıkacağını duyurur
     unlockAudio();
-    setTimeout(() => playKeyClick(false), 80);
-    setTimeout(() => playKeyClick(false), 180);
-    setTimeout(() => playKeyClick(true), 320);
+    setTimeout(() => playKeyClick('letter'), 100);
+    setTimeout(() => playKeyClick('letter'), 220);
+    setTimeout(() => playKeyClick('space'), 380);
     showToast('Klavye sesi açık. Yazmaya başla, dinle.');
   } else {
     showToast('Klavye sesi kapalı.');
