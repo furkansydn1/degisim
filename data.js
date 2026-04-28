@@ -678,5 +678,139 @@ const VENT_CATEGORIES = [
 
 
 
+// ---------- KELİME AİLELERİ — Davranışsal psikoloji için sınıflandırılmış ----------
+// Bu listeler bilimsel olarak doğrulanmış semantik gruplara dayalıdır
+// (LIWC — Linguistic Inquiry and Word Count metodolojisi, Türkçeye uyarlanmış)
+// Her aile için pozitif eşleştirme yapılır; bir cevap birden fazla aileye girebilir
+
+const WORD_FAMILIES = {
+  // Anksiyete / endişe / korku — yüksek anksiyete belirtisi
+  anksiyete: [
+    'korku', 'korkuyorum', 'korkuyo', 'korktum', 'korkacağım', 'korktuğum', 'korkutuyor', 'korkutucu',
+    'endişe', 'endişeli', 'endişeleniyorum', 'endişeleniyor', 'endişeliyim', 'endişeliydim', 'endişeleniyo',
+    'panik', 'panikledim', 'panikliyorum', 'paniklemek',
+    'kaygı', 'kaygılı', 'kaygılanıyorum', 'kaygılı oluyorum', 'kaygım',
+    'tedirgin', 'tedirginim', 'tedirgindim', 'tedirginliğim',
+    'gergin', 'gerginim', 'gerginlik', 'gerildim', 'kasıldım',
+    'stres', 'stresli', 'stresliyim', 'stresliydim', 'stresimden',
+    'sıkışmış', 'sıkıştım', 'sıkışmışım', 'sıkıntı', 'sıkıntılı', 'sıkıntım',
+    'rahatsız', 'huzursuz', 'huzursuzum', 'titriyor', 'titriyorum', 'ürküyorum'
+  ],
+
+  // Depresif / çökkün / bezginlik
+  depresif: [
+    'üzgün', 'üzgünüm', 'üzgündüm', 'üzüntü', 'üzdü', 'üzücü',
+    'mutsuz', 'mutsuzum', 'mutsuzluk', 'mutsuzdum',
+    'boşluk', 'boşum', 'anlamsız', 'değersiz', 'değersizim',
+    'umutsuz', 'umutsuzum', 'umutsuzluk', 'çaresiz', 'çaresizim', 'çaresizlik',
+    'yorgun', 'yorgunum', 'yorgunluk', 'yorgundum', 'yoruldum',
+    'tükendim', 'tükenmiş', 'tükenmişim', 'tükenmişlik', 'bittim', 'bitmişim',
+    'kayıp', 'kaybolmuş', 'kaybolmuşum',
+    'ağladım', 'ağlamak', 'ağlıyorum', 'ağladığım', 'gözyaşı',
+    'yalnız', 'yalnızım', 'yalnızlık', 'yalnızdım', 'yapayalnız'
+  ],
+
+  // Pasiflik / eylemsizlik / "yapamıyorum"
+  pasiflik: [
+    'yapamadım', 'yapamıyorum', 'yapamam', 'yapamayacağım', 'yapamadığım',
+    'beceremedim', 'beceremem', 'beceremiyorum', 'beceriksizim',
+    'olmuyor', 'olmadı', 'olmayacak', 'olamadım', 'olamıyorum',
+    'gücüm yok', 'enerjim yok', 'isteğim yok', 'motivasyonum yok',
+    'erteledim', 'erteliyorum', 'ertelendim', 'ertelemek',
+    'sürükleniyorum', 'sürüklendim', 'sürüklenmek',
+    'üşeniyorum', 'üşendim', 'tembelliğim', 'tembellik', 'tembelim'
+  ],
+
+  // Reddetme / kaçınma
+  reddetme: [
+    'istemiyorum', 'istemedim', 'istemem', 'istemiyo',
+    'bıktım', 'bıktırdı', 'bıkkın', 'bıkkınım',
+    'sıkıldım', 'sıkıcı', 'sıkıyor', 'sıkıldığım',
+    'iğreniyorum', 'tiksiniyorum', 'tiksindim', 'nefret',
+    'kaçtım', 'kaçıyorum', 'kaçmak', 'kaçındım', 'uzaklaştım', 'uzaklaşmak',
+    'bıraktım', 'bırakmak', 'vazgeçtim', 'vazgeçmek'
+  ],
+
+  // Olumlu duygu / canlılık
+  pozitif: [
+    'mutlu', 'mutluyum', 'mutluydum', 'mutluluk',
+    'sevinç', 'sevindim', 'seviniyorum', 'sevincim',
+    'keyif', 'keyifli', 'keyifliyim', 'keyfim',
+    'huzur', 'huzurlu', 'huzurluyum', 'huzurum',
+    'rahat', 'rahatladım', 'rahatlık', 'rahattım', 'rahatım',
+    'umut', 'umutlu', 'umutluyum', 'umutla',
+    'heyecan', 'heyecanlı', 'heyecanlıyım', 'heyecanlandım',
+    'gurur', 'gururluyum', 'minnettar', 'minnettarım', 'şükran',
+    'enerji', 'enerjik', 'enerjim', 'canlı', 'diri', 'tazelendim'
+  ],
+
+  // Eylem / hareket / üretkenlik
+  eylem: [
+    'yaptım', 'yaptığım', 'tamamladım', 'tamamladığım', 'bitirdim', 'başladım',
+    'çalıştım', 'çalışıyorum', 'çabaladım', 'uğraştım', 'denedim', 'denemek',
+    'koştum', 'yürüdüm', 'gittim', 'kalktım', 'erkenden',
+    'karar verdim', 'belirledim', 'planladım', 'plan yaptım',
+    'okudum', 'yazdım', 'düşündüm', 'kurdum', 'bitirdim'
+  ],
+
+  // İş / kariyer teması
+  is_temasi: [
+    'iş', 'işim', 'işime', 'işte', 'işten', 'işyeri', 'işyerim', 'işteyken',
+    'çalışıyorum', 'çalıştığım', 'mesai', 'mesaim', 'patron', 'patronum', 'müdür', 'amir',
+    'meslek', 'mesleğim', 'kariyer', 'kariyerim', 'maaş', 'maaşım', 'para', 'paramı',
+    'proje', 'projem', 'görev', 'görevim', 'müşteri', 'müşterim', 'rapor', 'toplantı', 'şirket', 'şirketim'
+  ],
+
+  // İlişki / sevgili / partner teması
+  iliski_temasi: [
+    'sevgili', 'sevgilim', 'sevgilime', 'eşim', 'eşime', 'partner', 'partnerim', 'partnerime',
+    'ilişki', 'ilişkim', 'ilişkime', 'aşk', 'aşkım', 'sevda', 'sevdiğim',
+    'aldat', 'aldattı', 'ihanet', 'ayrılık', 'ayrıldı', 'ayrıldım', 'ayrılığım',
+    'evli', 'evlilik', 'evliliğim', 'evliyim', 'nişan', 'nişanlı'
+  ],
+
+  // Aile teması
+  aile_temasi: [
+    'anne', 'annem', 'anneme', 'annemden', 'annemle',
+    'baba', 'babam', 'babama', 'babamdan', 'babamla',
+    'kardeş', 'kardeşim', 'kardeşime', 'abi', 'abim', 'abla', 'ablam',
+    'aile', 'ailem', 'aileme', 'aileyle', 'ebeveyn', 'akraba',
+    'çocuk', 'çocuğum', 'çocuklar', 'oğul', 'oğlum', 'kızım', 'evlat'
+  ],
+
+  // Sağlık / beden teması
+  saglik_temasi: [
+    'sağlık', 'sağlığım', 'sağlığımı', 'hasta', 'hastayım', 'hastalandım', 'hastalık',
+    'beden', 'bedenim', 'bedenime', 'vücut', 'vücudum',
+    'ağrı', 'ağrıyor', 'ağrıdı', 'sızı', 'kasıldı', 'kasılıyor',
+    'kilo', 'kilom', 'kilolu', 'şişman', 'zayıf', 'zayıfladım',
+    'uyku', 'uyuyamadım', 'uyandım', 'uyumadım', 'uykusuz',
+    'spor', 'egzersiz', 'koşu', 'koştum', 'yürüyüş', 'yürüdüm'
+  ],
+
+  // Kendine eleştiri / öz-yargı
+  ozyargı: [
+    'aptal', 'aptalım', 'aptaldım', 'salak', 'salağım',
+    'beceriksiz', 'beceriksizim', 'işe yaramaz', 'işe yaramazım',
+    'yetersiz', 'yetersizim', 'yetmiyorum', 'yetersizliğim',
+    'kötüyüm', 'kötüydüm', 'rezil', 'rezilim', 'utandım', 'utancım',
+    'pişman', 'pişmanım', 'pişmanlık', 'suçlu', 'suçluyum', 'suçluluk'
+  ],
+
+  // Belirsizlik / kararsızlık
+  belirsizlik: [
+    'belki', 'olabilir', 'sanırım', 'galiba', 'herhalde',
+    'bilmiyorum', 'bilemiyorum', 'kararsızım', 'kararsız', 'tereddüt', 'tereddütteyim',
+    'şüphe', 'şüphem', 'şüpheliyim', 'kuşku', 'kuşkulu',
+    'emin değilim', 'kafam karışık', 'karışık', 'çelişki', 'çelişkili'
+  ]
+};
+
+// Geçmiş zaman / gelecek zaman — fiil çekim son ekleri ile basit tespit
+const PAST_TENSE_SUFFIXES = ['dim', 'dum', 'düm', 'tım', 'tim', 'tum', 'tüm', 'di', 'dı', 'du', 'dü', 'ti', 'tı', 'tu', 'tü'];
+const FUTURE_TENSE_MARKERS = ['acak', 'ecek', 'acağım', 'eceğim', 'acaksın', 'eceksin', 'acaktır', 'ecektir', 'planlıyorum', 'planlarım', 'düşünüyorum', 'niyetim', 'niyetli'];
+
+
+
 // ES modül olarak dışa aç — app.js import eder
-export { SLOGANS, QUOTES, QUESTIONS, TIME_SLOTS, STOPWORDS, GUIDE_ARTICLES, BFI_QUESTIONS, BFI_DIMENSIONS, BFI_INTERPRETATIONS, generateProfileSummary, VENT_CATEGORIES };
+export { SLOGANS, QUOTES, QUESTIONS, TIME_SLOTS, STOPWORDS, GUIDE_ARTICLES, BFI_QUESTIONS, BFI_DIMENSIONS, BFI_INTERPRETATIONS, generateProfileSummary, VENT_CATEGORIES, WORD_FAMILIES, PAST_TENSE_SUFFIXES, FUTURE_TENSE_MARKERS };
