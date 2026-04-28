@@ -6,7 +6,7 @@
 
 console.log('[Kaizen] app.js yükleniyor...');
 
-import { SLOGANS, QUOTES, QUESTIONS, TIME_SLOTS, STOPWORDS, GUIDE_ARTICLES, BFI_QUESTIONS, BFI_DIMENSIONS, BFI_INTERPRETATIONS, generateProfileSummary, VENT_CATEGORIES, WORD_FAMILIES, PAST_TENSE_SUFFIXES, FUTURE_TENSE_MARKERS } from './data.js?v=12';
+import { SLOGANS, QUOTES, QUESTIONS, TIME_SLOTS, STOPWORDS, GUIDE_ARTICLES, BFI_QUESTIONS, BFI_DIMENSIONS, BFI_INTERPRETATIONS, generateProfileSummary, VENT_CATEGORIES, WORD_FAMILIES, PAST_TENSE_SUFFIXES, FUTURE_TENSE_MARKERS } from './data.js?v=13';
 
 console.log('[Kaizen] data.js içe aktarıldı');
 
@@ -68,6 +68,50 @@ let currentJournalEntry = null;
 let bfiCache = [];
 let bfiAnswers = {};
 let bfiCurrentIndex = 0;
+
+// =========================================================
+// TARİH YARDIMCILARI — başta tanımlandı ki hoisting sorunsuz çalışsın
+// =========================================================
+
+// Yerel saatle bugünün tarihi (YYYY-MM-DD)
+function todayStr() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// "Etkili gün" — gece yarısı sonrası ama 07:30 öncesi → dün geri döner
+// Böylece akşam soruları gece 02:00'de cevaplandığında bile o günün tarihine yazılır
+function effectiveDayStr() {
+  const d = new Date();
+  const hour = d.getHours() + d.getMinutes() / 60;
+  // 07:30 öncesi ise dünü dön
+  if (hour < 7.5) {
+    const yesterday = new Date(d.getTime() - 86400000);
+    const y = yesterday.getFullYear();
+    const m = String(yesterday.getMonth() + 1).padStart(2, '0');
+    const day = String(yesterday.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+  return todayStr();
+}
+
+// Belirli bir tarih (YYYY-MM-DD) pazar günü mü?
+function isDateSunday(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00'); // öğle vakti — DST sorunlarını önlemek için
+  return d.getDay() === 0;
+}
+
+// Belirli bir tarih ayın son 3 gününde mi?
+function isDateInLastDaysOfMonth(dateStr, daysFromEnd = 3) {
+  const d = new Date(dateStr + 'T12:00:00');
+  const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  return d.getDate() >= (lastDay - daysFromEnd + 1);
+}
+
+// =========================================================
 
 document.getElementById('loginBtn').addEventListener('click', async () => {
   try {
@@ -188,18 +232,42 @@ async function updateStreak() {
 }
 
 async function addAnswer(type, questionId, questionText, answerText, slotKey, lateMinutes) {
-  if (!answerText.trim()) return;
-  const ref = collection(db, 'users', currentUser.uid, 'answers');
-  await addDoc(ref, {
-    type: type,
-    questionId: questionId,
-    question: questionText,
-    answer: answerText.trim(),
-    slotKey: slotKey || null,
-    lateMinutes: lateMinutes || 0,
-    date: effectiveDayStr(), // Gece yarısı sonrası (00-07:30) ise dünün tarihi
-    timestamp: Timestamp.now()
-  });
+  console.log('[ANSWER] addAnswer çağrıldı:', { type, questionId, slotKey, lateMinutes, answerLen: answerText?.length });
+  if (!answerText.trim()) {
+    console.warn('[ANSWER] Cevap boş, kaydedilmedi');
+    return;
+  }
+
+  let dateStr;
+  try {
+    dateStr = effectiveDayStr();
+    console.log('[ANSWER] effectiveDayStr:', dateStr);
+  } catch (e) {
+    console.error('[ANSWER] effectiveDayStr HATASI:', e);
+    dateStr = new Date().toISOString().slice(0, 10); // Fallback
+  }
+
+  try {
+    const ref = collection(db, 'users', currentUser.uid, 'answers');
+    console.log('[ANSWER] Firebase addDoc başlıyor...');
+    const docRef = await addDoc(ref, {
+      type: type,
+      questionId: questionId,
+      question: questionText,
+      answer: answerText.trim(),
+      slotKey: slotKey || null,
+      lateMinutes: lateMinutes || 0,
+      date: dateStr,
+      timestamp: Timestamp.now()
+    });
+    console.log('[ANSWER] ✓ Kaydedildi, id:', docRef.id);
+    return docRef.id;
+  } catch (e) {
+    console.error('[ANSWER] ✗ Firebase HATASI:', e.code, e.message);
+    console.error(e);
+    showToast('Kayıt hatası: ' + (e.message || 'bilinmeyen'));
+    throw e;
+  }
 }
 
 async function loadHistory() {
@@ -488,43 +556,7 @@ async function toggleTaskCompletion(taskId) {
   renderHome();
 }
 
-// Yerel saatle bugünün tarihi (YYYY-MM-DD)
-function todayStr() {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
-// "Etkili gün" — gece yarısı sonrası ama 07:30 öncesi → dün geri döner
-// Böylece akşam soruları gece 02:00'de cevaplandığında bile o günün tarihine yazılır
-function effectiveDayStr() {
-  const d = new Date();
-  const hour = d.getHours() + d.getMinutes() / 60;
-  // 07:30 öncesi ise dünü dön
-  if (hour < 7.5) {
-    const yesterday = new Date(d.getTime() - 86400000);
-    const y = yesterday.getFullYear();
-    const m = String(yesterday.getMonth() + 1).padStart(2, '0');
-    const day = String(yesterday.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  }
-  return todayStr();
-}
-
-// Belirli bir tarih (YYYY-MM-DD) pazar günü mü?
-function isDateSunday(dateStr) {
-  const d = new Date(dateStr + 'T12:00:00'); // öğle vakti — DST sorunlarını önlemek için
-  return d.getDay() === 0;
-}
-
-// Belirli bir tarih ayın son 3 gününde mi?
-function isDateInLastDaysOfMonth(dateStr, daysFromEnd = 3) {
-  const d = new Date(dateStr + 'T12:00:00');
-  const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-  return d.getDate() >= (lastDay - daysFromEnd + 1);
-}
+// (Helper fonksiyonlar dosyanın başına taşındı — todayStr, effectiveDayStr, isDateSunday, isDateInLastDaysOfMonth)
 
 function showToast(msg) {
   const t = document.getElementById('toast');
