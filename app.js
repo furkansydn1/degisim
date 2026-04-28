@@ -6,7 +6,7 @@
 
 console.log('[Kaizen] app.js yükleniyor...');
 
-import { SLOGANS, QUOTES, QUESTIONS, TIME_SLOTS, STOPWORDS, GUIDE_ARTICLES, BFI_QUESTIONS, BFI_DIMENSIONS, BFI_INTERPRETATIONS, generateProfileSummary, VENT_CATEGORIES } from './data.js';
+import { SLOGANS, QUOTES, QUESTIONS, TIME_SLOTS, STOPWORDS, GUIDE_ARTICLES, BFI_QUESTIONS, BFI_DIMENSIONS, BFI_INTERPRETATIONS, generateProfileSummary, VENT_CATEGORIES, WORD_FAMILIES, PAST_TENSE_SUFFIXES, FUTURE_TENSE_MARKERS } from './data.js?v=12';
 
 console.log('[Kaizen] data.js içe aktarıldı');
 
@@ -51,8 +51,6 @@ let userData = {
   lastMonthlyRitual: null,
   onboardingDone: false,
   notifEnabled: false,
-  keyboardSound: true,
-  keyboardSoundProfile: 'holypanda',
   journalPinHash: null,
   journalIncludeInPatterns: false
 };
@@ -175,9 +173,9 @@ async function saveUserData() {
 }
 
 async function updateStreak() {
-  const today = todayStr();
+  const today = effectiveDayStr(); // Etkili gün — gece 02:00 dünün sayılır
   if (userData.lastActiveDate === today) return;
-  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  const yesterday = new Date(new Date(today + 'T12:00:00').getTime() - 86400000).toISOString().slice(0, 10);
   if (userData.lastActiveDate === yesterday) {
     userData.streak = (userData.streak || 0) + 1;
   } else if (userData.lastActiveDate) {
@@ -199,7 +197,7 @@ async function addAnswer(type, questionId, questionText, answerText, slotKey, la
     answer: answerText.trim(),
     slotKey: slotKey || null,
     lateMinutes: lateMinutes || 0,
-    date: todayStr(),
+    date: effectiveDayStr(), // Gece yarısı sonrası (00-07:30) ise dünün tarihi
     timestamp: Timestamp.now()
   });
 }
@@ -240,7 +238,7 @@ async function addJournalEntry(title, content) {
   const docRef = await addDoc(ref, {
     title: title.trim(),
     content: content.trim(),
-    date: todayStr(),
+    date: effectiveDayStr(),
     timestamp: Timestamp.now()
   });
   return docRef.id;
@@ -251,7 +249,7 @@ async function updateJournalEntry(id, title, content) {
   await setDoc(ref, {
     title: title.trim(),
     content: content.trim(),
-    date: todayStr(),
+    date: effectiveDayStr(),
     timestamp: Timestamp.now()
   }, { merge: true });
 }
@@ -290,7 +288,7 @@ async function addVentEntry(categoryKey, questionIndex, content) {
     category: categoryKey,
     questionIndex: questionIndex,
     content: content.trim(),
-    date: todayStr(),
+    date: effectiveDayStr(),
     timestamp: Timestamp.now()
   });
   return docRef.id;
@@ -329,7 +327,7 @@ async function saveBfiResult(scores, answers) {
   const docRef = await addDoc(ref, {
     scores: scores,
     answers: answers,
-    date: todayStr(),
+    date: effectiveDayStr(),
     timestamp: Timestamp.now()
   });
   return docRef.id;
@@ -490,7 +488,43 @@ async function toggleTaskCompletion(taskId) {
   renderHome();
 }
 
-function todayStr() { return new Date().toISOString().slice(0, 10); }
+// Yerel saatle bugünün tarihi (YYYY-MM-DD)
+function todayStr() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// "Etkili gün" — gece yarısı sonrası ama 07:30 öncesi → dün geri döner
+// Böylece akşam soruları gece 02:00'de cevaplandığında bile o günün tarihine yazılır
+function effectiveDayStr() {
+  const d = new Date();
+  const hour = d.getHours() + d.getMinutes() / 60;
+  // 07:30 öncesi ise dünü dön
+  if (hour < 7.5) {
+    const yesterday = new Date(d.getTime() - 86400000);
+    const y = yesterday.getFullYear();
+    const m = String(yesterday.getMonth() + 1).padStart(2, '0');
+    const day = String(yesterday.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+  return todayStr();
+}
+
+// Belirli bir tarih (YYYY-MM-DD) pazar günü mü?
+function isDateSunday(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00'); // öğle vakti — DST sorunlarını önlemek için
+  return d.getDay() === 0;
+}
+
+// Belirli bir tarih ayın son 3 gününde mi?
+function isDateInLastDaysOfMonth(dateStr, daysFromEnd = 3) {
+  const d = new Date(dateStr + 'T12:00:00');
+  const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  return d.getDate() >= (lastDay - daysFromEnd + 1);
+}
 
 function showToast(msg) {
   const t = document.getElementById('toast');
@@ -519,302 +553,7 @@ window.showScreen = function(name) {
   window.scrollTo(0, 0);
 };
 
-// =========================================================
-// KLAVYE SES MOTORU — gerçek mekanik klavye & daktilo sesleri
-// Holy Panda / Cream: tplai/kbsim (MIT)
-// Daktilo: orhun/daktilo (MIT/Apache-2.0)
-// =========================================================
-
-// Mevcut ses profilleri — kullanıcı Ayarlar'dan seçebilir
-const KEY_SOUND_PROFILES = {
-  holypanda: {
-    name: 'holypanda',
-    label: 'Yumuşak Klavye (Holy Panda)',
-    down: [
-      'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/holypanda/GENERIC_R0.mp3',
-      'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/holypanda/GENERIC_R1.mp3',
-      'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/holypanda/GENERIC_R2.mp3',
-      'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/holypanda/GENERIC_R3.mp3',
-      'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/holypanda/GENERIC_R4.mp3'
-    ],
-    space: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/holypanda/SPACE.mp3',
-    enter: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/holypanda/ENTER.mp3',
-    backspace: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/holypanda/BACKSPACE.mp3',
-    masterGain: 2.2
-  },
-  cream: {
-    name: 'cream',
-    label: 'Linear Klavye (Cream)',
-    down: [
-      'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cream/GENERIC_R0.mp3',
-      'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cream/GENERIC_R1.mp3',
-      'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cream/GENERIC_R2.mp3',
-      'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cream/GENERIC_R3.mp3',
-      'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cream/GENERIC_R4.mp3'
-    ],
-    space: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cream/SPACE.mp3',
-    enter: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cream/ENTER.mp3',
-    backspace: 'https://cdn.jsdelivr.net/gh/tplai/kbsim@master/src/assets/audio/cream/BACKSPACE.mp3',
-    masterGain: 2.2
-  },
-  daktilo: {
-    name: 'daktilo',
-    label: 'Daktilo (Klasik Tak-Tak)',
-    // orhun/daktilo - Rust projesi, sounds/ klasöründe MP3'ler
-    // Her tuş aynı keydown.mp3'ü çalar, pitch varyasyonu ile farklılaşır
-    down: [
-      'https://cdn.jsdelivr.net/gh/orhun/daktilo@main/sounds/keydown.mp3'
-    ],
-    space: 'https://cdn.jsdelivr.net/gh/orhun/daktilo@main/sounds/keydown.mp3',
-    enter: 'https://cdn.jsdelivr.net/gh/orhun/daktilo@main/sounds/ding.mp3', // 🔔 Daktilo zili!
-    backspace: 'https://cdn.jsdelivr.net/gh/orhun/daktilo@main/sounds/keydown.mp3',
-    masterGain: 1.8,
-    pitchRange: 0.15 // daha fazla varyasyon (tek ses dosyası olduğu için)
-  }
-};
-
-// Kullanıcı seçimine göre aktif profil
-function getPreferredProfile() {
-  const prefs = ['holypanda', 'cream', 'daktilo'];
-  const userChoice = userData.keyboardSoundProfile || 'holypanda';
-  if (KEY_SOUND_PROFILES[userChoice]) return userChoice;
-  return 'holypanda';
-}
-
-// Yedek sırası (fallback chain): kullanıcı seçimi → holypanda → cream → daktilo
-function getProfileLoadOrder() {
-  const preferred = getPreferredProfile();
-  const all = ['holypanda', 'cream', 'daktilo'];
-  const rest = all.filter(p => p !== preferred);
-  return [preferred, ...rest];
-}
-
-// Önceden yüklenmiş audio buffer'ları
-let keyAudioBuffers = {
-  down: [],
-  space: null,
-  enter: null,
-  backspace: null
-};
-let keyAudioLoaded = false;
-let activeSoundProfile = null;
-let audioCtx = null;
-let audioCtxReady = false;
-let lastKeyTime = 0;
-let keystrokeCounter = 0;
-let keyVolumeGain = null;
-
-function initAudioContext() {
-  if (audioCtx) return;
-  try {
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
-    audioCtx = new AC();
-    // Master volume — Holy Panda sesleri zaten orta seviye, 2.2x gain iyi yüksek ama çığlık değil
-    keyVolumeGain = audioCtx.createGain();
-    keyVolumeGain.gain.value = 2.2;
-    keyVolumeGain.connect(audioCtx.destination);
-  } catch (e) {
-    console.warn('AudioContext başlatılamadı:', e);
-  }
-}
-
-async function tryLoadProfile(profile) {
-  if (!audioCtx) return false;
-  try {
-    const downPromises = profile.down.map(url =>
-      fetch(url).then(r => { if (!r.ok) throw new Error('fetch fail'); return r.arrayBuffer(); })
-                .then(ab => audioCtx.decodeAudioData(ab))
-                .catch(() => null)
-    );
-    const results = await Promise.all([
-      Promise.all(downPromises),
-      fetch(profile.space).then(r => r.ok ? r.arrayBuffer() : null)
-        .then(ab => ab ? audioCtx.decodeAudioData(ab) : null).catch(() => null),
-      fetch(profile.enter).then(r => r.ok ? r.arrayBuffer() : null)
-        .then(ab => ab ? audioCtx.decodeAudioData(ab) : null).catch(() => null),
-      fetch(profile.backspace).then(r => r.ok ? r.arrayBuffer() : null)
-        .then(ab => ab ? audioCtx.decodeAudioData(ab) : null).catch(() => null)
-    ]);
-
-    const downs = results[0].filter(b => b !== null);
-    if (downs.length === 0) return false;
-
-    keyAudioBuffers.down = downs;
-    keyAudioBuffers.space = results[1];
-    keyAudioBuffers.enter = results[2];
-    keyAudioBuffers.backspace = results[3];
-    activeSoundProfile = profile.name;
-    keyAudioLoaded = true;
-
-    // Profilin kendi master gain'ini uygula
-    if (keyVolumeGain && profile.masterGain) {
-      keyVolumeGain.gain.value = profile.masterGain;
-    }
-
-    console.log(`[Kaizen] Klavye sesleri yüklendi: ${profile.name} (${downs.length} varyant)`);
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-async function preloadKeySounds() {
-  if (!audioCtx || keyAudioLoaded) return;
-  const order = getProfileLoadOrder();
-  for (const profileKey of order) {
-    const profile = KEY_SOUND_PROFILES[profileKey];
-    if (!profile) continue;
-    const ok = await tryLoadProfile(profile);
-    if (ok) return;
-  }
-  console.warn('[Kaizen] Hiç ses profili yüklenemedi, fallback kullanılacak');
-}
-
-// Kullanıcı profil değiştirirse — cache'i temizle, yeniden yükle
-async function reloadKeySounds() {
-  keyAudioLoaded = false;
-  activeSoundProfile = null;
-  keyAudioBuffers = { down: [], space: null, enter: null, backspace: null };
-  if (!audioCtx) return;
-  await preloadKeySounds();
-}
-
-function unlockAudio() {
-  if (audioCtxReady) return;
-  initAudioContext();
-  if (!audioCtx) return;
-  if (audioCtx.state === 'suspended') {
-    audioCtx.resume().then(() => {
-      audioCtxReady = true;
-      preloadKeySounds();
-    });
-  } else {
-    audioCtxReady = true;
-    preloadKeySounds();
-  }
-}
-
-document.addEventListener('click', unlockAudio, { once: false });
-document.addEventListener('keydown', unlockAudio, { once: false });
-document.addEventListener('touchstart', unlockAudio, { once: false });
-
-function playBuffer(buffer, volumeMult = 1.0) {
-  if (!audioCtx || !buffer) return;
-  try {
-    const source = audioCtx.createBufferSource();
-    source.buffer = buffer;
-    // Aktif profilin pitch range'ine göre varyasyon
-    const activeProfile = activeSoundProfile ? KEY_SOUND_PROFILES[activeSoundProfile] : null;
-    const pitchRange = (activeProfile && activeProfile.pitchRange) || 0.05;
-    source.playbackRate.value = (1 - pitchRange) + Math.random() * (pitchRange * 2);
-    const gain = audioCtx.createGain();
-    gain.gain.value = volumeMult;
-    source.connect(gain);
-    gain.connect(keyVolumeGain || audioCtx.destination);
-    source.start(0);
-  } catch (e) {
-    // Sessiz kal
-  }
-}
-
-function playKeyClick(keyType = 'letter') {
-  if (!userData.keyboardSound) return;
-  if (!audioCtx || !audioCtxReady) return;
-
-  const now = audioCtx.currentTime;
-  if (now - lastKeyTime < 0.025) return;
-  lastKeyTime = now;
-
-  keystrokeCounter++;
-
-  // Ses seviyesi hafif varyasyon (%85-110)
-  const variation = 0.85 + Math.random() * 0.25;
-
-  if (keyAudioLoaded) {
-    if (keyType === 'space' && keyAudioBuffers.space) {
-      playBuffer(keyAudioBuffers.space, variation);
-      return;
-    }
-    if (keyType === 'enter' && keyAudioBuffers.enter) {
-      playBuffer(keyAudioBuffers.enter, variation);
-      return;
-    }
-    if (keyType === 'backspace' && keyAudioBuffers.backspace) {
-      playBuffer(keyAudioBuffers.backspace, variation);
-      return;
-    }
-    const buffers = keyAudioBuffers.down;
-    if (buffers.length > 0) {
-      const idx = Math.floor(Math.random() * buffers.length);
-      playBuffer(buffers[idx], variation);
-      return;
-    }
-  }
-
-  playFallbackClick(keyType !== 'letter');
-}
-
-// Fallback — thock tarzı sentez (CDN erişilemezse)
-function playFallbackClick(isSpecialKey = false) {
-  if (!audioCtx) return;
-  const now = audioCtx.currentTime;
-
-  try {
-    const volume = isSpecialKey ? 0.7 : 0.55;
-    const duration = isSpecialKey ? 0.08 : 0.055;
-
-    const bufferSize = Math.floor(audioCtx.sampleRate * duration);
-    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-    const data = buffer.getChannelData(0);
-    // Daha yumuşak decay - thock hissi
-    for (let i = 0; i < bufferSize; i++) {
-      const t = i / bufferSize;
-      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 2.5);
-    }
-
-    const src = audioCtx.createBufferSource();
-    src.buffer = buffer;
-
-    // Düşük bantta bırak - thock için
-    const filter = audioCtx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = isSpecialKey ? 350 : 550;
-    filter.Q.value = 1.8;
-
-    const gain = audioCtx.createGain();
-    gain.gain.setValueAtTime(volume, now);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-    src.connect(filter);
-    filter.connect(gain);
-    gain.connect(keyVolumeGain || audioCtx.destination);
-    src.start(now);
-    src.stop(now + duration);
-  } catch (e) {}
-}
-
-function attachKeyboardSounds() {
-  document.addEventListener('keydown', (e) => {
-    const target = e.target;
-    if (!target) return;
-    const tag = target.tagName;
-    const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || target.isContentEditable;
-    if (!isTyping) return;
-
-    if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab', 'Escape'].includes(e.key)) return;
-
-    let keyType = 'letter';
-    if (e.key === ' ') keyType = 'space';
-    else if (e.key === 'Enter') keyType = 'enter';
-    else if (e.key === 'Backspace') keyType = 'backspace';
-
-    playKeyClick(keyType);
-  });
-}
-
 function initApp() {
-  attachKeyboardSounds();
   document.querySelectorAll('.nav-item').forEach(n => {
     n.addEventListener('click', () => showScreen(n.dataset.screen));
   });
@@ -843,7 +582,6 @@ function initApp() {
   if (footer) footer.style.display = 'block';
 
   renderHome();
-  setTimeout(checkRituals, 800);
   setupNotifs();
 }
 
@@ -986,6 +724,7 @@ function renderHome() {
 
   renderTimeSlots();
   renderActiveQuestHero();
+  renderRitualCard();
 }
 
 // Ana sayfadaki "aktif quest" büyük kartı — en üstte gözüken
@@ -994,7 +733,8 @@ function renderActiveQuestHero() {
   if (!box) return;
 
   const now = getCurrentHourDecimal();
-  const today = todayStr();
+  const effDay = effectiveDayStr(); // Gece yarısı sonrası ama 07:30 öncesi ise dünü kullan
+  const today = effDay; // İçerideki kod 'today' kullanıyor, alias olarak set et
 
   // Kuruluş tamamlanmadı mı?
   if (!userData.kurulusCompleted) {
@@ -1022,6 +762,10 @@ function renderActiveQuestHero() {
   let doneCount = 0;
   let sabahDone = false, gunIciDone = false, aksamDone = false;
 
+  // Gece yarısı sonrası (00:00–07:30): saat dünün eski mantığında değil
+  // Bütün dünün slotları "kaçırılmış" sayılır, kullanıcı hâlâ cevaplayabilir
+  const isAfterMidnight = (todayStr() !== effDay);
+
   TIME_SLOTS.forEach(slot => {
     const todayAnswers = historyCache.filter(a => a.date === today && a.slotKey === slot.key);
     const isDone = todayAnswers.length >= slot.count;
@@ -1031,9 +775,10 @@ function renderActiveQuestHero() {
       if (slot.type === 'gunici') gunIciDone = true;
       if (slot.type === 'aksam') aksamDone = true;
     }
-    const isActive = !isDone && now >= slot.start && now < slot.end;
+    // Gece yarısı sonrasıysa hiçbir slot "aktif" değil — hepsi kaçırılmış sayılır
+    const isActive = !isDone && !isAfterMidnight && now >= slot.start && now < slot.end;
     if (isActive && !activeSlot) activeSlot = slot;
-    if (!isDone && !activeSlot && now < slot.start && !nextSlot) nextSlot = slot;
+    if (!isDone && !activeSlot && !isAfterMidnight && now < slot.start && !nextSlot) nextSlot = slot;
   });
 
   // Aktif slot varsa
@@ -1071,10 +816,17 @@ function renderActiveQuestHero() {
   TIME_SLOTS.forEach(slot => {
     const todayAnswers = historyCache.filter(a => a.date === today && a.slotKey === slot.key);
     const isDone = todayAnswers.length >= slot.count;
-    if (!isDone && now >= slot.end && !missedSlot) missedSlot = slot;
+    if (isDone) return;
+    // Normal gün içi: pencere kapandı mı?
+    if (!isAfterMidnight && now >= slot.end && !missedSlot) missedSlot = slot;
+    // Gece yarısı sonrası: tüm dünün slotları "kaçırılmış" olarak gösterilir
+    if (isAfterMidnight && !missedSlot) missedSlot = slot;
   });
 
   if (missedSlot) {
+    const subText = isAfterMidnight
+      ? `Saat geç oldu — sabah olana kadar hâlâ cevaplayabilirsin`
+      : `Penceresi kapandı — ama hâlâ cevaplayabilirsin`;
     box.innerHTML = `
       <div class="active-quest-hero missed" onclick="startQuest('${missedSlot.type}', '${missedSlot.key}')">
         <div class="aqh-accent-bar missed-bar"></div>
@@ -1082,7 +834,7 @@ function renderActiveQuestHero() {
           <div>
             <div class="aqh-label missed-label">KAÇIRILDI · ${missedSlot.time}</div>
             <div class="aqh-title">${escapeHtml(missedSlot.label)}</div>
-            <div class="aqh-sub">Penceresi kapandı — ama hâlâ cevaplayabilirsin</div>
+            <div class="aqh-sub">${subText}</div>
           </div>
           <div class="aqh-arrow">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
@@ -1427,6 +1179,53 @@ function updateBadges(insights) {
   else cb.classList.add('hidden');
 }
 
+// ====================================================================
+// GELİŞMİŞ ÖRÜNTÜ ANALİZİ — 12 farklı bilimsel analiz
+// Her analiz kendi minimum data eşiğini kontrol eder
+// Veri yetersizse o analiz görünmez (yanılma payını minimize için)
+// ====================================================================
+
+// Yardımcı: Bir cevap dizisinde belirli bir kelime ailesi kaç kez geçer?
+function countWordFamily(answers, familyKey) {
+  const family = WORD_FAMILIES[familyKey] || [];
+  let count = 0;
+  answers.forEach(a => {
+    const text = (a.answer || '').toLowerCase();
+    family.forEach(word => {
+      // Kelime sınırlarına dikkat ederek say
+      const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp('(?:^|[^a-zçğıöşü])' + escaped + '(?:[^a-zçğıöşü]|$)', 'gi');
+      const matches = text.match(regex);
+      if (matches) count += matches.length;
+    });
+  });
+  return count;
+}
+
+// Yardımcı: Toplam kelime sayısı (rate hesaplaması için)
+function countTotalWords(answers) {
+  let total = 0;
+  answers.forEach(a => {
+    total += (a.answer || '').split(/\s+/).filter(w => w.length > 0).length;
+  });
+  return total;
+}
+
+// Yardımcı: tarih aralığındaki cevapları getir
+function getAnswersInDateRange(daysBack) {
+  const cutoff = Date.now() - daysBack * 86400000;
+  return historyCache.filter(a => {
+    if (a.timestamp && a.timestamp.toDate) {
+      return a.timestamp.toDate().getTime() > cutoff;
+    }
+    if (a.date) {
+      const d = new Date(a.date + 'T12:00:00');
+      return d.getTime() > cutoff;
+    }
+    return false;
+  });
+}
+
 function detectPatterns() {
   const out = [];
   if (!historyCache.length) return out;
@@ -1464,7 +1263,416 @@ function detectPatterns() {
     return out;
   }
 
-  // 7 günden sonra gerçek örüntü analizi başlasın
+  // ==========================================================
+  // 7 gün sonrası — gerçek analizler başlar
+  // ==========================================================
+
+  const last30 = getAnswersInDateRange(30);
+  const last14 = getAnswersInDateRange(14);
+  const last7 = getAnswersInDateRange(7);
+  const allAnswers = historyCache.slice(0, 200); // Performans için en yeni 200
+
+  // ----------------------------------------------------------
+  // ANALİZ 1: Kronik gecikme — saat bazında detaylı
+  // ----------------------------------------------------------
+  const guniciRecent = last14.filter(a => a.type === 'gunici');
+  if (guniciRecent.length >= 5) {
+    const lateOnes = guniciRecent.filter(a => (a.lateMinutes || 0) > 30);
+    const ratio = lateOnes.length / guniciRecent.length;
+    if (ratio >= 0.4) {
+      const avgMin = Math.round(lateOnes.reduce((s, a) => s + (a.lateMinutes || 0), 0) / lateOnes.length);
+
+      // En çok geç kalınan slotu bul
+      const slotCounts = {};
+      lateOnes.forEach(a => {
+        const slot = TIME_SLOTS.find(s => s.key === a.slotKey);
+        if (slot) slotCounts[slot.time] = (slotCounts[slot.time] || 0) + 1;
+      });
+      const worstSlot = Object.entries(slotCounts).sort((a, b) => b[1] - a[1])[0];
+
+      let msg = `Son 14 günde gün içi sorularının <em>%${Math.round(ratio * 100)}</em>'sini geç cevapladın — ortalama <em>${avgMin} dakika</em> geç.`;
+      if (worstSlot && worstSlot[1] >= 2) {
+        msg += ` En çok <em>${worstSlot[0]}</em> sorusunu erteliyorsun (${worstSlot[1]} kez). O saatte ne oluyor — yorgunluk mu, sıkışmışlık mı, başka bir tetik mi?`;
+      } else {
+        msg += ` Bu bir örüntü — neyi erteliyorsun gerçekten?`;
+      }
+
+      out.push({
+        type: 'warn',
+        label: 'Kronik erteleme',
+        msg: msg
+      });
+    }
+  }
+
+  // ----------------------------------------------------------
+  // ANALİZ 2: Hafta içi vs hafta sonu uçurum
+  // ----------------------------------------------------------
+  if (daysSinceJoined >= 21) {
+    const last4Weeks = getAnswersInDateRange(28);
+    if (last4Weeks.length >= 20) {
+      const weekdayDays = new Set();
+      const weekendDays = new Set();
+      let weekdayPossible = 0, weekendPossible = 0;
+
+      // Geçmiş 28 günde kaç hafta içi / hafta sonu var?
+      for (let i = 0; i < 28; i++) {
+        const d = new Date(Date.now() - i * 86400000);
+        const dow = d.getDay();
+        if (dow === 0 || dow === 6) weekendPossible++;
+        else weekdayPossible++;
+      }
+
+      last4Weeks.forEach(a => {
+        if (!a.date) return;
+        const d = new Date(a.date + 'T12:00:00');
+        const dow = d.getDay();
+        if (dow === 0 || dow === 6) weekendDays.add(a.date);
+        else weekdayDays.add(a.date);
+      });
+
+      const weekdayRate = weekdayDays.size / weekdayPossible;
+      const weekendRate = weekendDays.size / weekendPossible;
+
+      if (weekdayRate - weekendRate >= 0.3 && weekdayRate >= 0.5) {
+        out.push({
+          type: 'warn',
+          label: 'Hafta sonu kayboluyorsun',
+          msg: `Hafta içi cevap oranın <em>%${Math.round(weekdayRate * 100)}</em>, hafta sonu <em>%${Math.round(weekendRate * 100)}</em>. Yapılandırılmış zaman olunca buradasın, serbest zamanda kayboluyorsun. Hafta sonu için farklı bir tetik koyman lazım — saat alarmı, kahve ile bağlama, yatağa gitmeden önce gibi.`
+        });
+      } else if (weekendRate - weekdayRate >= 0.3 && weekendRate >= 0.5) {
+        out.push({
+          type: '',
+          label: 'Hafta sonu daha çok buradasın',
+          msg: `Hafta içi cevap oranın <em>%${Math.round(weekdayRate * 100)}</em>, hafta sonu <em>%${Math.round(weekendRate * 100)}</em>. Hafta içi yoğunluk seni susturuyor. Tam tersini yapanlar var — sen ters köşesin.`
+        });
+      }
+    }
+  }
+
+  // ----------------------------------------------------------
+  // ANALİZ 3: Belirli saatlerde çöküş
+  // ----------------------------------------------------------
+  if (daysSinceJoined >= 21 && last30.length >= 30) {
+    const slotCounts = {};
+    TIME_SLOTS.forEach(s => slotCounts[s.key] = { done: 0, possible: 0, label: s.time });
+
+    // Possible: Kayıttan beri her gün için her slot 1 kez mümkün
+    const daysActive = Math.min(daysSinceJoined + 1, 30);
+    TIME_SLOTS.forEach(s => slotCounts[s.key].possible = daysActive);
+
+    last30.forEach(a => {
+      if (a.slotKey && slotCounts[a.slotKey]) {
+        slotCounts[a.slotKey].done++;
+      }
+    });
+
+    // En az ve en çok yapılan slotları bul
+    const rates = Object.entries(slotCounts).map(([key, v]) => ({
+      key, label: v.label, rate: v.possible > 0 ? v.done / v.possible : 0, done: v.done, possible: v.possible
+    })).filter(r => r.possible >= 10);
+
+    if (rates.length >= 3) {
+      const sorted = [...rates].sort((a, b) => a.rate - b.rate);
+      const worst = sorted[0];
+      const avgRate = rates.reduce((s, r) => s + r.rate, 0) / rates.length;
+
+      if (worst.rate < 0.4 && avgRate > 0.6) {
+        out.push({
+          type: 'warn',
+          label: `${worst.label} sorusu zor geliyor`,
+          msg: `Son 30 günde <em>${worst.label}</em> sorusunu sadece <em>${worst.done}</em> kez cevapladın (diğer saatlerin ortalaması <em>%${Math.round(avgRate * 100)}</em>). Bu saat senin için zor — ya başka bir aktiviteyle çakışıyor, ya o vaktin duygusal bir yükü var. Düşünmeye değer.`
+        });
+      }
+    }
+  }
+
+  // ----------------------------------------------------------
+  // ANALİZ 4: Cevap uzunluğu trendi (azalıyor mu?)
+  // ----------------------------------------------------------
+  if (daysSinceJoined >= 14 && historyCache.length >= 20) {
+    const sortedByDate = [...historyCache].sort((a, b) => {
+      const ta = a.timestamp?.toDate ? a.timestamp.toDate().getTime() : new Date(a.date + 'T00:00:00').getTime();
+      const tb = b.timestamp?.toDate ? b.timestamp.toDate().getTime() : new Date(b.date + 'T00:00:00').getTime();
+      return ta - tb; // eski → yeni
+    });
+
+    const half = Math.floor(sortedByDate.length / 2);
+    const oldHalf = sortedByDate.slice(0, half);
+    const newHalf = sortedByDate.slice(half);
+
+    const avgWordsOld = oldHalf.reduce((s, a) => s + (a.answer || '').split(/\s+/).length, 0) / oldHalf.length;
+    const avgWordsNew = newHalf.reduce((s, a) => s + (a.answer || '').split(/\s+/).length, 0) / newHalf.length;
+
+    if (avgWordsOld >= 30 && avgWordsNew < avgWordsOld * 0.6) {
+      out.push({
+        type: 'warn',
+        label: 'Cevapların kısalıyor',
+        msg: `Eski cevaplarında ortalama <em>${Math.round(avgWordsOld)}</em> kelime yazıyordun, son cevaplarında <em>${Math.round(avgWordsNew)}</em>. Bir şey kapanıyor — çabasız geçirme moduna giriyorsun. Bu örüntü çoğu zaman "bıraktım" anlamına gelir 1-2 ay sonra. Bilinçli bir karar mı bu yoksa farkında değil miydin?`
+      });
+    } else if (avgWordsNew > avgWordsOld * 1.5 && avgWordsNew >= 50) {
+      out.push({
+        type: 'celebrate',
+        label: 'Daha derine iniyorsun',
+        msg: `Eski cevaplarında ortalama <em>${Math.round(avgWordsOld)}</em> kelime yazardın, son cevaplarında <em>${Math.round(avgWordsNew)}</em>. Daha fazla yazmak, daha fazla görmek demek. İyi gidiyorsun.`
+      });
+    }
+  }
+
+  // ----------------------------------------------------------
+  // ANALİZ 5: Streak kırılma örüntüsü
+  // ----------------------------------------------------------
+  if (daysSinceJoined >= 30) {
+    const last60 = getAnswersInDateRange(60);
+    const days = new Set(last60.map(a => a.date));
+
+    // Hangi günlerde streak kırılıyor (önceki gün var, sonraki gün yok)
+    const breakDays = {};
+    for (let i = 0; i < 60; i++) {
+      const d = new Date(Date.now() - i * 86400000);
+      const dStr = d.toISOString().slice(0, 10);
+      const prev = new Date(d.getTime() - 86400000).toISOString().slice(0, 10);
+      const next = new Date(d.getTime() + 86400000).toISOString().slice(0, 10);
+
+      // Bugün yok ama dün varsa → streak kırılması
+      if (!days.has(dStr) && days.has(prev)) {
+        const dow = d.getDay();
+        const dayName = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'][dow];
+        breakDays[dayName] = (breakDays[dayName] || 0) + 1;
+      }
+    }
+
+    const breakEntries = Object.entries(breakDays).sort((a, b) => b[1] - a[1]);
+    if (breakEntries.length && breakEntries[0][1] >= 3) {
+      const [dayName, count] = breakEntries[0];
+      out.push({
+        type: 'warn',
+        label: 'Belirli günde kırılıyorsun',
+        msg: `Son 60 günde <em>${count} kez</em> streak'in <em>${dayName}</em> günü kırıldı. Bu rastlantı değil — o gün özel bir yük taşıyor (yoğun iş, sosyal yorgunluk, hafta başı stresi vs). O günü "minimum gün" olarak konumlandırmak işe yarar — sadece 1 cevap yetiyor.`
+      });
+    }
+  }
+
+  // ----------------------------------------------------------
+  // ANALİZ 6: Kelime aileleri analizi (anksiyete, pasiflik vs)
+  // ----------------------------------------------------------
+  if (allAnswers.length >= 15 && countTotalWords(allAnswers) >= 500) {
+    const totalWords = countTotalWords(allAnswers);
+
+    // Her aile için sayı + oran
+    const familyStats = {};
+    Object.keys(WORD_FAMILIES).forEach(key => {
+      const count = countWordFamily(allAnswers, key);
+      familyStats[key] = {
+        count,
+        rate: count / totalWords * 100, // her 100 kelimede yüzde
+      };
+    });
+
+    // Ölçüt: Bir aile baskınsa (örnek olarak %1.5'ten fazla, normal Türkçe metinde her aile ~%0.3)
+    if (familyStats.anksiyete.rate >= 1.5 && familyStats.anksiyete.count >= 10) {
+      out.push({
+        type: 'warn',
+        label: 'Anksiyete sinyalleri yoğun',
+        msg: `Cevaplarında anksiyete-endişe-korku ailesindeki kelimeler son ${allAnswers.length} cevapta <em>${familyStats.anksiyete.count} kez</em> geçti (her 100 kelimede ${familyStats.anksiyete.rate.toFixed(1)} kez — normalin ${(familyStats.anksiyete.rate / 0.4).toFixed(1)} katı). Bu duygusal değil, fiziksel bir hâl — uyku, kafein, hareket, nefes egzersizi gibi temel şeyleri gözden geçirmek bile fark yaratır.`
+      });
+    }
+
+    if (familyStats.depresif.rate >= 1.5 && familyStats.depresif.count >= 10) {
+      out.push({
+        type: 'warn',
+        label: 'Çökkün ton baskın',
+        msg: `Üzgün/yorgun/yalnız/tükenmiş kelime ailesi ${allAnswers.length} cevapta <em>${familyStats.depresif.count} kez</em> geçti (her 100 kelimede ${familyStats.depresif.rate.toFixed(1)}). Bu uyarı işareti — kendiliğinden geçer beklemesi 3-4 hafta. Eğer 2-3 haftadır böyleyse profesyonel destek almak yargı değil, akıl meselesi.`
+      });
+    }
+
+    if (familyStats.pasiflik.rate >= 1.0 && familyStats.pasiflik.count >= 8) {
+      out.push({
+        type: 'warn',
+        label: '"Yapamıyorum" cümleleri çoğalmış',
+        msg: `"Yapamadım/olmuyor/yapamıyorum/erteledim" gibi pasif kalıplar ${allAnswers.length} cevapta <em>${familyStats.pasiflik.count} kez</em> geçti. Dilim eylemini etkiler — kendine "yapamadım" demek beynine bunu öğretir. "Yapamadım" yerine "şu yüzden yapmadım" demek bile farklı bir döngü açar.`
+      });
+    }
+
+    if (familyStats.ozyargı.rate >= 0.8 && familyStats.ozyargı.count >= 6) {
+      out.push({
+        type: 'warn',
+        label: 'Kendine sert konuşuyorsun',
+        msg: `"Aptal/beceriksiz/yetersiz/rezil" gibi öz-yargı kalıpları cevaplarında <em>${familyStats.ozyargı.count} kez</em> geçti. Bunu en iyi arkadaşına söyler miydin? Söylemezdin. Kendine de söyleme — beyin "ben" ve "başkası" arasında ayrım yapamıyor bu konuda.`
+      });
+    }
+
+    if (familyStats.pozitif.rate >= 1.5 && familyStats.depresif.rate < 0.5 && allAnswers.length >= 30) {
+      out.push({
+        type: 'celebrate',
+        label: 'Güzel bir dönemdesin',
+        msg: `Cevaplarında olumlu duygu kelimeleri yüksek (her 100 kelimede ${familyStats.pozitif.rate.toFixed(1)} kez), çökkünlük belirtileri çok düşük. Bu hâli kayda geç — kötü bir döneme girdiğinde bugünleri okuman seni hatırlatır.`
+      });
+    }
+  }
+
+  // ----------------------------------------------------------
+  // ANALİZ 7: Geçmiş zaman vs gelecek zaman oranı
+  // ----------------------------------------------------------
+  if (allAnswers.length >= 20) {
+    let pastCount = 0, futureCount = 0;
+    allAnswers.forEach(a => {
+      const text = (a.answer || '').toLowerCase();
+      const words = text.split(/\s+/).filter(w => w.length > 3);
+
+      words.forEach(word => {
+        // Geçmiş zaman: -dim/dum/düm/tım gibi son ek
+        if (PAST_TENSE_SUFFIXES.some(suffix => word.endsWith(suffix) && word.length > suffix.length + 2)) {
+          pastCount++;
+        }
+        // Gelecek zaman: -acak/ecek
+        if (FUTURE_TENSE_MARKERS.some(marker => word.includes(marker))) {
+          futureCount++;
+        }
+      });
+    });
+
+    const total = pastCount + futureCount;
+    if (total >= 30) {
+      const pastRatio = pastCount / total;
+      if (pastRatio >= 0.85) {
+        out.push({
+          type: '',
+          label: 'Hep geçmişe bakıyorsun',
+          msg: `Cevaplarında geçmiş zaman <em>%${Math.round(pastRatio * 100)}</em>, gelecek zaman <em>%${Math.round((1-pastRatio) * 100)}</em>. Sağlıklı denge %60-70 arası geçmiş, %30-40 gelecek. Geçmişi sürekli işliyorsun — yarın için bir cümle eklemek bile ileriye açılan kapıdır.`
+        });
+      }
+    }
+  }
+
+  // ----------------------------------------------------------
+  // ANALİZ 8: "Ben" merkezliliği (izolasyon belirtisi olabilir)
+  // ----------------------------------------------------------
+  if (allAnswers.length >= 25) {
+    let benCount = 0, oCount = 0;
+    allAnswers.forEach(a => {
+      const text = ' ' + (a.answer || '').toLowerCase() + ' ';
+      // "ben/bana/benim/beni/bende" tek kelime olarak
+      const benMatches = text.match(/\s(ben|bana|benim|beni|bende|benden|bence)\s/g);
+      if (benMatches) benCount += benMatches.length;
+      // "o/onu/onun/ona/onlar"
+      const oMatches = text.match(/\s(o|onu|onun|ona|onda|onlar|onları|onların|onlara)\s/g);
+      if (oMatches) oCount += oMatches.length;
+    });
+
+    const total = benCount + oCount;
+    if (total >= 40) {
+      const benRatio = benCount / total;
+      if (benRatio >= 0.85) {
+        out.push({
+          type: '',
+          label: 'Sosyal alanın daralmış olabilir',
+          msg: `Cevaplarında "ben/bana/benim" zamirleri <em>%${Math.round(benRatio * 100)}</em> oranında, "o/onlar" sadece <em>%${Math.round((1-benRatio) * 100)}</em>. Uygulamaya kendin için yazıyorsun, normal — ama bu kadar yüksek "ben" oranı izolasyon ya da yalnızlık döneminin bir işareti olabilir. Son 2 haftada kaç kişiyle gerçek sohbet ettin?`
+        });
+      }
+    }
+  }
+
+  // ----------------------------------------------------------
+  // ANALİZ 9: Tema ağırlığı (iş/ilişki/aile dağılımı)
+  // ----------------------------------------------------------
+  if (allAnswers.length >= 20) {
+    const themes = {
+      'iş': countWordFamily(allAnswers, 'is_temasi'),
+      'ilişki': countWordFamily(allAnswers, 'iliski_temasi'),
+      'aile': countWordFamily(allAnswers, 'aile_temasi'),
+      'sağlık': countWordFamily(allAnswers, 'saglik_temasi'),
+    };
+    const totalThemes = Object.values(themes).reduce((s, n) => s + n, 0);
+    if (totalThemes >= 20) {
+      const sorted = Object.entries(themes).sort((a, b) => b[1] - a[1]);
+      const dominant = sorted[0];
+      const dominantRatio = dominant[1] / totalThemes;
+
+      if (dominantRatio >= 0.5) {
+        out.push({
+          type: '',
+          label: `${dominant[0].charAt(0).toUpperCase() + dominant[0].slice(1)} temasında sıkışmışsın`,
+          msg: `Cevaplarındaki tema ağırlığı: <em>${dominant[0]} %${Math.round(dominantRatio * 100)}</em>, diğer alanlar daha az. Bu kötü bir şey değil ama dengeyi gösterir — hayatının ${dominant[0]} dışında ${sorted.slice(1).map(s => s[0]).join(', ')} alanları da var. Onlar şu an susmuş — neden?`
+        });
+      }
+    }
+  }
+
+  // ----------------------------------------------------------
+  // ANALİZ 10: Vizyon-eylem ayrışması (geliştirilmiş)
+  // ----------------------------------------------------------
+  if (userData.yearGoal?.title && allAnswers.length >= 10) {
+    const goalText = (userData.yearGoal.title + ' ' + (userData.yearGoal.why || '')).toLowerCase();
+    const goalWords = goalText.split(/\s+/).filter(w => w.length > 4 && !STOPWORDS.has(w));
+
+    if (goalWords.length > 0) {
+      // Hedef ile ilgili kelimeler son 30 günde kaç kez geçti?
+      let goalMentions = 0;
+      let pasifWithGoal = 0;
+      last30.forEach(a => {
+        const text = (a.answer || '').toLowerCase();
+        const hasGoalWord = goalWords.some(w => text.includes(w));
+        if (hasGoalWord) {
+          goalMentions++;
+          // Aynı cevapta pasiflik kelimesi de var mı?
+          if (WORD_FAMILIES.pasiflik.some(p => text.includes(p))) {
+            pasifWithGoal++;
+          }
+        }
+      });
+
+      if (goalMentions >= 3 && pasifWithGoal / goalMentions >= 0.5) {
+        out.push({
+          type: 'warn',
+          label: 'Hedeften kaçıyorsun',
+          msg: `Vizyonun "<em>${escapeHtml(userData.yearGoal.title)}</em>". Son 30 günde bunu <em>${goalMentions}</em> kez yazdın ama aynı cümlelerin <em>%${Math.round(pasifWithGoal / goalMentions * 100)}</em>'inde "yapamadım/olmuyor/erteledim" gibi pasif ifadeler kullandın. İçinde hâlâ var — kaçışın asıl sebebi hedeften değil, "yeterince iyi olamamak"tan korkundan.`
+        });
+      } else if (goalMentions === 0 && allAnswers.length >= 30) {
+        out.push({
+          type: 'warn',
+          label: 'Vizyon kayboldu',
+          msg: `Vizyonun "<em>${escapeHtml(userData.yearGoal.title)}</em>" — ama son 30 günde cevaplarında bu konuyla ilgili tek kelime geçmedi. Vizyon yazılı ama yaşamıyor. Bu ayki projen gerçekten vizyona yaklaştırıyor mu, yoksa onu unutturmaya mı yarıyor?`
+        });
+      }
+    }
+  }
+
+  // ----------------------------------------------------------
+  // ANALİZ 11: Aylık projenin enerjisi
+  // ----------------------------------------------------------
+  if (userData.monthGoal?.title && userData.monthGoal.startDate) {
+    const startDate = new Date(userData.monthGoal.startDate + 'T00:00:00');
+    const daysIntoMonth = Math.floor((Date.now() - startDate.getTime()) / 86400000);
+
+    if (daysIntoMonth >= 14) {
+      const goalText = (userData.monthGoal.title + ' ' + (userData.monthGoal.why || '')).toLowerCase();
+      const goalWords = goalText.split(/\s+/).filter(w => w.length > 4 && !STOPWORDS.has(w));
+
+      if (goalWords.length > 0) {
+        // Son 7 gün vs önceki 7 gün karşılaştır
+        const last7Mentions = last7.filter(a => goalWords.some(w => (a.answer || '').toLowerCase().includes(w))).length;
+        const prev7 = getAnswersInDateRange(14).filter(a => {
+          const aDate = a.date;
+          const cutoff = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+          return aDate < cutoff;
+        });
+        const prev7Mentions = prev7.filter(a => goalWords.some(w => (a.answer || '').toLowerCase().includes(w))).length;
+
+        if (prev7Mentions >= 3 && last7Mentions <= 1) {
+          out.push({
+            type: 'warn',
+            label: 'Aylık projen sönüyor',
+            msg: `Aylık projen "<em>${escapeHtml(userData.monthGoal.title)}</em>" — önceki 7 günde bunu <em>${prev7Mentions} kez</em> yazdın, son 7 günde sadece <em>${last7Mentions}</em>. Enerjin düşüyor. Ya hedefi sadeleştir, ya da neden enerji çekildi onu yaz — projeyi devam ettirmek için "neden" gerek, sırf "tamamlamak" yetmez.`
+          });
+        }
+      }
+    }
+  }
+
+  // ----------------------------------------------------------
+  // ANALİZ 12: Belirli kelime takıntısı (eski, ama geliştirilmiş)
+  // ----------------------------------------------------------
   const recent = historyCache.slice(0, 100);
   const words = {};
   recent.forEach(a => {
@@ -1473,7 +1681,6 @@ function detectPatterns() {
       if (w.length > 4 && !STOPWORDS.has(w)) words[w] = (words[w] || 0) + 1;
     });
   });
-  // Kullanıcı isterse günlük yazılarını da analize dahil et
   if (userData.journalIncludeInPatterns && journalCache.length) {
     journalCache.slice(0, 100).forEach(entry => {
       const text = ((entry.title || '') + ' ' + (entry.content || '')).toLowerCase().replace(/[^\wçğıöşü\s]/gi, ' ');
@@ -1482,16 +1689,24 @@ function detectPatterns() {
       });
     });
   }
-  const top = Object.entries(words).filter(([w, c]) => c >= 4).sort((a, b) => b[1] - a[1]);
+  // Bu sefer 6+ kez geçen kelime arıyoruz, daha güçlü sinyal
+  const top = Object.entries(words).filter(([w, c]) => c >= 6).sort((a, b) => b[1] - a[1]);
   if (top.length) {
     const w = top[0];
-    out.push({
-      type: '',
-      label: 'Bir şeyi tekrarlıyorsun',
-      msg: `Son cevaplarında <em>"${escapeHtml(w[0])}"</em> kelimesi <em>${w[1]}</em> kez geçti. Tesadüf değil — bir yere parmak basıyor.`
-    });
+    // Kaç farklı cevapta geçti?
+    const distinctAnswers = recent.filter(a => (a.answer || '').toLowerCase().includes(w[0])).length;
+    if (distinctAnswers >= 4) {
+      out.push({
+        type: '',
+        label: 'Bir kelime sürekli dönüyor',
+        msg: `Son ${recent.length} cevabında <em>"${escapeHtml(w[0])}"</em> kelimesi <em>${w[1]}</em> kez geçti, <em>${distinctAnswers}</em> ayrı cevapta. Bu tesadüf değil — bilinçaltında bir mesele dönüyor. Bir gün buna özel zaman ayır, sadece bu kelimeyi düşün — neden hep buraya gelir aklın?`
+      });
+    }
   }
 
+  // ----------------------------------------------------------
+  // EKSTRA: Streak kutlama (ilk 7 günden sonra)
+  // ----------------------------------------------------------
   if ((userData.streak || 0) >= 7) {
     out.push({
       type: 'celebrate',
@@ -1500,19 +1715,9 @@ function detectPatterns() {
     });
   }
 
-  if (userData.yearGoal?.title && historyCache.length > 5) {
-    const last7 = new Set();
-    for (let i = 0; i < 7; i++) last7.add(new Date(Date.now() - i * 86400000).toISOString().slice(0, 10));
-    const activeDays = new Set(historyCache.filter(a => last7.has(a.date)).map(a => a.date));
-    if (activeDays.size < 3) {
-      out.push({
-        type: 'warn',
-        label: 'Söz ve eylem ayrışıyor',
-        msg: `Vizyonunda "<em>${escapeHtml(userData.yearGoal.title)}</em>" yazıyor ama son 7 günde sadece <em>${activeDays.size} gün</em> buradaydın. Hangisi gerçek sen — yazan mı, yapan mı?`
-      });
-    }
-  }
-
+  // ----------------------------------------------------------
+  // EKSTRA: 3 gün yokluk uyarısı (eskiden vardı)
+  // ----------------------------------------------------------
   const today = todayStr();
   const y1 = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
   const y2 = new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10);
@@ -1525,23 +1730,9 @@ function detectPatterns() {
     });
   }
 
-  // Geç cevap örüntüsü — son 14 gündeki gün içi cevaplarına bak
-  const last14 = new Set();
-  for (let i = 0; i < 14; i++) last14.add(new Date(Date.now() - i * 86400000).toISOString().slice(0, 10));
-  const guniciRecent = historyCache.filter(a => a.type === 'gunici' && last14.has(a.date));
-  if (guniciRecent.length >= 5) {
-    const lateOnes = guniciRecent.filter(a => (a.lateMinutes || 0) > 30);
-    const ratio = lateOnes.length / guniciRecent.length;
-    if (ratio >= 0.5) {
-      const avgMin = Math.round(lateOnes.reduce((s, a) => s + a.lateMinutes, 0) / lateOnes.length);
-      out.push({
-        type: 'warn',
-        label: 'Kronik erteleme',
-        msg: `Son 14 günde gün içi sorularının <em>%${Math.round(ratio * 100)}</em>'sine pencere kapandıktan sonra cevap verdin — ortalama <em>${avgMin} dakika</em> geç. Bu bir örüntü. Neyi erteliyorsun?`
-      });
-    }
-  }
-
+  // ----------------------------------------------------------
+  // EKSTRA: Zaman kapsülü (varsa)
+  // ----------------------------------------------------------
   const capsules = getCapsuleEntries();
   if (capsules.length) {
     out.push({
@@ -1718,8 +1909,8 @@ async function finishQuest() {
     showToast(msg);
   }
 
-  if (currentQuestType === 'haftalik') userData.lastWeeklyRitual = todayStr();
-  if (currentQuestType === 'aylik') userData.lastMonthlyRitual = todayStr();
+  if (currentQuestType === 'haftalik') userData.lastWeeklyRitual = effectiveDayStr();
+  if (currentQuestType === 'aylik') userData.lastMonthlyRitual = effectiveDayStr();
 
   await saveUserData();
   await loadHistory();
@@ -2113,84 +2304,94 @@ window.goToGuide = function(id) {
   showScreen('guide');
 };
 
-function checkRituals() {
-  const today = new Date();
-  const dow = today.getDay();
-  const dom = today.getDate();
-  const lastW = userData.lastWeeklyRitual ? new Date(userData.lastWeeklyRitual) : null;
-  const daysSinceLastW = lastW ? Math.floor((today - lastW) / 86400000) : 999;
+// Eski checkRituals kaldırıldı — artık ritüel kartları anasayfada renderRitualCard ile gösteriliyor
+// Pop-up confirm yerine kalıcı kart yaklaşımı
 
-  if (dow === 0 && daysSinceLastW >= 6) {
-    setTimeout(() => {
-      if (confirm('Pazar geldi. Haftalık ritüele ne dersin? (4 kısa soru)')) {
-        startQuest('haftalik', null);
-      }
-    }, 1200);
+function isRitualActive(type) {
+  // Etkili gün: gece 00:00–07:30 ise dünü kullanır
+  // Bu sayede pazar 23:55'te başlanmış ritüel pazartesi 00:30'da hâlâ aktif görünür
+  const effDay = effectiveDayStr();
+
+  // Pazar haftalık ritüeli: sadece pazar (etkili gün) ise
+  if (type === 'haftalik') {
+    if (!isDateSunday(effDay)) return false;
+    if (!userData.lastWeeklyRitual) return true;
+    const lastDate = userData.lastWeeklyRitual;
+    return lastDate !== effDay; // bu pazar yapılmamışsa aktif
+  }
+  // Aylık ritüel: ayın son 3 günü (etkili gün), bu ay henüz yapılmamışsa
+  if (type === 'aylik') {
+    if (!isDateInLastDaysOfMonth(effDay, 3)) return false;
+    if (!userData.lastMonthlyRitual) return true;
+    const lastDate = new Date(userData.lastMonthlyRitual + 'T12:00:00');
+    const effDate = new Date(effDay + 'T12:00:00');
+    const sameMonth = lastDate.getMonth() === effDate.getMonth() && lastDate.getFullYear() === effDate.getFullYear();
+    return !sameMonth;
+  }
+  return false;
+}
+
+function renderRitualCard() {
+  const box = document.getElementById('ritualCardBlock');
+  if (!box) return;
+
+  const showWeekly = isRitualActive('haftalik');
+  const showMonthly = isRitualActive('aylik');
+
+  if (!showWeekly && !showMonthly) {
+    box.innerHTML = '';
+    return;
   }
 
-  const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-  const lastM = userData.lastMonthlyRitual ? new Date(userData.lastMonthlyRitual) : null;
-  const sameMonth = lastM && lastM.getMonth() === today.getMonth() && lastM.getFullYear() === today.getFullYear();
+  let html = '';
 
-  if (dom >= lastDayOfMonth - 2 && !sameMonth) {
-    setTimeout(() => {
-      if (confirm('Ay kapanıyor. Aylık ritüel vakti (4 soru). Hemen yapalım mı?')) {
-        startQuest('aylik', null);
-      }
-    }, 3000);
+  if (showWeekly) {
+    const totalQ = QUESTIONS.haftalik.length;
+    html += `
+      <div class="ritual-card weekly" onclick="startQuest('haftalik', null)">
+        <div class="ritual-card-accent"></div>
+        <div class="ritual-card-head">
+          <div class="ritual-card-label">PAZAR RİTÜELİ</div>
+          <div class="ritual-card-time">bugün açık</div>
+        </div>
+        <div class="ritual-card-title">Geçen haftayı kapat, yenisine geç</div>
+        <div class="ritual-card-sub">${totalQ} kısa soru · 8-12 dk · gece 24:00'te kapanır</div>
+        <div class="ritual-card-arrow">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </div>
+      </div>
+    `;
   }
+
+  if (showMonthly) {
+    const totalQ = QUESTIONS.aylik.length;
+    const today = new Date();
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    const daysLeft = lastDay - today.getDate();
+    const daysText = daysLeft === 0 ? 'son gün' : (daysLeft === 1 ? 'yarın ay biter' : `${daysLeft} gün kaldı`);
+    html += `
+      <div class="ritual-card monthly" onclick="startQuest('aylik', null)">
+        <div class="ritual-card-accent monthly-accent"></div>
+        <div class="ritual-card-head">
+          <div class="ritual-card-label monthly-label">AYLIK RİTÜEL</div>
+          <div class="ritual-card-time">${daysText}</div>
+        </div>
+        <div class="ritual-card-title">Geçen ayı kapat — kazandığın ne, bıraktığın ne?</div>
+        <div class="ritual-card-sub">${totalQ} soru · 12-18 dk · ayın son 3 günü açık</div>
+        <div class="ritual-card-arrow">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </div>
+      </div>
+    `;
+  }
+
+  box.innerHTML = html;
 }
 
 function renderSettings() {
   const sw = document.getElementById('notifSwitch');
   sw.classList.toggle('on', !!userData.notifEnabled);
-
-  const ksSw = document.getElementById('keyboardSoundSwitch');
-  if (ksSw) ksSw.classList.toggle('on', !!userData.keyboardSound);
-
-  // Ses profili dropdown
-  const profSel = document.getElementById('soundProfileSelect');
-  if (profSel) profSel.value = userData.keyboardSoundProfile || 'holypanda';
-
-  // Stil satırı sadece ses açıkken görünsün
-  const styleRow = document.getElementById('soundStyleRow');
-  if (styleRow) styleRow.style.display = userData.keyboardSound ? 'flex' : 'none';
 }
-
-window.changeSoundProfile = async function(newProfile) {
-  if (!KEY_SOUND_PROFILES[newProfile]) return;
-  userData.keyboardSoundProfile = newProfile;
-  await saveUserData();
-  showToast('Ses yükleniyor...');
-  unlockAudio();
-  await reloadKeySounds();
-  // Test sesi çal
-  setTimeout(() => playKeyClick('letter'), 100);
-  setTimeout(() => playKeyClick('letter'), 250);
-  setTimeout(() => playKeyClick('enter'), 450);
-  showToast(`Ses stili: ${KEY_SOUND_PROFILES[newProfile].label}`);
-};
-
-window.toggleKeyboardSound = async function() {
-  userData.keyboardSound = !userData.keyboardSound;
-  await saveUserData();
-  const sw = document.getElementById('keyboardSoundSwitch');
-  if (sw) sw.classList.toggle('on', userData.keyboardSound);
-
-  // Stil satırını göster/gizle
-  const styleRow = document.getElementById('soundStyleRow');
-  if (styleRow) styleRow.style.display = userData.keyboardSound ? 'flex' : 'none';
-
-  if (userData.keyboardSound) {
-    unlockAudio();
-    setTimeout(() => playKeyClick('letter'), 100);
-    setTimeout(() => playKeyClick('letter'), 220);
-    setTimeout(() => playKeyClick('space'), 380);
-    showToast('Klavye sesi açık. Yazmaya başla, dinle.');
-  } else {
-    showToast('Klavye sesi kapalı.');
-  }
-};
 
 window.toggleNotif = async function() {
   if (!userData.notifEnabled) {
@@ -2839,7 +3040,7 @@ function renderJournalEditor() {
       </div>
       <div class="journal-editor-footer">
         <div class="journal-save-status" id="journalSaveStatus">Otomatik kaydediliyor</div>
-        <button class="btn-primary journal-save-btn" onclick="saveJournalManual()">Kaydet & Kapat</button>
+        <button class="btn btn-primary journal-save-btn" onclick="saveJournalManual()">Kaydet & Kapat</button>
       </div>
     </div>
   `;
@@ -2983,7 +3184,8 @@ window.renderVentAllList = function() {
   const items = sorted.map(v => {
     const cat = VENT_CATEGORIES.find(c => c.key === v.category);
     if (!cat) return '';
-    const qText = cat.questions[v.questionIndex] || '';
+    const rawQ = cat.questions[v.questionIndex];
+    const qText = (typeof rawQ === 'string' ? rawQ : rawQ?.q) || '';
     const d = v.timestamp?.toDate ? v.timestamp.toDate() : new Date();
     const dateStr = d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
     const excerpt = (v.content || '').slice(0, 220);
@@ -3040,6 +3242,8 @@ function renderVentCategoryQuestions() {
   const questionCards = cat.questions.map((q, i) => {
     const answers = answeredMap[i] || [];
     const hasAnswers = answers.length > 0;
+    // Geriye uyumluluk: eski kategorilerde q string, yenilerde {q, hint} objesi
+    const qText = typeof q === 'string' ? q : q.q;
 
     return `
       <div class="vent-q-card ${hasAnswers ? 'answered' : ''}" onclick="openVentQuestion(${i})">
@@ -3047,7 +3251,7 @@ function renderVentCategoryQuestions() {
           <div class="vent-q-num">${String(i + 1).padStart(2, '0')}</div>
           ${hasAnswers ? `<div class="vent-q-badge">${answers.length} yazı</div>` : ''}
         </div>
-        <div class="vent-q-text">${escapeHtml(q)}</div>
+        <div class="vent-q-text">${escapeHtml(qText)}</div>
         <div class="vent-q-action">${hasAnswers ? 'Yazdıkların →' : 'Dert dök →'}</div>
       </div>
     `;
@@ -3082,7 +3286,10 @@ function renderVentEditor() {
   const box = document.getElementById('ventContent');
   const cat = currentVentCategory;
   const qIndex = currentVentEntry.questionIndex;
-  const qText = cat.questions[qIndex];
+  const rawQ = cat.questions[qIndex];
+  // Geriye uyumluluk: eski kategorilerde string, yenilerde {q, hint} objesi
+  const qText = typeof rawQ === 'string' ? rawQ : rawQ.q;
+  const qHint = typeof rawQ === 'string' ? null : rawQ.hint;
 
   // Bu soruya olan tüm geçmiş cevaplar
   const prevEntries = ventCache.filter(v => v.category === cat.key && v.questionIndex === qIndex);
@@ -3110,6 +3317,14 @@ function renderVentEditor() {
     `;
   }
 
+  const totalQuestions = cat.questions.length;
+  const hintHtml = qHint ? `
+      <div class="vent-editor-hint">
+        <div class="vent-editor-hint-lbl">İpucu</div>
+        <div class="vent-editor-hint-txt">${escapeHtml(qHint)}</div>
+      </div>
+    ` : '';
+
   box.innerHTML = `
     <div class="vent-editor">
       <div class="vent-editor-header c-${cat.color}">
@@ -3117,12 +3332,14 @@ function renderVentEditor() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
           Geri
         </button>
-        <div class="vent-editor-cat">${escapeHtml(cat.name)} · Soru ${qIndex + 1}/10</div>
+        <div class="vent-editor-cat">${escapeHtml(cat.name)} · Soru ${qIndex + 1}/${totalQuestions}</div>
       </div>
 
       <div class="vent-editor-question">
         ${escapeHtml(qText)}
       </div>
+
+      ${hintHtml}
 
       <textarea
         class="vent-editor-area"
@@ -3133,8 +3350,8 @@ function renderVentEditor() {
       <div class="vent-editor-footer">
         <div class="vent-editor-status" id="ventEditorStatus">Otomatik kaydediliyor</div>
         <div class="vent-editor-actions">
-          ${!currentVentEntry.new && currentVentEntry.id ? `<button class="btn-ghost vent-delete-btn" onclick="deleteCurrentVent()">Sil</button>` : ''}
-          <button class="btn-primary" onclick="saveVentManual()">Kaydet & Kapat</button>
+          ${!currentVentEntry.new && currentVentEntry.id ? `<button class="btn btn-ghost vent-delete-btn" onclick="deleteCurrentVent()">Sil</button>` : ''}
+          <button class="btn btn-primary" onclick="saveVentManual()">Kaydet & Kapat</button>
         </div>
       </div>
 
@@ -3363,7 +3580,7 @@ function renderBfiResults(box, status) {
           <div class="bfi-retake-title">Yeniden test yapabilirsin</div>
           <div class="bfi-retake-desc">30 gün geçti. Karakterinin evrimini görmek ister misin?</div>
         </div>
-        <button class="btn-primary bfi-retake-btn" onclick="startBfiTest()">Tekrar yap</button>
+        <button class="btn btn-primary bfi-retake-btn" onclick="startBfiTest()">Tekrar yap</button>
       </div>
     `;
   } else {
@@ -3521,7 +3738,7 @@ function renderBfiQuestion() {
       </div>
 
       <div class="bfi-test-footer">
-        ${bfiCurrentIndex > 0 ? `<button class="btn-ghost bfi-test-prev" onclick="prevBfiQuestion()">← Önceki</button>` : '<div></div>'}
+        ${bfiCurrentIndex > 0 ? `<button class="btn btn-ghost bfi-test-prev" onclick="prevBfiQuestion()">← Önceki</button>` : '<div></div>'}
         <div class="bfi-test-note">Otomatik kayıt · yarıda bırakabilirsin</div>
       </div>
 
