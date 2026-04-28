@@ -172,7 +172,7 @@ const QUESTIONS = {
 // =========================================================
 
 const TIME_SLOTS = [
-  { key: 'sabah-block', time: '07:30', label: 'Sabah · 3 soru', type: 'sabah', count: 3, start: 0, end: 11 },
+  { key: 'sabah-block', time: '07:30', label: 'Sabah · 3 soru', type: 'sabah', count: 3, start: 6.5, end: 11 },
   { key: 'g-1100',      time: '11:00', label: 'Öğle öncesi',    type: 'gunici', count: 1, start: 11,   end: 13.5, fixedQuestionId: 'g1' },
   { key: 'g-1330',      time: '13:30', label: 'Öğle sonrası',   type: 'gunici', count: 1, start: 13.5, end: 15.25, fixedQuestionId: 'g2' },
   { key: 'g-1515',      time: '15:15', label: 'İkindi',         type: 'gunici', count: 1, start: 15.25, end: 17,   fixedQuestionId: 'g3' },
